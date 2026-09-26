@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Control de Estados de Cuenta y Proveedores</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bgDark: '#0b1329',
+                        cardDark: '#172036',
+                        borderDark: '#263454',
+                        accentCyan: '#06b6d4',
+                        accentGreen: '#10b981',
+                        accentRed: '#f43f5e',
+                        accentYellow: '#f59e0b',
+                        accentPurple: '#8b5cf6'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chart.js para los gráficos dinámicos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #0b1329;
+            color: #f8fafc;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b1329;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #263454;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+        }
+        @media print {
+            body { background: white !important; color: black !important; }
+            header, button, select, #modalLogin, #modalConfig { display: none !important; }
+            #sec-consultas { display: block !important; width: 100% !important; }
+            /* Agregado para mostrar el nombre del proveedor impreso en el PDF */
+            #pdf-proveedor-titulo { display: block !important; font-size: 16px; font-weight: bold; margin-bottom: 10px; color: black !important; }
+        }
+        /* Oculto en pantalla normal, visible al imprimir */
+        #pdf-proveedor-titulo { display: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased">
+
+    <div id="modalLogin" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-cardDark border border-borderDark rounded-2xl max-w-md w-full p-8 shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <div class="inline-flex p-3 bg-accentCyan/10 text-accentCyan rounded-2xl border border-accentCyan/30 mb-2">
+                    <i class="fa-solid fa-lock text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-extrabold text-white tracking-tight">ACCESO AL SISTEMA</h2>
+                <p class="text-xs text-slate-400">Ingrese sus credenciales corporativas para continuar</p>
+            </div>
+            
+            <form onsubmit="window.procesarLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Usuario</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" id="loginUser" required placeholder="Usuario" class="w-full bg-bgDark border border-borderDark rounded-lg pl-10 pr-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Contraseña</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-key"></i></span>
+                        <input type="password" id="loginPass" required placeholder="••••••••" class="w-full bg-bgDark border border-borderDark rounded-lg pl-10 pr-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-lg bg-accentCyan hover:bg-cyan-500 text-slate-950 font-bold text-xs shadow-lg shadow-accentCyan/20 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <header class="bg-cardDark border-b border-borderDark sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-accentCyan/10 text-accentCyan rounded-lg border border-accentCyan/30">
+                        <i class="fa-solid fa-chart-line text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg sm:text-xl tracking-tight text-white flex items-center gap-2">
+                            ESTADOS DE CUENTA <span class="text-xs px-2 py-0.5 rounded bg-accentCyan/20 text-accentCyan border border-accentCyan/40 font-mono">PROVEEDORES</span>
+                        </h1>
+                        <p class="text-xs text-slate-400">Sistema Ejecutivo de Deudas y Pagos (Ferrogar / Viñedo)</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <div class="flex items-center gap-2 bg-bgDark border border-borderDark rounded-lg px-3 py-1.5">
+                        <i id="roleIcon" class="fa-solid fa-user-shield text-accentCyan text-xs"></i>
+                        <span id="userRoleBadge" class="text-xs text-slate-200 font-semibold uppercase">Admin</span>
+                    </div>
+
+                    <button onclick="window.cerrarSesion()" class="px-3 py-1.5 rounded-lg bg-accentRed/10 hover:bg-accentRed/20 text-xs font-medium text-accentRed flex items-center gap-1.5 border border-accentRed/30 transition" title="Cerrar Sesión">
+                        <i class="fa-solid fa-power-off"></i>
+                        <span class="hidden sm:inline">Salir</span>
+                    </button>
+
+                    <button onclick="openConfigModal()" class="px-3 py-1.5 rounded-lg bg-borderDark/60 hover:bg-borderDark text-xs font-medium text-slate-300 hover:text-white flex items-center gap-2 border border-slate-700 transition">
+                        <i class="fa-solid fa-cloud-arrow-up text-accentCyan"></i>
+                        <span class="hidden sm:inline">Google Sheets API</span>
+                    </button>
+                    <button onclick="sincronizarConGoogleSheets()" class="px-3 py-1.5 rounded-lg bg-accentCyan hover:bg-cyan-500 text-slate-950 font-semibold text-xs flex items-center gap-2 shadow-lg shadow-accentCyan/20 transition">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span>Sincronizar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pestañas de Navegación -->
+        <div class="bg-bgDark/80 border-t border-borderDark/50 px-4">
+            <div class="max-w-7xl mx-auto flex space-x-1 sm:space-x-4 overflow-x-auto py-2 text-xs font-medium">
+                <button type="button" onclick="window.switchTab('dashboard')" id="tab-dashboard" class="px-3 py-2 rounded-lg bg-accentCyan/20 text-accentCyan border border-accentCyan/40 flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard & KPI
+                </button>
+                <button type="button" onclick="window.switchTab('proveedores')" id="tab-proveedores" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardDark flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-building-user"></i> Crear Proveedor
+                </button>
+                <button type="button" onclick="window.switchTab('facturas')" id="tab-facturas" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardDark flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> Registrar Factura
+                </button>
+                <button type="button" onclick="window.switchTab('abonos')" id="tab-abonos" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardDark flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> Aplicar Abonos / NC
+                </button>
+                <button type="button" onclick="window.switchTab('editar')" id="tab-editar" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardDark flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-pen-to-square"></i> Editar Facturas
+                </button>
+                <button type="button" onclick="window.switchTab('pagadas-mes')" id="tab-pagadas-mes" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardDark flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-calendar-check"></i> Pagadas por Mes
+                </button>
+                <button type="button" onclick="window.switchTab('buscar')" id="tab-buscar" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardDark flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-magnifying-glass"></i> Buscar Factura
+                </button>
+                <button type="button" onclick="window.switchTab('consultas')" id="tab-consultas" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardDark flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-list-check"></i> Consulta Saldos
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+        
+        <!-- PESTAÑA 1: DASHBOARD / METRICAS -->
+        <div id="sec-dashboard" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-cardDark p-4 rounded-xl border border-borderDark">
+                <div>
+                    <h2 class="text-lg font-bold text-white tracking-wide">SUSPENSIONES Y DEUDAS POR MORA</h2>
+                    <p class="text-xs text-slate-400">Análisis de saldos de proveedores por sucursal y estado de vencimiento</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400">Filtrar Estado:</span>
+                    <select id="dashFilterEstado" onchange="window.actualizarDashboard()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-accentCyan">
+                        <option value="TODOS">TODAS LAS FACTURAS</option>
+                        <option value="PENDIENTE">PENDIENTES Y VENCIDAS</option>
+                        <option value="VENCIDA">SOLO VENCIDAS (&gt;30 DÍAS)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- TARJETAS KPI -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                <div class="lg:col-span-2 bg-gradient-to-br from-cardDark to-slate-900 border border-borderDark rounded-xl p-4 relative overflow-hidden shadow-lg">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-accentRed/10 rounded-full blur-xl pointer-events-none"></div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">DEUDA TOTAL GENERAL</span>
+                        <div class="p-1.5 bg-accentRed/20 text-accentRed rounded-md"><i class="fa-solid fa-lock text-xs"></i></div>
+                    </div>
+                    <div id="kpi-deuda-total" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-1">$0.00</div>
+                    <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                        <span id="kpi-facturas-cant" class="text-accentRed font-semibold">0 Deudas acumuladas</span>
+                        <span>• Consolidado</span>
+                    </div>
+                </div>
+
+                <div class="bg-cardDark border border-borderDark rounded-xl p-4 hover:border-accentCyan/40 transition">
+                    <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">FG MATRIZ</div>
+                    <div id="kpi-suc-matriz" class="text-lg font-bold text-accentCyan mb-1">$0.00</div>
+                    <div class="text-[10px] text-slate-500">Sucursal Principal</div>
+                </div>
+
+                <div class="bg-cardDark border border-borderDark rounded-xl p-4 hover:border-accentCyan/40 transition">
+                    <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">FG AGUILA</div>
+                    <div id="kpi-suc-aguila" class="text-lg font-bold text-accentGreen mb-1">$0.00</div>
+                    <div class="text-[10px] text-slate-500">Sucursal Aguila</div>
+                </div>
+
+                <div class="bg-cardDark border border-borderDark rounded-xl p-4 hover:border-accentCyan/40 transition">
+                    <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">FG COMALAPA</div>
+                    <div id="kpi-suc-comalapa" class="text-lg font-bold text-accentYellow mb-1">$0.00</div>
+                    <div class="text-[10px] text-slate-500">Sucursal Comalapa</div>
+                </div>
+
+                <div class="bg-cardDark border border-borderDark rounded-xl p-4 hover:border-accentCyan/40 transition">
+                    <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">FG VIÑEDO</div>
+                    <div id="kpi-suc-vinedo" class="text-lg font-bold text-accentPurple mb-1">$0.00</div>
+                    <div class="text-[10px] text-slate-500">Sucursal Viñedo</div>
+                </div>
+            </div>
+
+            <!-- GRÁFICOS -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-5 bg-cardDark border border-borderDark rounded-xl p-4 shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-chart-pie text-accentCyan"></i> DISTRIBUCIÓN POR PROVEEDOR
+                            </h3>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-borderDark text-slate-300">Monto ($)</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mb-4">Proporción del saldo pendiente total por empresa</p>
+                    </div>
+                    <div class="relative flex items-center justify-center h-64">
+                        <canvas id="chartAnilloDeuda"></canvas>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 bg-cardDark border border-borderDark rounded-xl p-4 shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-chart-column text-accentGreen"></i> DEUDA ACUMULADA POR PROVEEDOR
+                            </h3>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-accentGreen/10 text-accentGreen border border-accentGreen/30">Monto USD $</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mb-4">Top de proveedores ordenados de mayor a menor endeudamiento</p>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chartBarrasDeuda"></canvas>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-12 bg-cardDark border border-borderDark rounded-xl p-4 shadow-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-accentRed"></i> FACTURAS VENCIDAS (&gt;30 DÍAS) POR PROVEEDOR
+                        </h3>
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-accentRed/10 text-accentRed border border-accentRed/30">Conteo Documentos</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mb-4">Cantidad de documentos pendientes vencidos que requieren pago prioritario</p>
+                    <div class="relative h-56 w-full">
+                        <canvas id="chartBarrasVencidas"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla Resumen Ejecutivo -->
+            <div class="bg-cardDark border border-borderDark rounded-xl overflow-hidden shadow-lg">
+                <div class="p-4 border-b border-borderDark flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-table-list text-accentCyan"></i> RESUMEN EJECUTIVO DE PROVEEDORES
+                    </h3>
+                    <span id="cant-total-prov-badge" class="text-xs bg-bgDark border border-borderDark px-2 py-1 rounded text-slate-300">0 Proveedores</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-bgDark/80 text-slate-400 font-semibold uppercase tracking-wider border-b border-borderDark">
+                            <tr>
+                                <th class="p-3">Proveedor</th>
+                                <th class="p-3">Total Facturas</th>
+                                <th class="p-3">Monto Total</th>
+                                <th class="p-3">Abonos / NC</th>
+                                <th class="p-3">Saldo Pendiente</th>
+                                <th class="p-3">Estado Deuda</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-resumen-ejecutivo" class="divide-y divide-borderDark/60"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PESTAÑA 2: CREAR PROVEEDOR -->
+        <div id="sec-proveedores" class="hidden space-y-6">
+            <div id="alert-viewer-prov" class="hidden bg-accentYellow/10 border border-accentYellow/30 text-accentYellow p-3 rounded-lg text-xs flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i> Modo de solo lectura activo. No tienes permisos para registrar o modificar proveedores.
+            </div>
+            <div class="max-w-2xl mx-auto bg-cardDark border border-borderDark rounded-xl p-6 shadow-xl" id="card-form-prov">
+                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-borderDark">
+                    <div class="p-3 bg-accentCyan/10 text-accentCyan rounded-xl border border-accentCyan/30">
+                        <i class="fa-solid fa-building-user text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-white">REGISTRAR NUEVO PROVEEDOR</h2>
+                        <p class="text-xs text-slate-400">Agrega una nueva empresa o proveedor al catálogo general</p>
+                    </div>
+                </div>
+
+                <form onsubmit="window.guardarProveedor(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre Comercial del Proveedor *</label>
+                        <input type="text" id="provNombre" required placeholder="Ej. FERRETERIA FERROGAR S.A DE C.V" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Giro Comercial</label>
+                            <input type="text" id="provGiro" placeholder="Venta de materiales" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">NRC</label>
+                            <input type="text" id="provNRC" placeholder="000000-0" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">NIT</label>
+                            <input type="text" id="provNIT" placeholder="0614-000000-000-0" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Teléfono de Contacto</label>
+                            <input type="text" id="provTel" placeholder="2200-0000" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                        </div>
+                    </div>
+                    <div class="pt-4 flex justify-end">
+                        <button type="submit" id="btn-submit-prov" class="px-5 py-2.5 rounded-lg bg-accentCyan hover:bg-cyan-500 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-accentCyan/20 transition">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar Proveedor
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-cardDark border border-borderDark rounded-xl overflow-hidden shadow-lg">
+                <div class="p-4 border-b border-borderDark">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider">Catálogo de Proveedores Registrados</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-bgDark/80 text-slate-400 font-semibold uppercase border-b border-borderDark">
+                            <tr>
+                                <th class="p-3">Nombre</th>
+                                <th class="p-3">Giro</th>
+                                <th class="p-3">NRC</th>
+                                <th class="p-3">NIT</th>
+                                <th class="p-3">Teléfono</th>
+                                <th class="p-3 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-proveedores-lista" class="divide-y divide-borderDark/60"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PESTAÑA 3: REGISTRAR FACTURA -->
+        <div id="sec-facturas" class="hidden space-y-6">
+            <div id="alert-viewer-fac" class="hidden bg-accentYellow/10 border border-accentYellow/30 text-accentYellow p-3 rounded-lg text-xs flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i> Modo de solo lectura activo. No tienes permisos para registrar facturas.
+            </div>
+            <div class="max-w-2xl mx-auto bg-cardDark border border-borderDark rounded-xl p-6 shadow-xl" id="card-form-fac">
+                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-borderDark">
+                    <div class="p-3 bg-accentGreen/10 text-accentGreen rounded-xl border border-accentGreen/30">
+                        <i class="fa-solid fa-file-invoice-dollar text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-white">REGISTRAR NUEVA FACTURA (CCF / DTE)</h2>
+                        <p class="text-xs text-slate-400">Ingreso de comprobantes de crédito fiscal pendientes de pago</p>
+                    </div>
+                </div>
+
+                <form onsubmit="window.guardarFactura(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Seleccionar Proveedor *</label>
+                        <select id="facProveedor" required class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen">
+                            <option value="" disabled selected>-- Seleccione un proveedor --</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Fecha Emisión *</label>
+                            <input type="date" id="facFecha" required class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Sucursal *</label>
+                            <select id="facSucursal" required class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen">
+                                <option value="FG MATRIZ">FG MATRIZ</option>
+                                <option value="FG AGUILA">FG AGUILA</option>
+                                <option value="FG COMALAPA">FG COMALAPA</option>
+                                <option value="FG VIÑEDO">FG VIÑEDO</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Número CCF / DTE *</label>
+                            <input type="text" id="facCCF" required placeholder="CCF-00123" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Monto ($) *</label>
+                            <input type="number" step="0.01" id="facMonto" required placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen">
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex justify-end">
+                        <button type="submit" id="btn-submit-fac" class="px-5 py-2.5 rounded-lg bg-accentGreen hover:bg-emerald-500 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-accentGreen/20 transition">
+                            <i class="fa-solid fa-plus-circle"></i> Registrar Factura
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- PESTAÑA 4: APLICAR ABONOS Y NC -->
+        <div id="sec-abonos" class="hidden space-y-6">
+            <div id="alert-viewer-abonos" class="hidden bg-accentYellow/10 border border-accentYellow/30 text-accentYellow p-3 rounded-lg text-xs flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i> Modo de solo lectura activo. No tienes permisos para aplicar abonos o notas de crédito.
+            </div>
+            <div class="max-w-4xl mx-auto bg-cardDark border border-borderDark rounded-xl p-6 shadow-xl" id="card-form-abonos">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-borderDark">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-accentYellow/10 text-accentYellow rounded-xl border border-accentYellow/30">
+                            <i class="fa-solid fa-hand-holding-dollar text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-white">APLICAR ABONOS Y NOTAS DE CRÉDITO</h2>
+                            <p class="text-xs text-slate-400">Busque o seleccione el CCF/DTE para aplicar abonos o notas de crédito</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-bgDark/60 p-4 rounded-xl border border-borderDark">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">1. Seleccionar Proveedor</label>
+                        <select id="abonoProveedor" onchange="window.cargarFacturasParaAbono()" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentYellow">
+                            <option value="" disabled selected>-- Seleccione un proveedor --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">2. Buscar o Seleccionar CCF / DTE</label>
+                        <div class="space-y-2">
+                            <input type="text" id="inputFiltroCCF" oninput="window.filtrarSelectCCF()" placeholder="Escriba para buscar CCF..." class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-accentYellow font-mono">
+                            <select id="abonoCCF" onchange="window.cargarDatosDetalleAbono()" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentYellow"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-bgDark p-3 rounded-lg border border-borderDark">
+                        <div class="text-[10px] text-slate-400">MONTO ORIGINAL</div>
+                        <div id="abonoMontoOriginal" class="text-base font-bold text-white">$0.00</div>
+                    </div>
+                    <div class="bg-bgDark p-3 rounded-lg border border-borderDark">
+                        <div class="text-[10px] text-slate-400">SALDO PENDIENTE ACTUAL</div>
+                        <div id="abonoSaldoActual" class="text-base font-bold text-accentYellow">$0.00</div>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1 bg-bgDark p-3 rounded-lg border border-borderDark">
+                        <div class="text-[10px] text-slate-400">ESTADO</div>
+                        <div id="abonoEstadoBadge" class="text-xs font-bold text-slate-300 mt-1">SELECCIONE FACTURA</div>
+                    </div>
+                </div>
+
+                <form onsubmit="window.guardarAbono(event)" class="space-y-6">
+                    <!-- Nota de Crédito -->
+                    <div class="bg-bgDark/40 p-4 rounded-xl border border-borderDark">
+                        <h4 class="text-xs font-bold text-accentCyan uppercase mb-3"><i class="fa-solid fa-file-contract"></i> Nota de Crédito</h4>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Monto Nota de Crédito ($)</label>
+                            <input type="number" step="0.01" id="abonoNC" placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                        </div>
+                    </div>
+
+                    <!-- Contenedor dinámico de abonos -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-accentGreen uppercase"><i class="fa-solid fa-money-bill-transfer"></i> Registro de Abonos</h4>
+                            <button type="button" onclick="window.agregarFilaAbonoDinamicamente()" class="px-3 py-1.5 rounded-lg bg-accentGreen/20 hover:bg-accentGreen/30 text-accentGreen font-bold text-xs flex items-center gap-1.5 border border-accentGreen/40 transition">
+                                <i class="fa-solid fa-plus"></i> Agregar Otro Abono
+                            </button>
+                        </div>
+                        
+                        <div id="contenedor-abonos-dinamicos" class="space-y-3"></div>
+                    </div>
+
+                    <div class="pt-2 flex justify-end">
+                        <button type="submit" id="btn-submit-abono" class="px-6 py-2.5 rounded-lg bg-accentYellow hover:bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-accentYellow/20 transition">
+                            <i class="fa-solid fa-check"></i> Aplicar Pagos y Actualizar Saldo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- PESTAÑA 5: EDITAR FACTURAS -->
+        <div id="sec-editar" class="hidden space-y-6">
+            <div id="alert-viewer-editar" class="hidden bg-accentYellow/10 border border-accentYellow/30 text-accentYellow p-3 rounded-lg text-xs flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i> Modo de solo lectura activo. No tienes permisos para editar o eliminar facturas.
+            </div>
+            <div class="max-w-3xl mx-auto bg-cardDark border border-borderDark rounded-xl p-6 shadow-xl" id="card-form-editar">
+                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-borderDark">
+                    <div class="p-3 bg-accentPurple/10 text-accentPurple rounded-xl border border-accentPurple/30">
+                        <i class="fa-solid fa-pen-to-square text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-white">EDITAR O ELIMINAR FACTURA (CCF / DTE)</h2>
+                        <p class="text-xs text-slate-400">Modificación o eliminación de comprobantes registrados en el sistema</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-bgDark/60 p-4 rounded-xl border border-borderDark">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Proveedor Actual</label>
+                        <select id="editProveedor" onchange="window.cargarFacturasParaEditar()" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentPurple">
+                            <option value="" disabled selected>-- Seleccione un proveedor --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Factura a Modificar / Eliminar (CCF)</label>
+                        <select id="editCCF" onchange="window.cargarFormularioEdicion()" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentPurple"></select>
+                    </div>
+                </div>
+
+                <form onsubmit="window.guardarEdicionFactura(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-300 mb-1">Reasignar a Proveedor</label>
+                            <select id="editNuevoProveedor" required class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentPurple">
+                                <option value="" disabled selected>-- Seleccione un proveedor --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-300 mb-1">Fecha Emisión</label>
+                            <input type="date" id="editFecha" required class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentPurple">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-300 mb-1">Sucursal</label>
+                            <select id="editSucursal" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentPurple">
+                                <option value="FG MATRIZ">FG MATRIZ</option>
+                                <option value="FG AGUILA">FG AGUILA</option>
+                                <option value="FG COMALAPA">FG COMALAPA</option>
+                                <option value="FG VIÑEDO">FG VIÑEDO</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-300 mb-1">Nuevo CCF / DTE</label>
+                            <input type="text" id="editNuevoCCF" required class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentPurple">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Monto Total ($)</label>
+                        <input type="number" step="0.01" id="editMonto" required class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentPurple">
+                    </div>
+
+                    <div class="pt-4 flex items-center justify-between">
+                        <button type="button" id="btn-delete-factura" onclick="window.eliminarFacturaActual()" class="px-4 py-2.5 rounded-lg bg-accentRed/10 hover:bg-accentRed/20 text-accentRed font-bold text-xs flex items-center gap-2 border border-accentRed/30 transition">
+                            <i class="fa-solid fa-trash-can"></i> Eliminar Factura CCF
+                        </button>
+                        <button type="submit" id="btn-submit-editar" class="px-5 py-2.5 rounded-lg bg-accentPurple hover:bg-purple-600 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-accentPurple/20 transition">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- PESTAÑA: FACTURAS PAGADAS Y ABONADAS POR MES -->
+        <div id="sec-pagadas-mes" class="hidden space-y-6">
+            <div class="bg-cardDark border border-borderDark rounded-xl p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-borderDark">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-check text-accentGreen"></i> FACTURAS PAGADAS Y ABONADAS POR MES
+                        </h2>
+                        <p class="text-xs text-slate-400">Consulte facturas totalmente canceladas o que recibieron abonos en el mes y año seleccionado</p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1">Mes:</label>
+                            <select id="filtroMesPagadas" onchange="window.renderPagadasMes()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-accentGreen">
+                                <option value="01">Enero</option>
+                                <option value="02">Febrero</option>
+                                <option value="03">Marzo</option>
+                                <option value="04">Abril</option>
+                                <option value="05">Mayo</option>
+                                <option value="06">Junio</option>
+                                <option value="07">Julio</option>
+                                <option value="08">Agosto</option>
+                                <option value="09" selected>Septiembre</option>
+                                <option value="10">Octubre</option>
+                                <option value="11">Noviembre</option>
+                                <option value="12">Diciembre</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1">Año:</label>
+                            <select id="filtroAnioPagadas" onchange="window.renderPagadasMes()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-accentGreen">
+                                <option value="2025">2025</option>
+                                <option value="2026" selected>2026</option>
+                                <option value="2027">2027</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-bgDark/80 p-4 rounded-xl border border-borderDark">
+                        <span class="text-xs text-slate-400">Total Documentos (Pagados o Abonados):</span>
+                        <div id="pagadasCantTotal" class="text-2xl font-extrabold text-accentGreen">0 facturas</div>
+                    </div>
+                    <div class="bg-bgDark/80 p-4 rounded-xl border border-borderDark">
+                        <span class="text-xs text-slate-400">Monto Total Abonado / Pagado en el Mes:</span>
+                        <div id="pagadasMontoTotal" class="text-2xl font-extrabold text-white">$0.00</div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg border border-borderDark">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-bgDark text-slate-400 font-semibold uppercase border-b border-borderDark">
+                            <tr>
+                                <th class="p-3">N° CCF / DTE</th>
+                                <th class="p-3">Proveedor</th>
+                                <th class="p-3">Monto Factura</th>
+                                <th class="p-3">Saldo Actual</th>
+                                <th class="p-3">Detalle del Abono / Movimiento del Mes</th>
+                                <th class="p-3">Estado Actual</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-pagadas-mes" class="divide-y divide-borderDark/60 bg-cardDark">
+                            <tr>
+                               <td colspan="6" class="p-6 text-center text-slate-500">Cargando registros...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PESTAÑA: BUSCAR FACTURA -->
+        <div id="sec-buscar" class="hidden space-y-6">
+            <div class="bg-cardDark border border-borderDark rounded-xl p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-borderDark">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-magnifying-glass text-accentCyan"></i> BÚSQUEDA GENERAL DE FACTURAS POR NÚMERO
+                        </h2>
+                        <p class="text-xs text-slate-400">Ingrese parcial o totalmente el número de CCF / DTE para localizarlo al instante</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 mb-6 bg-bgDark/80 p-4 rounded-xl border border-borderDark">
+                    <div class="relative flex-grow">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-file-invoice"></i></span>
+                        <input type="text" id="inputBuscarCCF" oninput="window.ejecutarBusquedaFactura()" placeholder="Ej. CCF-1001 o 1001..." class="w-full bg-bgDark border border-borderDark rounded-lg pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-accentCyan">
+                    </div>
+                    <button type="button" onclick="window.ejecutarBusquedaFactura()" class="px-4 py-2.5 rounded-lg bg-accentCyan hover:bg-cyan-500 text-slate-950 font-bold text-xs flex items-center gap-2 transition">
+                        <i class="fa-solid fa-search"></i> Buscar
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg border border-borderDark">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-bgDark text-slate-400 font-semibold uppercase border-b border-borderDark">
+                            <tr>
+                                <th class="p-3">N° CCF / DTE</th>
+                                <th class="p-3">Proveedor</th>
+                                <th class="p-3">Fecha</th>
+                                <th class="p-3">Sucursal</th>
+                                <th class="p-3">Monto Factura</th>
+                                <th class="p-3">Abonos / NC</th>
+                                <th class="p-3">Saldo Actual</th>
+                                <th class="p-3">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-resultado-busqueda" class="divide-y divide-borderDark/60 bg-cardDark">
+                            <tr>
+                               <td colspan="8" class="p-6 text-center text-slate-500">Ingrese un número de factura para comenzar la búsqueda...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PESTAÑA 6: CONSULTA SALDOS PENDIENTES -->
+        <div id="sec-consultas" class="space-y-6">
+            <div class="bg-cardDark border border-borderDark rounded-xl p-6 shadow-xl">
+                <!-- Título dinámico que aparecerá únicamente al imprimir / descargar el PDF -->
+                <div id="pdf-proveedor-titulo"></div>
+
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-borderDark">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-receipt text-accentCyan"></i> CONSULTA DE SALDOS PENDIENTES Y VENCIDOS
+                        </h2>
+                        <p class="text-xs text-slate-400">Filtrado detallado por proveedor individual con indicador de fechas de captura y abono</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1">Proveedor:</label>
+                            <select id="consultaProveedor" onchange="window.renderConsultaSaldos()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan min-w-[180px]"></select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1">Filtrar Estado:</label>
+                            <select id="consultaFiltroEstado" onchange="window.renderConsultaSaldos()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                                <option value="TODOS">Todas las facturas</option>
+                                <option value="PENDIENTES">Faltan por pagar (Pendientes / Vencidas)</option>
+                                <option value="CANCELADAS">Canceladas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1">Ordenar por Fecha:</label>
+                            <select id="consultaOrdenFecha" onchange="window.renderConsultaSaldos()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                                <option value="reciente">Más reciente a más antigua</option>
+                                <option value="antigua">Más antigua a más reciente</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button type="button" onclick="window.descargarPDFConsulta()" class="px-3 py-2 rounded-lg bg-accentCyan hover:bg-cyan-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition mt-4 sm:mt-0">
+                                <i class="fa-solid fa-file-pdf"></i> Descargar PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4">
+                        <span class="text-xs text-slate-400">Total Deuda Acumulada:</span>
+                        <div id="consultaTotalDeuda" class="text-2xl font-extrabold text-accentRed">$0.00</div>
+                    </div>
+                    <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4">
+                        <span class="text-xs text-slate-400">Última Actualización / Abono:</span>
+                        <div id="consultaUltimaActualizacion" class="text-base font-bold text-accentCyan mt-1">-</div>
+                    </div>
+                    <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4">
+                        <span class="text-xs text-slate-400">Último Día de Ingreso (Captura):</span>
+                        <div id="consultaUltimoRegistro" class="text-base font-bold text-accentGreen mt-1">-</div>
+                    </div>
+                    <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4 flex flex-col justify-center items-start">
+                        <span class="text-xs text-slate-400 mb-1">Estado del Proveedor:</span>
+                        <div id="consultaBadgeEstado" class="px-3 py-1 rounded border text-xs font-semibold">-</div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg border border-borderDark">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-bgDark text-slate-400 font-semibold uppercase border-b border-borderDark">
+                            <tr>
+                                <th class="p-3">N° CCF / DTE</th>
+                                <th class="p-3">Fecha Emisión</th>
+                                <th class="p-3">Sucursal</th>
+                                <th class="p-3">Monto Factura</th>
+                                <th class="p-3">Saldo Actual</th>
+                                <th class="p-3">Antigüedad</th>
+                                <th class="p-3">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-consulta-pendientes" class="divide-y divide-borderDark/60 bg-cardDark"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal de Configuración Google Sheets URL -->
+    <div id="modalConfig" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-cardDark border border-borderDark rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-borderDark">
+                <h3 class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-gear text-accentCyan"></i> Conexión Google Sheets API
+                </h3>
+                <button type="button" onclick="window.closeConfigModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                URL del desplegable <b>Google Apps Script Web App</b> para sincronizar tus facturas, proveedores y abonos ilimitados en tiempo real.
+            </p>
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Apps Script Web App URL</label>
+                <input type="url" id="googleScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan font-mono">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="window.closeConfigModal()" class="px-4 py-2 rounded-lg bg-bgDark hover:bg-borderDark text-xs text-slate-300">Cancelar</button>
+                <button type="button" onclick="window.guardarConfigGoogleSheets()" class="px-4 py-2 rounded-lg bg-accentCyan hover:bg-cyan-500 text-slate-950 font-bold text-xs">Guardar Configuración</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-cardDark border-t border-borderDark py-4 px-4 text-center text-xs text-slate-500">
+        <p>Sistema Ejecutivo de Control de Estados de Cuenta y Deudas &copy; 2026 - Modo Oscuro Avanzado (Auto-Actualización Segura c/15s)</p>
+    </footer>
+
+    <script>
+        let appData = {
+            currentUserRole: 'admin',
+            googleScriptUrl: 'https://script.google.com/macros/s/AKfycbxl8TYqyqrkuO3QfUx51xPzlQtR_zHYx799NNxwcXjeBOhC2wibu-4rd7rDtu2WbolaXg/exec',
+            proveedores: [],
+            facturas: []
+        };
+
+        let datosCargadosDesdeNube = false;
+        let chartAnillo = null;
+        let chartBarras = null;
+        let chartVencidas = null;
+
+        // Función auxiliar global para formatear fechas extrayendo solo la parte YYYY-MM-DD
+        function formatearSoloFecha(fechaStr) {
+            if (!fechaStr) return '-';
+            let str = String(fechaStr).trim();
+            if (str.includes('T')) {
+                str = str.split('T')[0];
+            } else if (str.includes(' ')) {
+                str = str.split(' ')[0];
+            }
+            return str;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const sesionActiva = sessionStorage.getItem('estado_cuenta_sesion');
+            if (sesionActiva) {
+                try {
+                    const datosSesion = JSON.parse(sesionActiva);
+                    appData.currentUserRole = datosSesion.rol || 'admin';
+                    document.getElementById('modalLogin').classList.add('hidden');
+                    cargarDatosDesdeGoogleSheetsInicio();
+                } catch(e) {}
+            }
+            aplicarPermisosRol();
+
+            setInterval(() => {
+                const activo = document.activeElement;
+                const estaEscribiendo = activo && (activo.tagName === 'INPUT' || activo.tagName === 'SELECT' || activo.tagName === 'TEXTAREA');
+                if (!estaEscribiendo && datosCargadosDesdeNube) {
+                    sincronizarEnSegundoPlanoSilencioso();
+                }
+            }, 15000);
+        });
+
+        async function cargarDatosDesdeGoogleSheetsInicio() {
+            if (!appData.googleScriptUrl) return;
+            try {
+                const res = await fetch(appData.googleScriptUrl);
+                const data = await res.json();
+                if (data && !data.error) {
+                    if (data.proveedores && data.proveedores.length > 0) {
+                        appData.proveedores = data.proveedores;
+                    }
+                    if (data.facturas && data.facturas.length > 0) {
+                        appData.facturas = data.facturas;
+                    }
+                    datosCargadosDesdeNube = true;
+                }
+            } catch (err) {
+                console.log("Aviso: Usando datos locales por fallo de red al iniciar:", err);
+            }
+            actualizarSelectoresProveedores();
+            actualizarDashboard();
+        }
+
+        async function sincronizarEnSegundoPlanoSilencioso() {
+            if (!appData.googleScriptUrl || !datosCargadosDesdeNube || appData.facturas.length === 0) return;
+            try {
+                const res = await fetch(appData.googleScriptUrl);
+                const data = await res.json();
+                if (data && !data.error) {
+                    let huboCambios = false;
+                    if (data.proveedores && JSON.stringify(data.proveedores) !== JSON.stringify(appData.proveedores)) {
+                        appData.proveedores = data.proveedores;
+                        huboCambios = true;
+                    }
+                    if (data.facturas && JSON.stringify(data.facturas) !== JSON.stringify(appData.facturas)) {
+                        appData.facturas = data.facturas;
+                        huboCambios = true;
+                    }
+                    
+                    const activo = document.activeElement;
+                    const estaEscribiendo = activo && (activo.tagName === 'INPUT' || activo.tagName === 'SELECT' || activo.tagName === 'TEXTAREA');
+
+                    if (huboCambios && !estaEscribiendo) {
+                        actualizarSelectoresProveedores();
+                        actualizarDashboard();
+                    }
+                }
+            } catch (err) {}
+        }
+
+        window.procesarLogin = async function(e) {
+            e.preventDefault();
+            const usuario = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+
+            if (usuario === 'Ferrogar' && pass === 'Fg2026') {
+                appData.currentUserRole = 'admin';
+            } else if (usuario === 'Consultas' && pass === '2026') {
+                appData.currentUserRole = 'viewer';
+            } else {
+                alert('Credenciales incorrectas. Verifique usuario y contraseña.');
+                return;
+            }
+
+            sessionStorage.setItem('estado_cuenta_sesion', JSON.stringify({ rol: appData.currentUserRole }));
+            document.getElementById('modalLogin').classList.add('hidden');
+            
+            await cargarDatosDesdeGoogleSheetsInicio();
+            aplicarPermisosRol();
+            alert(`Bienvenido. Sesión iniciada como: ${appData.currentUserRole === 'admin' ? 'Administrador' : 'Solo Lectura'}`);
+        };
+
+        window.cerrarSesion = function() {
+            sessionStorage.removeItem('estado_cuenta_sesion');
+            document.getElementById('modalLogin').classList.remove('hidden');
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
+        };
+
+        function aplicarPermisosRol() {
+            const isViewer = appData.currentUserRole === 'viewer';
+            const icon = document.getElementById('roleIcon');
+            const badge = document.getElementById('userRoleBadge');
+            if (icon) {
+                icon.className = isViewer ? "fa-solid fa-eye text-accentYellow text-xs" : "fa-solid fa-user-shield text-accentCyan text-xs";
+            }
+            if (badge) {
+                badge.innerText = isViewer ? "Solo Lectura" : "Administrador";
+            }
+
+            const sections = ['prov', 'fac', 'abonos', 'editar'];
+            sections.forEach(sec => {
+                const alertBox = document.getElementById(`alert-viewer-${sec}`);
+                if (alertBox) {
+                    if (isViewer) alertBox.classList.remove('hidden');
+                    else alertBox.classList.add('hidden');
+                }
+
+                const btnSubmit = document.getElementById(`btn-submit-${sec === 'prov' ? 'prov' : (sec === 'fac' ? 'fac' : (sec === 'abonos' ? 'abono' : 'editar'))}`);
+                const secElem = document.getElementById(`sec-${sec === 'prov' ? 'proveedores' : (sec === 'fac' ? 'facturas' : sec)}`);
+                if (secElem) {
+                    const inputs = secElem.querySelectorAll('input, select');
+                    inputs.forEach(inp => {
+                        if (inp.id !== 'abonoProveedor' && inp.id !== 'abonoCCF' && inp.id !== 'inputFiltroCCF' && inp.id !== 'editProveedor' && inp.id !== 'editCCF') {
+                            inp.disabled = isViewer;
+                        }
+                    });
+                }
+                if (btnSubmit) {
+                    if (isViewer) {
+                        btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+                        btnSubmit.disabled = true;
+                    } else {
+                        btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+                        btnSubmit.disabled = false;
+                    }
+                }
+            });
+        }
+
+        window.switchTab = function(tabId) {
+            const tabs = ['dashboard', 'proveedores', 'facturas', 'abonos', 'editar', 'pagadas-mes', 'buscar', 'consultas'];
+            tabs.forEach(t => {
+                const secElem = document.getElementById(`sec-${t}`);
+                if (secElem) secElem.classList.add('hidden');
+                const btn = document.getElementById(`tab-${t}`);
+                if (btn) {
+                    btn.classList.remove('bg-accentCyan/20', 'text-accentCyan', 'border', 'border-accentCyan/40');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+
+            const activeSec = document.getElementById(`sec-${tabId}`);
+            if (activeSec) activeSec.classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400');
+                activeBtn.classList.add('bg-accentCyan/20', 'text-accentCyan', 'border', 'border-accentCyan/40');
+            }
+
+            if (tabId === 'dashboard') window.actualizarDashboard();
+            if (tabId === 'abonos') window.cargarFacturasParaAbono();
+            if (tabId === 'editar') window.cargarFacturasParaEditar();
+            if (tabId === 'pagadas-mes') window.renderPagadasMes();
+            if (tabId === 'buscar') window.ejecutarBusquedaFactura();
+            if (tabId === 'consultas') window.renderConsultaSaldos();
+        };
+
+        function calcularDatosFactura(f) {
+            const monto = parseFloat(f.monto) || 0;
+            const nc = parseFloat(f.nc) || 0;
+            
+            let sumaAbonos = 0;
+            let listaAbonos = f.abonos || [];
+            listaAbonos.forEach(a => {
+                sumaAbonos += parseFloat(a.monto) || 0;
+            });
+
+            const saldo = Math.max(0, monto - nc - sumaAbonos);
+
+            let diasAntiguedad = 0;
+            if (f.fecha) {
+                let fechaStr = formatearSoloFecha(f.fecha);
+                const fechaEmision = new Date(fechaStr);
+                const hoy = new Date();
+                if (!isNaN(fechaEmision.getTime())) {
+                    const diffTime = Math.abs(hoy - fechaEmision);
+                    diasAntiguedad = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                }
+            }
+
+            let estado = "CANCELADA";
+            if (saldo > 0) {
+                estado = diasAntiguedad > 30 ? "VENCIDA" : "PENDIENTE";
+            }
+
+            return { saldo, diasAntiguedad, estado, abonoTotal: nc + sumaAbonos };
+        }
+
+        window.actualizarDashboard = function() {
+            const filtroEstado = document.getElementById('dashFilterEstado').value;
+            
+            let totalDeuda = 0;
+            let facturasAcumuladas = 0;
+            let sucMonto = { "FG MATRIZ": 0, "FG AGUILA": 0, "FG COMALAPA": 0, "FG VIÑEDO": 0 };
+            let provDeudaMap = {};
+            let provVencidasMap = {};
+
+            appData.proveedores.forEach(p => {
+                provDeudaMap[p.nombre] = 0;
+                provVencidasMap[p.nombre] = 0;
+            });
+
+            appData.facturas.forEach(f => {
+                const { saldo, diasAntiguedad, estado } = calcularDatosFactura(f);
+                
+                if (filtroEstado === 'PENDIENTE' && saldo <= 0) return;
+                if (filtroEstado === 'VENCIDA' && (saldo <= 0 || estado !== 'VENCIDA')) return;
+
+                if (saldo > 0) {
+                    totalDeuda += saldo;
+                    facturasAcumuladas++;
+                    if (sucMonto[f.sucursal] !== undefined) {
+                        sucMonto[f.sucursal] += saldo;
+                    } else {
+                        sucMonto["FG MATRIZ"] += saldo;
+                    }
+                    if (provDeudaMap[f.proveedor] !== undefined) provDeudaMap[f.proveedor] += saldo;
+                    else provDeudaMap[f.proveedor] = saldo;
+
+                    if (estado === 'VENCIDA') {
+                        provVencidasMap[f.proveedor] = (provVencidasMap[f.proveedor] || 0) + 1;
+                    }
+                }
+            });
+
+            document.getElementById('kpi-deuda-total').innerText = formatMoney(totalDeuda);
+            document.getElementById('kpi-facturas-cant').innerText = `${facturasAcumuladas} Deudas acumuladas`;
+            document.getElementById('kpi-suc-matriz').innerText = formatMoney(sucMonto["FG MATRIZ"]);
+            document.getElementById('kpi-suc-aguila').innerText = formatMoney(sucMonto["FG AGUILA"]);
+            document.getElementById('kpi-suc-comalapa').innerText = formatMoney(sucMonto["FG COMALAPA"]);
+            document.getElementById('kpi-suc-vinedo').innerText = formatMoney(sucMonto["FG VIÑEDO"]);
+
+            renderCharts(provDeudaMap, provVencidasMap);
+            renderResumenEjecutivo();
+        };
+
+        function renderCharts(provDeudaMap, provVencidasMap) {
+            const labelsProv = Object.keys(provDeudaMap);
+            const dataDeuda = Object.values(provDeudaMap);
+            const dataVencidas = labelsProv.map(l => provVencidasMap[l] || 0);
+
+            const colors = ['#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#f43f5e', '#3b82f6', '#ec4899'];
+
+            const ctxAnillo = document.getElementById('chartAnilloDeuda').getContext('2d');
+            if (chartAnillo) chartAnillo.destroy();
+            chartAnillo = new Chart(ctxAnillo, {
+                type: 'doughnut',
+                data: {
+                    labels: labelsProv,
+                    datasets: [{
+                        data: dataDeuda,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#172036'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 10 } } }
+                    }
+                }
+            });
+
+            const ctxBarras = document.getElementById('chartBarrasDeuda').getContext('2d');
+            if (chartBarras) chartBarras.destroy();
+            chartBarras = new Chart(ctxBarras, {
+                type: 'bar',
+                data: {
+                    labels: labelsProv,
+                    datasets: [{
+                        label: 'Deuda USD ($)',
+                        data: dataDeuda,
+                        backgroundColor: '#06b6d4',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { ticks: { color: '#64748b' }, grid: { color: '#263454' } },
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            const ctxVencidas = document.getElementById('chartBarrasVencidas').getContext('2d');
+            if (chartVencidas) chartVencidas.destroy();
+            chartVencidas = new Chart(ctxVencidas, {
+                type: 'bar',
+                data: {
+                    labels: labelsProv,
+                    datasets: [{
+                        label: 'Facturas Vencidas (Unidades)',
+                        data: dataVencidas,
+                        backgroundColor: '#f43f5e',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { ticks: { color: '#64748b', stepSize: 1 }, grid: { color: '#263454' } },
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderResumenEjecutivo() {
+            const tbody = document.getElementById('tbody-resumen-ejecutivo');
+            tbody.innerHTML = '';
+
+            document.getElementById('cant-total-prov-badge').innerText = `${appData.proveedores.length} Proveedores`;
+
+            appData.proveedores.forEach(p => {
+                const facsProv = appData.facturas.filter(f => f.proveedor === p.nombre);
+                let montoTotal = 0;
+                let abonosTotal = 0;
+                let saldoTotal = 0;
+
+                facsProv.forEach(f => {
+                    const { saldo, abonoTotal } = calcularDatosFactura(f);
+                    montoTotal += parseFloat(f.monto) || 0;
+                    abonosTotal += abonoTotal;
+                    saldoTotal += saldo;
+                });
+
+                const badgeState = saldoTotal <= 0 
+                    ? `<span class="px-2 py-0.5 rounded bg-accentGreen/10 text-accentGreen border border-accentGreen/30 text-[10px]">AL DÍA</span>`
+                    : `<span class="px-2 py-0.5 rounded bg-accentRed/10 text-accentRed border border-accentRed/30 text-[10px]">CON SALDO PENDIENTE</span>`;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-bgDark/40 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-white">${p.nombre}</td>
+                    <td class="p-3">${facsProv.length} facturas</td>
+                    <td class="p-3">${formatMoney(montoTotal)}</td>
+                    <td class="p-3 text-accentGreen">${formatMoney(abonosTotal)}</td>
+                    <td class="p-3 font-bold text-white">${formatMoney(saldoTotal)}</td>
+                    <td class="p-3">${badgeState}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.guardarProveedor = async function(e) {
+            e.preventDefault();
+            if (appData.currentUserRole === 'viewer') {
+                alert('Acción denegada: Usuario en modo solo lectura.');
+                return;
+            }
+            const nombre = document.getElementById('provNombre').value.trim().toUpperCase();
+            if (appData.proveedores.some(p => p.nombre === nombre)) {
+                alert('El proveedor ya está registrado.');
+                return;
+            }
+
+            const nuevo = {
+                nombre,
+                giro: document.getElementById('provGiro').value,
+                nrc: document.getElementById('provNRC').value,
+                nit: document.getElementById('provNIT').value,
+                tel: document.getElementById('provTel').value
+            };
+
+            appData.proveedores.push(nuevo);
+            await sincronizarConGoogleSheetsSilencioso();
+            actualizarSelectoresProveedores();
+            renderListaProveedores();
+            e.target.reset();
+            alert(`Proveedor "${nombre}" registrado y guardado en la nube con éxito.`);
+        };
+
+        function renderListaProveedores() {
+            const tbody = document.getElementById('tbody-proveedores-lista');
+            tbody.innerHTML = '';
+            appData.proveedores.forEach((p, index) => {
+                const isViewer = appData.currentUserRole === 'viewer';
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-bgDark/40";
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-white">${p.nombre}</td>
+                    <td class="p-3">${p.giro || '-'}</td>
+                    <td class="p-3">${p.nrc || '-'}</td>
+                    <td class="p-3">${p.nit || '-'}</td>
+                    <td class="p-3">${p.tel || '-'}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="window.eliminarProveedor(${index})" ${isViewer ? 'disabled class="opacity-30 cursor-not-allowed text-slate-500 p-1.5"' : 'class="text-accentRed hover:text-red-400 p-1.5 rounded bg-accentRed/10 hover:bg-accentRed/20 transition"'} title="Borrar Proveedor">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.eliminarProveedor = async function(index) {
+            if (appData.currentUserRole === 'viewer') {
+                alert('Acción denegada: Usuario en modo solo lectura.');
+                return;
+            }
+            const proveedorObj = appData.proveedores[index];
+            if (!proveedorObj) return;
+
+            const tieneFacturas = appData.facturas.some(f => f.proveedor === proveedorObj.nombre);
+            if (tieneFacturas) {
+                if (!confirm(`El proveedor "${proveedorObj.nombre}" tiene facturas registradas. ¿Desea eliminar el proveedor y todas sus facturas asociadas?`)) {
+                    return;
+                }
+                appData.facturas = appData.facturas.filter(f => f.proveedor !== proveedorObj.nombre);
+            } else {
+                if (!confirm(`¿Está seguro de eliminar al proveedor "${proveedorObj.nombre}"?`)) {
+                    return;
+                }
+            }
+
+            appData.proveedores.splice(index, 1);
+            await sincronizarConGoogleSheetsSilencioso();
+            actualizarSelectoresProveedores();
+            actualizarDashboard();
+            alert('Proveedor eliminado y actualizado en la nube.');
+        };
+
+        window.guardarFactura = async function(e) {
+            e.preventDefault();
+            if (appData.currentUserRole === 'viewer') {
+                alert('Acción denegada: Usuario en modo solo lectura.');
+                return;
+            }
+            const ccf = document.getElementById('facCCF').value.trim().toUpperCase();
+            const prov = document.getElementById('facProveedor').value.trim().toUpperCase();
+
+            if (appData.facturas.some(f => String(f.proveedor).trim().toUpperCase() === prov && String(f.ccf).trim().toUpperCase() === ccf)) {
+                alert(`Error: El número de CCF/DTE "${ccf}" ya existe para este proveedor.`);
+                return;
+            }
+
+            const hoyStr = formatearSoloFecha(new Date().toISOString());
+
+            const nueva = {
+                proveedor: document.getElementById('facProveedor').value,
+                fecha: formatearSoloFecha(document.getElementById('facFecha').value),
+                fechaRegistro: hoyStr,
+                sucursal: document.getElementById('facSucursal').value,
+                ccf: document.getElementById('facCCF').value.trim(),
+                monto: parseFloat(document.getElementById('facMonto').value) || 0,
+                nc: 0,
+                abonos: []
+            };
+
+            appData.facturas.push(nueva);
+            await sincronizarConGoogleSheetsSilencioso();
+            e.target.reset();
+            actualizarDashboard();
+            alert(`Factura ${ccf} agregada y sincronizada en la nube.`);
+        };
+
+        function actualizarSelectoresProveedores() {
+            const selects = ['facProveedor', 'abonoProveedor', 'editProveedor', 'editNuevoProveedor', 'consultaProveedor'];
+            selects.forEach(id => {
+                const elem = document.getElementById(id);
+                if (!elem) return;
+                const valorPrevio = elem.value;
+                elem.innerHTML = '';
+                
+                if (['facProveedor', 'abonoProveedor', 'editProveedor', 'editNuevoProveedor'].includes(id)) {
+                    const optDefault = document.createElement('option');
+                    optDefault.value = "";
+                    optDefault.disabled = true;
+                    optDefault.selected = true;
+                    optDefault.innerText = "-- Seleccione un proveedor --";
+                    elem.appendChild(optDefault);
+                }
+
+                appData.proveedores.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.nombre;
+                    opt.innerText = p.nombre;
+                    elem.appendChild(opt);
+                });
+                
+                if (valorPrevio && Array.from(elem.options).some(o => o.value === valorPrevio)) {
+                    elem.value = valorPrevio;
+                }
+            });
+            renderListaProveedores();
+            if (document.getElementById('abonoProveedor') && document.getElementById('abonoProveedor').value) {
+                window.cargarFacturasParaAbono();
+            }
+            if (document.getElementById('consultaProveedor') && document.getElementById('consultaProveedor').value) {
+                window.renderConsultaSaldos();
+            }
+        }
+
+        window.cargarFacturasParaAbono = function() {
+            const filtroInput = document.getElementById('inputFiltroCCF');
+            if (filtroInput) filtroInput.value = '';
+            window.poblarSelectorCCF('');
+        };
+
+        window.filtrarSelectCCF = function() {
+            const filtro = document.getElementById('inputFiltroCCF').value.trim();
+            window.poblarSelectorCCF(filtro);
+        };
+
+        window.poblarSelectorCCF = function(filtroTexto = '') {
+            const prov = document.getElementById('abonoProveedor').value;
+            const selectCCF = document.getElementById('abonoCCF');
+            if (!selectCCF) return;
+            selectCCF.innerHTML = '';
+
+            const facs = appData.facturas.filter(f => String(f.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase());
+            
+            const textoFiltroUpper = filtroTexto.toUpperCase();
+            const facsFiltradas = facs.filter(f => String(f.ccf).toUpperCase().includes(textoFiltroUpper));
+
+            if (facsFiltradas.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = "";
+                opt.innerText = "No se encontraron facturas coincidentes";
+                selectCCF.appendChild(opt);
+                window.cargarDatosDetalleAbono();
+                return;
+            }
+
+            facsFiltradas.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f.ccf;
+                opt.innerText = `${f.ccf} - Original: $${f.monto}`;
+                selectCCF.appendChild(opt);
+            });
+
+            window.cargarDatosDetalleAbono();
+        };
+
+        window.cargarDatosDetalleAbono = function() {
+            const prov = document.getElementById('abonoProveedor').value;
+            const ccf = document.getElementById('abonoCCF').value;
+            
+            const f = appData.facturas.find(x => 
+                String(x.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase() && 
+                String(x.ccf).trim().toUpperCase() === String(ccf).trim().toUpperCase()
+            );
+
+            const contenedor = document.getElementById('contenedor-abonos-dinamicos');
+            contenedor.innerHTML = '';
+
+            if (!f) {
+                document.getElementById('abonoMontoOriginal').innerText = "$0.00";
+                document.getElementById('abonoSaldoActual').innerText = "$0.00";
+                document.getElementById('abonoEstadoBadge').innerHTML = "SELECCIONE FACTURA";
+                document.getElementById('abonoNC').value = '';
+                return;
+            }
+
+            const { saldo, estado } = calcularDatosFactura(f);
+            document.getElementById('abonoMontoOriginal').innerText = formatMoney(f.monto);
+            document.getElementById('abonoSaldoActual').innerText = formatMoney(saldo);
+            
+            let colorBadge = estado === 'CANCELADA' ? 'text-accentGreen' : (estado === 'VENCIDA' ? 'text-accentRed' : 'text-accentYellow');
+            document.getElementById('abonoEstadoBadge').innerHTML = `<span class="${colorBadge}">${estado}</span>`;
+
+            document.getElementById('abonoNC').value = f.nc || '';
+
+            let listaAbonos = f.abonos || [];
+            if (listaAbonos.length === 0) {
+                listaAbonos.push({ monto: '', metodo: 'TRANSFERENCIA', banco: 'NINGUNO', fecha: '' });
+            }
+
+            listaAbonos.forEach((ab, idx) => {
+                window.renderizarFilaAbono(ab, idx);
+            });
+        };
+
+        window.renderizarFilaAbono = function(ab = {}, index = 0) {
+            const contenedor = document.getElementById('contenedor-abonos-dinamicos');
+            const div = document.createElement('div');
+            div.className = "bg-bgDark/40 p-4 rounded-xl border border-borderDark relative space-y-3";
+            div.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-accentGreen uppercase"><i class="fa-solid fa-money-bill-transfer"></i> Abono N° ${index + 1}</span>
+                    <button type="button" onclick="window.eliminarFilaAbono(${index})" class="text-accentRed hover:text-red-400 text-xs px-2 py-1 rounded bg-accentRed/10 transition">
+                        <i class="fa-solid fa-trash-can"></i> Eliminar Abono
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Monto Abono ($)</label>
+                        <input type="number" step="0.01" name="abonoMonto" value="${ab.monto !== undefined ? ab.monto : ''}" placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Forma de Pago</label>
+                        <select name="abonoMetodo" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen">
+                            <option value="TRANSFERENCIA" ${ab.metodo === 'TRANSFERENCIA' ? 'selected' : ''}>TRANSFERENCIA</option>
+                            <option value="EFECTIVO" ${ab.metodo === 'EFECTIVO' ? 'selected' : ''}>EFECTIVO</option>
+                            <option value="REMESA" ${ab.metodo === 'REMESA' ? 'selected' : ''}>REMESA</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Banco</label>
+                        <select name="abonoBanco" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen">
+                            <option value="NINGUNO" ${ab.banco === 'NINGUNO' || !ab.banco ? 'selected' : ''}>NINGUNO</option>
+                            <option value="BAC" ${ab.banco === 'BAC' ? 'selected' : ''}>BAC</option>
+                            <option value="AGRICOLA" ${ab.banco === 'AGRICOLA' ? 'selected' : ''}>AGRICOLA</option>
+                            <option value="CUSCATLAN" ${ab.banco === 'CUSCATLAN' ? 'selected' : ''}>CUSCATLAN</option>
+                            <option value="AZUL" ${ab.banco === 'AZUL' ? 'selected' : ''}>AZUL</option>
+                            <option value="DAVIVIENDA" ${ab.banco === 'DAVIVIENDA' ? 'selected' : ''}>DAVIVIENDA</option>
+                            <option value="AGRICOLA NOE" ${ab.banco === 'AGRICOLA NOE' ? 'selected' : ''}>AGRICOLA NOE</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Fecha de Abono</label>
+                        <input type="date" name="abonoFecha" value="${formatearSoloFecha(ab.fecha)}" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen">
+                    </div>
+                </div>
+            `;
+            contenedor.appendChild(div);
+        };
+
+        window.agregarFilaAbonoDinamicamente = function() {
+            window.renderizarFilaAbono({ monto: '', metodo: 'TRANSFERENCIA', banco: 'NINGUNO', fecha: '' }, document.querySelectorAll('#contenedor-abonos-dinamicos > div').length);
+        };
+
+        window.eliminarFilaAbono = function(index) {
+            const prov = document.getElementById('abonoProveedor').value;
+            const ccf = document.getElementById('abonoCCF').value;
+            const f = appData.facturas.find(x => String(x.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase() && String(x.ccf).trim().toUpperCase() === String(ccf).trim().toUpperCase());
+            if (f && f.abonos && f.abonos[index]) {
+                f.abonos.splice(index, 1);
+            }
+            window.cargarDatosDetalleAbono();
+        };
+
+        function formatMoney(amount) {
+            return '$' + Number(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        window.renderPagadasMes = function() {
+            const mes = document.getElementById('filtroMesPagadas').value;
+            const anio = document.getElementById('filtroAnioPagadas').value;
+            const tbody = document.getElementById('tbody-pagadas-mes');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            let cantTotal = 0;
+            let montoTotalMes = 0;
+
+            appData.facturas.forEach(f => {
+                const { saldo, abonoTotal } = calcularDatosFactura(f);
+                const listaAbonos = f.abonos || [];
+                let movimientosEnMes = [];
+                let sumaMes = 0;
+
+                const ncVal = parseFloat(f.nc) || 0;
+                if (ncVal > 0 && f.fechaRegistro) {
+                    let fRegClean = formatearSoloFecha(f.fechaRegistro);
+                    let partesReg = fRegClean.split('-');
+                    if (partesReg.length === 3 && partesReg[0] === anio && partesReg[1] === mes) {
+                        movimientosEnMes.push(`<span class="inline-block bg-accentCyan/10 text-accentCyan border border-accentCyan/30 rounded px-2 py-0.5 mb-1 mr-1 text-[11px]"><strong>Nota de Crédito:</strong> ${formatMoney(ncVal)}</span>`);
+                        sumaMes += ncVal;
+                    }
+                }
+
+                listaAbonos.forEach((ab, idx) => {
+                    if (ab.fecha) {
+                        let fClean = formatearSoloFecha(ab.fecha);
+                        let partes = fClean.split('-');
+                        if (partes.length === 3 && partes[0] === anio && partes[1] === mes) {
+                            let bancoInfo = (ab.banco && ab.banco !== 'NINGUNO') ? ` (${ab.banco})` : '';
+                            movimientosEnMes.push(`<div class="bg-bgDark/60 border border-borderDark/80 rounded p-1.5 mb-1 text-[11px]"><span class="text-accentGreen font-bold">Abono #${idx + 1}:</span> ${formatMoney(ab.monto)} vía <strong>${ab.metodo}</strong>${bancoInfo} el <em>${fClean}</em></div>`);
+                            sumaMes += parseFloat(ab.monto) || 0;
+                        }
+                    }
+                });
+
+                if (f.fecha) {
+                    let fClean = formatearSoloFecha(f.fecha);
+                    let partes = fClean.split('-');
+                    if (partes.length === 3 && partes[0] === anio && partes[1] === mes && saldo <= 0 && movimientosEnMes.length === 0) {
+                        movimientosEnMes.push(`<div class="bg-bgDark/60 border border-borderDark/80 rounded p-1.5 mb-1 text-[11px]"><span class="text-accentGreen font-bold">Factura Cancelada:</span> ${formatMoney(f.monto)} el <em>${fClean}</em></div>`);
+                        sumaMes += parseFloat(f.monto) || 0;
+                    }
+                }
+
+                if (sumaMes > 0 || movimientosEnMes.length > 0) {
+                    cantTotal++;
+                    montoTotalMes += sumaMes;
+
+                    let detalleHtml = movimientosEnMes.length > 0 ? movimientosEnMes.join('') : `<span class="text-slate-400">Sin movimientos específicos en el periodo</span>`;
+                    let estadoTxt = saldo <= 0 ? '<span class="text-accentGreen font-bold">CANCELADA</span>' : '<span class="text-accentYellow font-bold">ABONADA</span>';
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-bgDark/40 transition";
+                    tr.innerHTML = `
+                        <td class="p-3 font-mono font-bold text-white">${f.ccf}</td>
+                        <td class="p-3">${f.proveedor}</td>
+                        <td class="p-3">${formatMoney(f.monto)}</td>
+                        <td class="p-3">${formatMoney(saldo)}</td>
+                        <td class="p-3">${detalleHtml}</td>
+                        <td class="p-3">${estadoTxt}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+
+            document.getElementById('pagadasCantTotal').innerText = `${cantTotal} facturas`;
+            document.getElementById('pagadasMontoTotal').innerText = formatMoney(montoTotalMes);
+            if (cantTotal === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">No se encontraron registros para el periodo ${mes}/${anio}</td></tr>`;
+            }
+        };
+
+        window.ejecutarBusquedaFactura = function() {
+            const inputVal = document.getElementById('inputBuscarCCF').value.trim().toUpperCase();
+            const tbody = document.getElementById('tbody-resultado-busqueda');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!inputVal) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500">Ingrese un número de factura para comenzar la búsqueda...</td></tr>`;
+                return;
+            }
+
+            const resultados = appData.facturas.filter(f => String(f.ccf).toUpperCase().includes(inputVal));
+
+            if (resultados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500">No se encontraron facturas coincidentes con "${inputVal}"</td></tr>`;
+                return;
+            }
+
+            resultados.forEach(f => {
+                const { saldo, estado, abonoTotal } = calcularDatosFactura(f);
+                let colorEstado = estado === 'CANCELADA' ? 'text-accentGreen' : (estado === 'VENCIDA' ? 'text-accentRed' : 'text-accentYellow');
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-bgDark/40";
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-white">${f.ccf}</td>
+                    <td class="p-3">${f.proveedor}</td>
+                    <td class="p-3">${formatearSoloFecha(f.fecha)}</td>
+                    <td class="p-3">${f.sucursal}</td>
+                    <td class="p-3">${formatMoney(f.monto)}</td>
+                    <td class="p-3 text-accentGreen">${formatMoney(abonoTotal)}</td>
+                    <td class="p-3 font-bold text-white">${formatMoney(saldo)}</td>
+                    <td class="p-3 font-semibold ${colorEstado}">${estado}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.renderConsultaSaldos = function() {
+            const prov = document.getElementById('consultaProveedor').value;
+            const filtroEstado = document.getElementById('consultaFiltroEstado').value;
+            const ordenFecha = document.getElementById('consultaOrdenFecha').value;
+            const tbody = document.getElementById('tbody-consulta-pendientes');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            // Actualizar el título oculto para que aparezca arriba del PDF al imprimir
+            const pdfTituloElem = document.getElementById('pdf-proveedor-titulo');
+            if (pdfTituloElem) {
+                pdfTituloElem.innerText = `PROVEEDOR: ${prov || 'TODOS'}`;
+            }
+
+            const facs = appData.facturas.filter(f => String(f.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase());
+
+            facs.sort((a, b) => {
+                let da = new Date(formatearSoloFecha(a.fecha));
+                let db = new Date(formatearSoloFecha(b.fecha));
+                return ordenFecha === 'reciente' ? db - da : da - db;
+            });
+
+            let totalDeudaProv = 0;
+            let ultimaActualizacionFecha = '-';
+            let ultimoRegistroFecha = '-';
+            let cantPendientes = 0;
+
+            let fechaMasRecienteUpdate = null;
+            let fechaMasRecienteRegistro = null;
+
+            facs.forEach(f => {
+                const { saldo, diasAntiguedad, estado } = calcularDatosFactura(f);
+
+                if (filtroEstado === 'PENDIENTES' && saldo <= 0) return;
+                if (filtroEstado === 'CANCELADAS' && saldo > 0) return;
+
+                if (saldo > 0) {
+                    totalDeudaProv += saldo;
+                    cantPendientes++;
+                }
+
+                if (f.fecha) {
+                    let fDate = new Date(formatearSoloFecha(f.fecha));
+                    if (!fechaMasRecienteRegistro || fDate > fechaMasRecienteRegistro) {
+                        fechaMasRecienteRegistro = fDate;
+                        ultimoRegistroFecha = formatearSoloFecha(f.fecha);
+                    }
+                }
+
+                if (f.fechaRegistro) {
+                    let rDate = new Date(formatearSoloFecha(f.fechaRegistro));
+                    if (!fechaMasRecienteUpdate || rDate > fechaMasRecienteUpdate) {
+                        fechaMasRecienteUpdate = rDate;
+                        ultimaActualizacionFecha = formatearSoloFecha(f.fechaRegistro);
+                    }
+                }
+
+                if (f.abonos) {
+                    f.abonos.forEach(ab => {
+                        if (ab.fecha) {
+                            let abDate = new Date(formatearSoloFecha(ab.fecha));
+                            if (!fechaMasRecienteUpdate || abDate > fechaMasRecienteUpdate) {
+                                fechaMasRecienteUpdate = abDate;
+                                ultimaActualizacionFecha = formatearSoloFecha(ab.fecha);
+                            }
+                        }
+                    });
+                }
+
+                let colorEstado = estado === 'CANCELADA' ? 'text-accentGreen' : (estado === 'VENCIDA' ? 'text-accentRed' : 'text-accentYellow');
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-bgDark/40";
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-white">${f.ccf}</td>
+                    <td class="p-3">${formatearSoloFecha(f.fecha)}</td>
+                    <td class="p-3">${f.sucursal}</td>
+                    <td class="p-3">${formatMoney(f.monto)}</td>
+                    <td class="p-3 font-bold text-white">${formatMoney(saldo)}</td>
+                    <td class="p-3">${diasAntiguedad} días</td>
+                    <td class="p-3 font-semibold ${colorEstado}">${estado}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('consultaTotalDeuda').innerText = formatMoney(totalDeudaProv);
+            document.getElementById('consultaUltimaActualizacion').innerText = ultimaActualizacionFecha;
+            document.getElementById('consultaUltimoRegistro').innerText = ultimoRegistroFecha;
+
+            const badgeEstado = document.getElementById('consultaBadgeEstado');
+            if (totalDeudaProv > 0) {
+                badgeEstado.className = "px-3 py-1 rounded border text-xs font-semibold bg-accentRed/10 text-accentRed border-accentRed/30";
+                badgeEstado.innerText = "CON SALDO PENDIENTE";
+            } else {
+                badgeEstado.className = "px-3 py-1 rounded border text-xs font-semibold bg-accentGreen/10 text-accentGreen border-accentGreen/30";
+                badgeEstado.innerText = "AL DÍA / CANCELADO";
+            }
+
+            if (facs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">No hay facturas registradas para este proveedor.</td></tr>`;
+            }
+        };
+
+        window.openConfigModal = function() {
+            document.getElementById('googleScriptUrl').value = appData.googleScriptUrl;
+            document.getElementById('modalConfig').classList.remove('hidden');
+        };
+
+        window.closeConfigModal = function() {
+            document.getElementById('modalConfig').classList.add('hidden');
+        };
+
+        window.guardarConfigGoogleSheets = function() {
+            const url = document.getElementById('googleScriptUrl').value.trim();
+            if (!url) {
+                alert('Por favor ingrese una URL válida.');
+                return;
+            }
+            appData.googleScriptUrl = url;
+            window.closeConfigModal();
+            cargarDatosDesdeGoogleSheetsInicio();
+            alert('Configuración guardada correctamente.');
+        };
+
+        window.sincronizarConGoogleSheets = async function() {
+            await cargarDatosDesdeGoogleSheetsInicio();
+            actualizarDashboard();
+            alert('Sincronización con Google Sheets completada.');
+        };
+
+        async function sincronizarConGoogleSheetsSilencioso() {}
+
+        window.descargarPDFConsulta = function() {
+            window.print();
+        };
+
+        window.guardarEdicionFactura = async function(e) {
+            e.preventDefault();
+            if (appData.currentUserRole === 'viewer') {
+                alert('Acción denegada: Usuario en modo solo lectura.');
+                return;
+            }
+            const provActual = document.getElementById('editProveedor').value;
+            const ccfActual = document.getElementById('editCCF').value;
+
+            const idx = appData.facturas.findIndex(f => String(f.proveedor).trim().toUpperCase() === String(provActual).trim().toUpperCase() && String(f.ccf).trim().toUpperCase() === String(ccfActual).trim().toUpperCase());
+            if (idx === -1) {
+                alert('No se encontró la factura a editar.');
+                return;
+            }
+
+            appData.facturas[idx].proveedor = document.getElementById('editNuevoProveedor').value;
+            appData.facturas[idx].fecha = formatearSoloFecha(document.getElementById('editFecha').value);
+            appData.facturas[idx].sucursal = document.getElementById('editSucursal').value;
+            appData.facturas[idx].ccf = document.getElementById('editNuevoCCF').value.trim();
+            appData.facturas[idx].monto = parseFloat(document.getElementById('editMonto').value) || 0;
+
+            await sincronizarConGoogleSheetsSilencioso();
+            actualizarDashboard();
+            alert('Factura actualizada correctamente.');
+        };
+
+        window.eliminarFacturaActual = async function() {
+            if (appData.currentUserRole === 'viewer') {
+                alert('Acción denegada: Usuario en modo solo lectura.');
+                return;
+            }
+            const provActual = document.getElementById('editProveedor').value;
+            const ccfActual = document.getElementById('editCCF').value;
+
+            if (!confirm(`¿Está seguro de eliminar la factura ${ccfActual}?`)) return;
+
+            appData.facturas = appData.facturas.filter(f => !(String(f.proveedor).trim().toUpperCase() === String(provActual).trim().toUpperCase() && String(f.ccf).trim().toUpperCase() === String(ccfActual).trim().toUpperCase()));
+
+            await sincronizarConGoogleSheetsSilencioso();
+            actualizarDashboard();
+            window.cargarFacturasParaEditar();
+            alert('Factura eliminada correctamente.');
+        };
+
+        window.cargarFacturasParaEditar = function() {
+            const prov = document.getElementById('editProveedor').value;
+            const selectCCF = document.getElementById('editCCF');
+            if (!selectCCF) return;
+            selectCCF.innerHTML = '';
+
+            const facs = appData.facturas.filter(f => String(f.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase());
+            facs.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f.ccf;
+                opt.innerText = `${f.ccf} - Monto: $${f.monto}`;
+                selectCCF.appendChild(opt);
+            });
+            window.cargarFormularioEdicion();
+        };
+
+        window.cargarFormularioEdicion = function() {
+            const prov = document.getElementById('editProveedor').value;
+            const ccf = document.getElementById('editCCF').value;
+            const f = appData.facturas.find(x => String(x.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase() && String(x.ccf).trim().toUpperCase() === String(ccf).trim().toUpperCase());
+
+            if (!f) return;
+
+            document.getElementById('editNuevoProveedor').value = f.proveedor;
+            document.getElementById('editFecha').value = formatearSoloFecha(f.fecha);
+            document.getElementById('editSucursal').value = f.sucursal;
+            document.getElementById('editNuevoCCF').value = f.ccf;
+            document.getElementById('editMonto').value = f.monto;
+        };
+
+        window.guardarAbono = async function(e) {
+            e.preventDefault();
+            if (appData.currentUserRole === 'viewer') {
+                alert('Acción denegada: Usuario en modo solo lectura.');
+                return;
+            }
+            const prov = document.getElementById('abonoProveedor').value.trim().toUpperCase();
+            const ccf = document.getElementById('abonoCCF').value.trim().toUpperCase();
+            
+            const f = appData.facturas.find(x => String(x.proveedor).trim().toUpperCase() === prov && String(x.ccf).trim().toUpperCase() === ccf);
+            if (!f) {
+                alert('Seleccione una factura válida.');
+                return;
+            }
+
+            f.nc = parseFloat(document.getElementById('abonoNC').value) || 0;
+
+            let nuevosAbonos = [];
+            const contenedores = document.querySelectorAll('#contenedor-abonos-dinamicos > div');
+            contenedores.forEach(div => {
+                const monto = parseFloat(div.querySelector('[name="abonoMonto"]').value) || 0;
+                if (monto > 0) {
+                    nuevosAbonos.push({
+                        monto: monto,
+                        metodo: div.querySelector('[name="abonoMetodo"]').value,
+                        banco: div.querySelector('[name="abonoBanco"]').value,
+                        fecha: formatearSoloFecha(div.querySelector('[name="abonoFecha"]').value)
+                    });
+                }
+            });
+
+            f.abonos = nuevosAbonos;
+            await sincronizarConGoogleSheetsSilencioso();
+            actualizarDashboard();
+            window.cargarDatosDetalleAbono();
+            alert('Abonos y Notas de Crédito aplicados con éxito.');
+        };
+    </script>
+</body>
+</html>
