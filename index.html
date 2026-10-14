@@ -19,6 +19,9 @@
                         accentRed: '#f43f5e',
                         accentYellow: '#f59e0b',
                         accentPurple: '#8b5cf6'
+                    },
+                    gridTemplateColumns: {
+                        '7': 'repeat(7, minmax(0, 1fr))'
                     }
                 }
             }
@@ -50,13 +53,16 @@
         }
         @media print {
             body { background: white !important; color: black !important; }
-            header, button, select, #modalLogin, #modalConfig { display: none !important; }
-            #sec-consultas { display: block !important; width: 100% !important; }
-            /* Agregado para mostrar el nombre del proveedor impreso en el PDF */
-            #pdf-proveedor-titulo { display: block !important; font-size: 16px; font-weight: bold; margin-bottom: 10px; color: black !important; }
+            header, button, select, #modalLogin, #modalConfig, #bannerNuevaVersion { display: none !important; }
+            .no-print { display: none !important; }
+            #sec-consultas:not(.hidden) { display: block !important; width: 100% !important; }
+            #sec-reporte-sucursal:not(.hidden) { display: block !important; width: 100% !important; }
+            #pdf-proveedor-titulo, #pdf-sucursal-titulo { display: block !important; font-size: 16px; font-weight: bold; margin-bottom: 12px; color: black !important; }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th, td { border: 1px solid #ddd !important; padding: 6px !important; color: black !important; }
         }
         /* Oculto en pantalla normal, visible al imprimir */
-        #pdf-proveedor-titulo { display: none; }
+        #pdf-proveedor-titulo, #pdf-sucursal-titulo { display: none; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased">
@@ -162,6 +168,9 @@
                 <button type="button" onclick="window.switchTab('consultas')" id="tab-consultas" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardDark flex items-center gap-2 whitespace-nowrap transition">
                     <i class="fa-solid fa-list-check"></i> Consulta Saldos
                 </button>
+                <button type="button" onclick="window.switchTab('reporte-sucursal')" id="tab-reporte-sucursal" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardDark flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-building-circle-check"></i> Reporte Sucursales
+                </button>
             </div>
         </div>
     </header>
@@ -186,17 +195,16 @@
             </div>
 
             <!-- TARJETAS KPI -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-                <div class="lg:col-span-2 bg-gradient-to-br from-cardDark to-slate-900 border border-borderDark rounded-xl p-4 relative overflow-hidden shadow-lg">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+                <div class="bg-gradient-to-br from-cardDark to-slate-900 border border-borderDark rounded-xl p-4 relative overflow-hidden shadow-lg">
                     <div class="absolute top-0 right-0 w-24 h-24 bg-accentRed/10 rounded-full blur-xl pointer-events-none"></div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">DEUDA TOTAL GENERAL</span>
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">DEUDA TOTAL GENERAL</span>
                         <div class="p-1.5 bg-accentRed/20 text-accentRed rounded-md"><i class="fa-solid fa-lock text-xs"></i></div>
                     </div>
-                    <div id="kpi-deuda-total" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-1">$0.00</div>
-                    <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                    <div id="kpi-deuda-total" class="text-xl sm:text-2xl font-extrabold text-white tracking-tight mb-1">$0.00</div>
+                    <div class="flex items-center gap-2 text-[10px] text-slate-400">
                         <span id="kpi-facturas-cant" class="text-accentRed font-semibold">0 Deudas acumuladas</span>
-                        <span>• Consolidado</span>
                     </div>
                 </div>
 
@@ -207,9 +215,15 @@
                 </div>
 
                 <div class="bg-cardDark border border-borderDark rounded-xl p-4 hover:border-accentCyan/40 transition">
-                    <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">FG AGUILA</div>
+                    <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">CONSTRUGAR AGUILA</div>
                     <div id="kpi-suc-aguila" class="text-lg font-bold text-accentGreen mb-1">$0.00</div>
                     <div class="text-[10px] text-slate-500">Sucursal Aguila</div>
+                </div>
+
+                <div class="bg-cardDark border border-borderDark rounded-xl p-4 hover:border-accentCyan/40 transition">
+                    <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">CONSTRUGAR AUTOPISTA</div>
+                    <div id="kpi-suc-autopista" class="text-lg font-bold text-orange-400 mb-1">$0.00</div>
+                    <div class="text-[10px] text-slate-500">Sucursal Autopista</div>
                 </div>
 
                 <div class="bg-cardDark border border-borderDark rounded-xl p-4 hover:border-accentCyan/40 transition">
@@ -222,6 +236,12 @@
                     <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">FG VIÑEDO</div>
                     <div id="kpi-suc-vinedo" class="text-lg font-bold text-accentPurple mb-1">$0.00</div>
                     <div class="text-[10px] text-slate-500">Sucursal Viñedo</div>
+                </div>
+
+                <div class="bg-cardDark border border-borderDark rounded-xl p-4 hover:border-accentCyan/40 transition">
+                    <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">FG HIERROGAR</div>
+                    <div id="kpi-suc-hierrogar" class="text-lg font-bold text-rose-400 mb-1">$0.00</div>
+                    <div class="text-[10px] text-slate-500">Sucursal Hierrogar</div>
                 </div>
             </div>
 
@@ -398,10 +418,13 @@
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 mb-1">Sucursal *</label>
                             <select id="facSucursal" required class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen">
+                                <option value="" disabled selected>-- Seleccione una sucursal --</option>
                                 <option value="FG MATRIZ">FG MATRIZ</option>
-                                <option value="FG AGUILA">FG AGUILA</option>
+                                <option value="CONSTRUGAR AGUILA">CONSTRUGAR AGUILA</option>
+                                <option value="CONSTRUGAR AUTOPISTA">CONSTRUGAR AUTOPISTA</option>
                                 <option value="FG COMALAPA">FG COMALAPA</option>
                                 <option value="FG VIÑEDO">FG VIÑEDO</option>
+                                <option value="FG HIERROGAR">FG HIERROGAR</option>
                             </select>
                         </div>
                         <div>
@@ -457,14 +480,22 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
                     <div class="bg-bgDark p-3 rounded-lg border border-borderDark">
                         <div class="text-[10px] text-slate-400">MONTO ORIGINAL</div>
                         <div id="abonoMontoOriginal" class="text-base font-bold text-white">$0.00</div>
                     </div>
                     <div class="bg-bgDark p-3 rounded-lg border border-borderDark">
-                        <div class="text-[10px] text-slate-400">SALDO PENDIENTE ACTUAL</div>
+                        <div class="text-[10px] text-slate-400">SALDO PENDIENTE</div>
                         <div id="abonoSaldoActual" class="text-base font-bold text-accentYellow">$0.00</div>
+                    </div>
+                    <div class="bg-bgDark p-3 rounded-lg border border-borderDark">
+                        <div class="text-[10px] text-slate-400">SUCURSAL</div>
+                        <div id="abonoSucursal" class="text-xs font-bold text-accentCyan mt-1 truncate">-</div>
+                    </div>
+                    <div class="bg-bgDark p-3 rounded-lg border border-borderDark">
+                        <div class="text-[10px] text-slate-400">FECHA EMISIÓN</div>
+                        <div id="abonoFechaEmision" class="text-xs font-bold text-slate-200 mt-1">-</div>
                     </div>
                     <div class="col-span-2 sm:col-span-1 bg-bgDark p-3 rounded-lg border border-borderDark">
                         <div class="text-[10px] text-slate-400">ESTADO</div>
@@ -550,9 +581,11 @@
                             <label class="block text-xs text-slate-300 mb-1">Sucursal</label>
                             <select id="editSucursal" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentPurple">
                                 <option value="FG MATRIZ">FG MATRIZ</option>
-                                <option value="FG AGUILA">FG AGUILA</option>
+                                <option value="CONSTRUGAR AGUILA">CONSTRUGAR AGUILA</option>
+                                <option value="CONSTRUGAR AUTOPISTA">CONSTRUGAR AUTOPISTA</option>
                                 <option value="FG COMALAPA">FG COMALAPA</option>
                                 <option value="FG VIÑEDO">FG VIÑEDO</option>
+                                <option value="FG HIERROGAR">FG HIERROGAR</option>
                             </select>
                         </div>
                         <div>
@@ -716,6 +749,18 @@
                             <select id="consultaProveedor" onchange="window.renderConsultaSaldos()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan min-w-[180px]"></select>
                         </div>
                         <div>
+                            <label class="block text-[10px] text-slate-400 mb-1">Filtrar Sucursal:</label>
+                            <select id="consultaFiltroSucursal" onchange="window.renderConsultaSaldos()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                                <option value="TODAS">Todas las Sucursales</option>
+                                <option value="FG MATRIZ">FG MATRIZ</option>
+                                <option value="CONSTRUGAR AGUILA">CONSTRUGAR AGUILA</option>
+                                <option value="CONSTRUGAR AUTOPISTA">CONSTRUGAR AUTOPISTA</option>
+                                <option value="FG COMALAPA">FG COMALAPA</option>
+                                <option value="FG VIÑEDO">FG VIÑEDO</option>
+                                <option value="FG HIERROGAR">FG HIERROGAR</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-[10px] text-slate-400 mb-1">Filtrar Estado:</label>
                             <select id="consultaFiltroEstado" onchange="window.renderConsultaSaldos()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
                                 <option value="TODOS">Todas las facturas</option>
@@ -738,10 +783,15 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                     <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4">
                         <span class="text-xs text-slate-400">Total Deuda Acumulada:</span>
                         <div id="consultaTotalDeuda" class="text-2xl font-extrabold text-accentRed">$0.00</div>
+                    </div>
+                    <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4">
+                        <span class="text-xs text-slate-400">Total Facturas Vencidas:</span>
+                        <div id="consultaTotalVencidasMonto" class="text-2xl font-extrabold text-accentRed">$0.00</div>
+                        <span id="consultaTotalVencidasCant" class="text-[11px] text-rose-400 font-semibold mt-0.5 inline-block">0 facturas vencidas</span>
                     </div>
                     <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4">
                         <span class="text-xs text-slate-400">Última Actualización / Abono:</span>
@@ -771,6 +821,91 @@
                             </tr>
                         </thead>
                         <tbody id="tbody-consulta-pendientes" class="divide-y divide-borderDark/60 bg-cardDark"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PESTAÑA 7: REPORTE POR SUCURSAL (TODOS LOS PROVEEDORES) -->
+        <div id="sec-reporte-sucursal" class="hidden space-y-6">
+            <div class="bg-cardDark border border-borderDark rounded-xl p-6 shadow-xl space-y-4">
+                <!-- Título dinámico que aparecerá únicamente al imprimir / descargar el PDF -->
+                <div id="pdf-sucursal-titulo"></div>
+
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-borderDark">
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-building-circle-check text-accentGreen"></i> REPORTE POR SUCURSAL (TODOS LOS PROVEEDORES)
+                        </h3>
+                        <p class="text-xs text-slate-400">Selecciona una sucursal para ver todos los CCF / DTE consolidados de cualquier proveedor</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div>
+                            <label class="block text-[10px] text-slate-300 font-semibold mb-1">Sucursal:</label>
+                            <select id="sucursalReporteSelect" onchange="window.renderReportePorSucursal()" class="bg-bgDark border border-accentGreen/50 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen font-bold">
+                                <option value="TODAS">TODAS LAS SUCURSALES</option>
+                                <option value="FG MATRIZ" selected>FG MATRIZ</option>
+                                <option value="CONSTRUGAR AGUILA">CONSTRUGAR AGUILA</option>
+                                <option value="CONSTRUGAR AUTOPISTA">CONSTRUGAR AUTOPISTA</option>
+                                <option value="FG COMALAPA">FG COMALAPA</option>
+                                <option value="FG VIÑEDO">FG VIÑEDO</option>
+                                <option value="FG HIERROGAR">FG HIERROGAR</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-300 font-semibold mb-1">Estado:</label>
+                            <select id="sucursalReporteEstado" onchange="window.renderReportePorSucursal()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen">
+                                <option value="TODOS">Todas las facturas</option>
+                                <option value="PENDIENTES" selected>Solo Pendientes / Vencidas</option>
+                                <option value="CANCELADAS">Solo Canceladas</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button type="button" onclick="window.descargarPDFReporteSucursal()" class="px-3 py-2 rounded-lg bg-accentGreen hover:bg-emerald-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition mt-4 sm:mt-0">
+                                <i class="fa-solid fa-file-pdf"></i> Descargar PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPIs de la Sucursal -->
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4">
+                        <span class="text-xs text-slate-400">Deuda Sucursal:</span>
+                        <div id="sucursalTotalDeuda" class="text-2xl font-extrabold text-accentRed">$0.00</div>
+                    </div>
+                    <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4">
+                        <span class="text-xs text-slate-400">Facturas en Sucursal:</span>
+                        <div id="sucursalCantFacturas" class="text-xl font-bold text-white mt-1">0 facturas</div>
+                    </div>
+                    <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4">
+                        <span class="text-xs text-slate-400">Monto Facturado:</span>
+                        <div id="sucursalMontoFacturado" class="text-xl font-bold text-accentCyan mt-1">$0.00</div>
+                    </div>
+                    <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4">
+                        <span class="text-xs text-slate-400">Abonado / Pagado:</span>
+                        <div id="sucursalTotalAbonado" class="text-xl font-bold text-accentGreen mt-1">$0.00</div>
+                    </div>
+                </div>
+
+                <!-- Tabla de CCF/DTE de todos los proveedores en la sucursal -->
+                <div class="overflow-x-auto rounded-lg border border-borderDark">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-bgDark text-slate-400 font-semibold uppercase border-b border-borderDark">
+                            <tr>
+                                <th class="p-3">Proveedor</th>
+                                <th class="p-3">N° CCF / DTE</th>
+                                <th class="p-3">Sucursal</th>
+                                <th class="p-3">Fecha Emisión</th>
+                                <th class="p-3">Monto Factura</th>
+                                <th class="p-3">Abonos / NC</th>
+                                <th class="p-3">Saldo Pendiente</th>
+                                <th class="p-3">Antigüedad</th>
+                                <th class="p-3">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-reporte-sucursal" class="divide-y divide-borderDark/60 bg-cardDark"></tbody>
                     </table>
                 </div>
             </div>
@@ -856,13 +991,29 @@
             }
         }
 
+        function normalizarSucursalesFacturas() {
+            let migradas = 0;
+            if (Array.isArray(appData.facturas)) {
+                appData.facturas.forEach(f => {
+                    if (f.sucursal === 'FG AGUILA') {
+                        f.sucursal = 'CONSTRUGAR AGUILA';
+                        migradas++;
+                    }
+                });
+            }
+            return migradas;
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             // 1. Cargar caché de localStorage para carga instantánea (0ms) sin esperar a la red
             try {
                 const cachedProv = localStorage.getItem('cache_proveedores');
                 const cachedFac = localStorage.getItem('cache_facturas');
                 if (cachedProv) appData.proveedores = JSON.parse(cachedProv);
-                if (cachedFac) appData.facturas = JSON.parse(cachedFac);
+                if (cachedFac) {
+                    appData.facturas = JSON.parse(cachedFac);
+                    normalizarSucursalesFacturas();
+                }
             } catch(e) {
                 console.warn("Aviso: No se pudo leer la caché local:", e);
             }
@@ -870,6 +1021,8 @@
             if (appData.proveedores.length > 0 || appData.facturas.length > 0) {
                 actualizarSelectoresProveedores();
                 actualizarDashboard();
+                window.renderConsultaSaldos();
+                if (window.renderReportePorSucursal) window.renderReportePorSucursal();
                 mostrarEstadoSincronizacion('exito', 'Datos en caché listos');
             }
 
@@ -893,6 +1046,9 @@
                     sincronizarEnSegundoPlanoSilencioso();
                 }
             }, 30000);
+
+            // 4. Iniciar detector automático de nuevas versiones
+            inicializarDetectorActualizaciones();
         });
 
         async function cargarDatosDesdeGoogleSheetsInicio(esManual = false) {
@@ -919,7 +1075,12 @@
                     }
                     if (Array.isArray(data.facturas)) {
                         appData.facturas = data.facturas;
+                        const migCount = normalizarSucursalesFacturas();
                         try { localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas)); } catch(e){}
+                        if (migCount > 0) {
+                            console.log(`Migración automática: Se actualizaron ${migCount} facturas de FG AGUILA a CONSTRUGAR AGUILA. Guardando en Google Sheets...`);
+                            sincronizarConGoogleSheetsSilencioso();
+                        }
                     }
                     datosCargadosDesdeNube = true;
                     mostrarEstadoSincronizacion('exito', 'Conectado a Google Sheets');
@@ -943,6 +1104,8 @@
                 }
                 actualizarSelectoresProveedores();
                 actualizarDashboard();
+                window.renderConsultaSaldos();
+                if (window.renderReportePorSucursal) window.renderReportePorSucursal();
             }
         }
 
@@ -959,10 +1122,16 @@
                         try { localStorage.setItem('cache_proveedores', JSON.stringify(appData.proveedores)); } catch(e){}
                         huboCambios = true;
                     }
-                    if (Array.isArray(data.facturas) && JSON.stringify(data.facturas) !== JSON.stringify(appData.facturas)) {
-                        appData.facturas = data.facturas;
-                        try { localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas)); } catch(e){}
-                        huboCambios = true;
+                    if (Array.isArray(data.facturas)) {
+                        data.facturas.forEach(f => {
+                            if (f.sucursal === 'FG AGUILA') f.sucursal = 'CONSTRUGAR AGUILA';
+                        });
+                        if (JSON.stringify(data.facturas) !== JSON.stringify(appData.facturas)) {
+                            appData.facturas = data.facturas;
+                            normalizarSucursalesFacturas();
+                            try { localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas)); } catch(e){}
+                            huboCambios = true;
+                        }
                     }
                     
                     const activo = document.activeElement;
@@ -971,6 +1140,8 @@
                     if (huboCambios && !estaEscribiendo) {
                         actualizarSelectoresProveedores();
                         actualizarDashboard();
+                        window.renderConsultaSaldos();
+                        if (window.renderReportePorSucursal) window.renderReportePorSucursal();
                     }
                     mostrarEstadoSincronizacion('exito', 'Conectado a Google Sheets');
                 }
@@ -1048,7 +1219,7 @@
         }
 
         window.switchTab = function(tabId) {
-            const tabs = ['dashboard', 'proveedores', 'facturas', 'abonos', 'editar', 'pagadas-mes', 'buscar', 'consultas'];
+            const tabs = ['dashboard', 'proveedores', 'facturas', 'abonos', 'editar', 'pagadas-mes', 'buscar', 'consultas', 'reporte-sucursal'];
             tabs.forEach(t => {
                 const secElem = document.getElementById(`sec-${t}`);
                 if (secElem) secElem.classList.add('hidden');
@@ -1073,6 +1244,7 @@
             if (tabId === 'pagadas-mes') window.renderPagadasMes();
             if (tabId === 'buscar') window.ejecutarBusquedaFactura();
             if (tabId === 'consultas') window.renderConsultaSaldos();
+            if (tabId === 'reporte-sucursal') window.renderReportePorSucursal();
         };
 
         function calcularDatosFactura(f) {
@@ -1111,7 +1283,14 @@
             
             let totalDeuda = 0;
             let facturasAcumuladas = 0;
-            let sucMonto = { "FG MATRIZ": 0, "FG AGUILA": 0, "FG COMALAPA": 0, "FG VIÑEDO": 0 };
+            let sucMonto = { 
+                "FG MATRIZ": 0, 
+                "CONSTRUGAR AGUILA": 0, 
+                "CONSTRUGAR AUTOPISTA": 0, 
+                "FG COMALAPA": 0, 
+                "FG VIÑEDO": 0,
+                "FG HIERROGAR": 0
+            };
             let provDeudaMap = {};
             let provVencidasMap = {};
 
@@ -1129,8 +1308,12 @@
                 if (saldo > 0) {
                     totalDeuda += saldo;
                     facturasAcumuladas++;
-                    if (sucMonto[f.sucursal] !== undefined) {
-                        sucMonto[f.sucursal] += saldo;
+                    
+                    let sName = f.sucursal;
+                    if (sName === 'FG AGUILA') sName = 'CONSTRUGAR AGUILA';
+
+                    if (sucMonto[sName] !== undefined) {
+                        sucMonto[sName] += saldo;
                     } else {
                         sucMonto["FG MATRIZ"] += saldo;
                     }
@@ -1145,10 +1328,12 @@
 
             document.getElementById('kpi-deuda-total').innerText = formatMoney(totalDeuda);
             document.getElementById('kpi-facturas-cant').innerText = `${facturasAcumuladas} Deudas acumuladas`;
-            document.getElementById('kpi-suc-matriz').innerText = formatMoney(sucMonto["FG MATRIZ"]);
-            document.getElementById('kpi-suc-aguila').innerText = formatMoney(sucMonto["FG AGUILA"]);
-            document.getElementById('kpi-suc-comalapa').innerText = formatMoney(sucMonto["FG COMALAPA"]);
-            document.getElementById('kpi-suc-vinedo').innerText = formatMoney(sucMonto["FG VIÑEDO"]);
+            if (document.getElementById('kpi-suc-matriz')) document.getElementById('kpi-suc-matriz').innerText = formatMoney(sucMonto["FG MATRIZ"]);
+            if (document.getElementById('kpi-suc-aguila')) document.getElementById('kpi-suc-aguila').innerText = formatMoney(sucMonto["CONSTRUGAR AGUILA"]);
+            if (document.getElementById('kpi-suc-autopista')) document.getElementById('kpi-suc-autopista').innerText = formatMoney(sucMonto["CONSTRUGAR AUTOPISTA"]);
+            if (document.getElementById('kpi-suc-comalapa')) document.getElementById('kpi-suc-comalapa').innerText = formatMoney(sucMonto["FG COMALAPA"]);
+            if (document.getElementById('kpi-suc-vinedo')) document.getElementById('kpi-suc-vinedo').innerText = formatMoney(sucMonto["FG VIÑEDO"]);
+            if (document.getElementById('kpi-suc-hierrogar')) document.getElementById('kpi-suc-hierrogar').innerText = formatMoney(sucMonto["FG HIERROGAR"]);
 
             renderCharts(provDeudaMap, provVencidasMap);
             renderResumenEjecutivo();
@@ -1293,6 +1478,8 @@
             await sincronizarConGoogleSheetsSilencioso();
             actualizarSelectoresProveedores();
             renderListaProveedores();
+            window.renderConsultaSaldos();
+            if (window.renderReportePorSucursal) window.renderReportePorSucursal();
             e.target.reset();
             alert(`Proveedor "${nombre}" registrado y guardado en la nube con éxito.`);
         };
@@ -1344,6 +1531,8 @@
             await sincronizarConGoogleSheetsSilencioso();
             actualizarSelectoresProveedores();
             actualizarDashboard();
+            window.renderConsultaSaldos();
+            if (window.renderReportePorSucursal) window.renderReportePorSucursal();
             alert('Proveedor eliminado y actualizado en la nube.');
         };
 
@@ -1377,7 +1566,13 @@
             appData.facturas.push(nueva);
             await sincronizarConGoogleSheetsSilencioso();
             e.target.reset();
+            const provSelect = document.getElementById('facProveedor');
+            if (provSelect) provSelect.selectedIndex = 0;
+            const sucSelect = document.getElementById('facSucursal');
+            if (sucSelect) sucSelect.selectedIndex = 0;
             actualizarDashboard();
+            window.renderConsultaSaldos();
+            if (window.renderReportePorSucursal) window.renderReportePorSucursal();
             alert(`Factura ${ccf} agregada y sincronizada en la nube.`);
         };
 
@@ -1474,6 +1669,10 @@
             if (!f) {
                 document.getElementById('abonoMontoOriginal').innerText = "$0.00";
                 document.getElementById('abonoSaldoActual').innerText = "$0.00";
+                const sucElem = document.getElementById('abonoSucursal');
+                if (sucElem) sucElem.innerText = "-";
+                const fecElem = document.getElementById('abonoFechaEmision');
+                if (fecElem) fecElem.innerText = "-";
                 document.getElementById('abonoEstadoBadge').innerHTML = "SELECCIONE FACTURA";
                 document.getElementById('abonoNC').value = '';
                 return;
@@ -1482,6 +1681,10 @@
             const { saldo, estado } = calcularDatosFactura(f);
             document.getElementById('abonoMontoOriginal').innerText = formatMoney(f.monto);
             document.getElementById('abonoSaldoActual').innerText = formatMoney(saldo);
+            const sucElem = document.getElementById('abonoSucursal');
+            if (sucElem) sucElem.innerText = f.sucursal || '-';
+            const fecElem = document.getElementById('abonoFechaEmision');
+            if (fecElem) fecElem.innerText = formatearSoloFecha(f.fecha) || '-';
             
             let colorBadge = estado === 'CANCELADA' ? 'text-accentGreen' : (estado === 'VENCIDA' ? 'text-accentRed' : 'text-accentYellow');
             document.getElementById('abonoEstadoBadge').innerHTML = `<span class="${colorBadge}">${estado}</span>`;
@@ -1675,9 +1878,11 @@
         };
 
         window.renderConsultaSaldos = function() {
-            const prov = document.getElementById('consultaProveedor').value;
-            const filtroEstado = document.getElementById('consultaFiltroEstado').value;
-            const ordenFecha = document.getElementById('consultaOrdenFecha').value;
+            const prov = document.getElementById('consultaProveedor') ? document.getElementById('consultaProveedor').value : '';
+            const filtroSucursalElem = document.getElementById('consultaFiltroSucursal');
+            const filtroSucursal = filtroSucursalElem ? filtroSucursalElem.value : 'TODAS';
+            const filtroEstado = document.getElementById('consultaFiltroEstado') ? document.getElementById('consultaFiltroEstado').value : 'TODOS';
+            const ordenFecha = document.getElementById('consultaOrdenFecha') ? document.getElementById('consultaOrdenFecha').value : 'reciente';
             const tbody = document.getElementById('tbody-consulta-pendientes');
             if (!tbody) return;
             tbody.innerHTML = '';
@@ -1685,10 +1890,14 @@
             // Actualizar el título oculto para que aparezca arriba del PDF al imprimir
             const pdfTituloElem = document.getElementById('pdf-proveedor-titulo');
             if (pdfTituloElem) {
-                pdfTituloElem.innerText = `PROVEEDOR: ${prov || 'TODOS'}`;
+                pdfTituloElem.innerText = `PROVEEDOR: ${prov || 'TODOS'} ${filtroSucursal !== 'TODAS' ? '- SUCURSAL: ' + filtroSucursal : ''}`;
             }
 
-            const facs = appData.facturas.filter(f => String(f.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase());
+            let facs = appData.facturas.filter(f => String(f.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase());
+
+            if (filtroSucursal !== 'TODAS') {
+                facs = facs.filter(f => String(f.sucursal).trim().toUpperCase() === filtroSucursal.toUpperCase());
+            }
 
             facs.sort((a, b) => {
                 let da = new Date(formatearSoloFecha(a.fecha));
@@ -1697,6 +1906,8 @@
             });
 
             let totalDeudaProv = 0;
+            let totalVencidasMonto = 0;
+            let cantVencidas = 0;
             let ultimaActualizacionFecha = '-';
             let ultimoRegistroFecha = '-';
             let cantPendientes = 0;
@@ -1713,6 +1924,10 @@
                 if (saldo > 0) {
                     totalDeudaProv += saldo;
                     cantPendientes++;
+                    if (estado === 'VENCIDA') {
+                        totalVencidasMonto += saldo;
+                        cantVencidas++;
+                    }
                 }
 
                 if (f.fecha) {
@@ -1746,7 +1961,7 @@
                 let colorEstado = estado === 'CANCELADA' ? 'text-accentGreen' : (estado === 'VENCIDA' ? 'text-accentRed' : 'text-accentYellow');
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-bgDark/40";
+                tr.className = "hover:bg-bgDark/40 transition";
                 tr.innerHTML = `
                     <td class="p-3 font-mono font-bold text-white">${f.ccf}</td>
                     <td class="p-3">${formatearSoloFecha(f.fecha)}</td>
@@ -1759,21 +1974,112 @@
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('consultaTotalDeuda').innerText = formatMoney(totalDeudaProv);
-            document.getElementById('consultaUltimaActualizacion').innerText = ultimaActualizacionFecha;
-            document.getElementById('consultaUltimoRegistro').innerText = ultimoRegistroFecha;
+            const elemTotalDeuda = document.getElementById('consultaTotalDeuda');
+            if (elemTotalDeuda) elemTotalDeuda.innerText = formatMoney(totalDeudaProv);
+
+            const elemVencidasMonto = document.getElementById('consultaTotalVencidasMonto');
+            if (elemVencidasMonto) elemVencidasMonto.innerText = formatMoney(totalVencidasMonto);
+
+            const elemVencidasCant = document.getElementById('consultaTotalVencidasCant');
+            if (elemVencidasCant) elemVencidasCant.innerText = `${cantVencidas} facturas vencidas`;
+
+            const elemUltimaAct = document.getElementById('consultaUltimaActualizacion');
+            if (elemUltimaAct) elemUltimaAct.innerText = ultimaActualizacionFecha;
+
+            const elemUltimoReg = document.getElementById('consultaUltimoRegistro');
+            if (elemUltimoReg) elemUltimoReg.innerText = ultimoRegistroFecha;
 
             const badgeEstado = document.getElementById('consultaBadgeEstado');
-            if (totalDeudaProv > 0) {
-                badgeEstado.className = "px-3 py-1 rounded border text-xs font-semibold bg-accentRed/10 text-accentRed border-accentRed/30";
-                badgeEstado.innerText = "CON SALDO PENDIENTE";
-            } else {
-                badgeEstado.className = "px-3 py-1 rounded border text-xs font-semibold bg-accentGreen/10 text-accentGreen border-accentGreen/30";
-                badgeEstado.innerText = "AL DÍA / CANCELADO";
+            if (badgeEstado) {
+                if (totalDeudaProv > 0) {
+                    badgeEstado.className = "px-3 py-1 rounded border text-xs font-semibold bg-accentRed/10 text-accentRed border-accentRed/30";
+                    badgeEstado.innerText = "CON SALDO PENDIENTE";
+                } else {
+                    badgeEstado.className = "px-3 py-1 rounded border text-xs font-semibold bg-accentGreen/10 text-accentGreen border-accentGreen/30";
+                    badgeEstado.innerText = "AL DÍA / CANCELADO";
+                }
             }
 
             if (facs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">No hay facturas registradas para este proveedor.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">No hay facturas registradas para este proveedor con los filtros seleccionados.</td></tr>`;
+            }
+
+            // También actualizamos el reporte por sucursal
+            if (window.renderReportePorSucursal) {
+                window.renderReportePorSucursal();
+            }
+        };
+
+        window.renderReportePorSucursal = function() {
+            const selectSuc = document.getElementById('sucursalReporteSelect');
+            const selectEst = document.getElementById('sucursalReporteEstado');
+            const tbody = document.getElementById('tbody-reporte-sucursal');
+            if (!selectSuc || !tbody) return;
+
+            const sucursalFiltro = selectSuc.value;
+            const estadoFiltro = selectEst ? selectEst.value : 'TODOS';
+            tbody.innerHTML = '';
+
+            let facturasSucursal = appData.facturas.filter(f => {
+                if (sucursalFiltro === 'TODAS') return true;
+                return String(f.sucursal).trim().toUpperCase() === sucursalFiltro.toUpperCase();
+            });
+
+            // Ordenar por fecha más reciente a más antigua
+            facturasSucursal.sort((a, b) => {
+                let da = new Date(formatearSoloFecha(a.fecha));
+                let db = new Date(formatearSoloFecha(b.fecha));
+                return db - da;
+            });
+
+            let totalDeuda = 0;
+            let totalFacturado = 0;
+            let totalAbonado = 0;
+            let cantFacturas = 0;
+
+            facturasSucursal.forEach(f => {
+                const { saldo, diasAntiguedad, estado, abonoTotal } = calcularDatosFactura(f);
+
+                if (estadoFiltro === 'PENDIENTES' && saldo <= 0) return;
+                if (estadoFiltro === 'CANCELADAS' && saldo > 0) return;
+
+                cantFacturas++;
+                totalFacturado += parseFloat(f.monto) || 0;
+                totalAbonado += abonoTotal;
+                totalDeuda += saldo;
+
+                let colorEstado = estado === 'CANCELADA' ? 'text-accentGreen' : (estado === 'VENCIDA' ? 'text-accentRed' : 'text-accentYellow');
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-bgDark/40 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-white">${f.proveedor}</td>
+                    <td class="p-3 font-mono font-bold text-accentCyan">${f.ccf}</td>
+                    <td class="p-3">${f.sucursal}</td>
+                    <td class="p-3">${formatearSoloFecha(f.fecha)}</td>
+                    <td class="p-3">${formatMoney(f.monto)}</td>
+                    <td class="p-3 text-accentGreen">${formatMoney(abonoTotal)}</td>
+                    <td class="p-3 font-bold text-white">${formatMoney(saldo)}</td>
+                    <td class="p-3">${diasAntiguedad} días</td>
+                    <td class="p-3 font-semibold ${colorEstado}">${estado}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const elemSucDeuda = document.getElementById('sucursalTotalDeuda');
+            if (elemSucDeuda) elemSucDeuda.innerText = formatMoney(totalDeuda);
+
+            const elemSucCant = document.getElementById('sucursalCantFacturas');
+            if (elemSucCant) elemSucCant.innerText = `${cantFacturas} facturas`;
+
+            const elemSucMonto = document.getElementById('sucursalMontoFacturado');
+            if (elemSucMonto) elemSucMonto.innerText = formatMoney(totalFacturado);
+
+            const elemSucAbonado = document.getElementById('sucursalTotalAbonado');
+            if (elemSucAbonado) elemSucAbonado.innerText = formatMoney(totalAbonado);
+
+            if (cantFacturas === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-500">No se encontraron facturas para la sucursal seleccionada con los filtros actuales.</td></tr>`;
             }
         };
 
@@ -1859,6 +2165,18 @@
             window.print();
         };
 
+        window.descargarPDFReporteSucursal = function() {
+            const selectSuc = document.getElementById('sucursalReporteSelect');
+            const selectEst = document.getElementById('sucursalReporteEstado');
+            const suc = selectSuc ? selectSuc.value : 'TODAS';
+            const est = selectEst ? selectEst.options[selectEst.selectedIndex].text : '';
+            const pdfTitulo = document.getElementById('pdf-sucursal-titulo');
+            if (pdfTitulo) {
+                pdfTitulo.innerText = `REPORTE CONSOLIDADO POR SUCURSAL: ${suc} | FILTRO: ${est}`;
+            }
+            window.print();
+        };
+
         window.guardarEdicionFactura = async function(e) {
             e.preventDefault();
             if (appData.currentUserRole === 'viewer') {
@@ -1881,7 +2199,23 @@
             appData.facturas[idx].monto = parseFloat(document.getElementById('editMonto').value) || 0;
 
             await sincronizarConGoogleSheetsSilencioso();
+
+            // Dejar en blanco el formulario y selectores de edición para volver a llenar otro
+            const editProvElem = document.getElementById('editProveedor');
+            if (editProvElem) editProvElem.selectedIndex = 0;
+            const selectCCF = document.getElementById('editCCF');
+            if (selectCCF) selectCCF.innerHTML = '<option value="" disabled selected>-- Seleccione CCF --</option>';
+            const editNuevoProvElem = document.getElementById('editNuevoProveedor');
+            if (editNuevoProvElem) editNuevoProvElem.selectedIndex = 0;
+            const editSucElem = document.getElementById('editSucursal');
+            if (editSucElem) editSucElem.selectedIndex = 0;
+            document.getElementById('editFecha').value = '';
+            document.getElementById('editNuevoCCF').value = '';
+            document.getElementById('editMonto').value = '';
+
             actualizarDashboard();
+            window.renderConsultaSaldos();
+            if (window.renderReportePorSucursal) window.renderReportePorSucursal();
             alert('Factura actualizada correctamente.');
         };
 
@@ -1899,6 +2233,8 @@
 
             await sincronizarConGoogleSheetsSilencioso();
             actualizarDashboard();
+            window.renderConsultaSaldos();
+            if (window.renderReportePorSucursal) window.renderReportePorSucursal();
             window.cargarFacturasParaEditar();
             alert('Factura eliminada correctamente.');
         };
@@ -1967,10 +2303,150 @@
             f.abonos = nuevosAbonos;
             await sincronizarConGoogleSheetsSilencioso();
             actualizarDashboard();
+            window.renderConsultaSaldos();
+            if (window.renderReportePorSucursal) window.renderReportePorSucursal();
             window.cargarDatosDetalleAbono();
             alert('Abonos y Notas de Crédito aplicados con éxito.');
         };
+
+        // ==========================================
+        // DETECTOR AUTOMÁTICO DE ACTUALIZACIONES WEB
+        // ==========================================
+        let huellaDigitalActual = null;
+        let comprobandoActualizacion = false;
+        let actualizacionDetectada = false;
+
+        async function obtenerHuellaDigitalServidor() {
+            if (window.location.protocol === 'file:') return null;
+            try {
+                const urlCheck = `${window.location.origin}${window.location.pathname}?_chk=${Date.now()}`;
+                const res = await fetch(urlCheck, {
+                    method: 'HEAD',
+                    cache: 'no-store'
+                });
+
+                if (res.ok) {
+                    const etag = res.headers.get('etag');
+                    const vercelId = res.headers.get('x-vercel-id');
+                    const lastMod = res.headers.get('last-modified');
+                    if (etag || vercelId || lastMod) {
+                        return `${etag || ''}_${vercelId || ''}_${lastMod || ''}`;
+                    }
+                }
+
+                // Fallback para servidores que no entregan cabeceras ETag en HEAD
+                const resGet = await fetch(urlCheck, { cache: 'no-store' });
+                if (resGet.ok) {
+                    const text = await resGet.text();
+                    let hash = 0;
+                    for (let i = 0; i < text.length; i++) {
+                        hash = ((hash << 5) - hash) + text.charCodeAt(i);
+                        hash |= 0;
+                    }
+                    return String(hash);
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        async function inicializarDetectorActualizaciones() {
+            if (window.location.protocol === 'file:') return;
+            huellaDigitalActual = await obtenerHuellaDigitalServidor();
+
+            // 1. Revisar automáticamente cada 2 minutos
+            setInterval(() => {
+                verificarSiHayNuevaVersion();
+            }, 120000);
+
+            // 2. Revisar al regresar a la pestaña del celular o ventana (Visibility Change)
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    verificarSiHayNuevaVersion();
+                }
+            });
+
+            // 3. Revisar al reconectar internet
+            window.addEventListener('online', () => {
+                verificarSiHayNuevaVersion();
+            });
+        }
+
+        async function verificarSiHayNuevaVersion() {
+            if (comprobandoActualizacion || actualizacionDetectada || !huellaDigitalActual) return;
+            comprobandoActualizacion = true;
+
+            try {
+                const huellaNueva = await obtenerHuellaDigitalServidor();
+                if (huellaNueva && huellaDigitalActual && huellaNueva !== huellaDigitalActual) {
+                    actualizacionDetectada = true;
+                    mostrarBannerActualizacion();
+                }
+            } catch(e) {}
+            finally {
+                comprobandoActualizacion = false;
+            }
+        }
+
+        function mostrarBannerActualizacion() {
+            const banner = document.getElementById('bannerNuevaVersion');
+            if (banner) {
+                banner.classList.remove('hidden');
+                setTimeout(() => {
+                    banner.classList.remove('translate-y-4');
+                    banner.classList.add('translate-y-0');
+                }, 50);
+            }
+        }
+
+        window.cerrarBannerActualizacion = function() {
+            const banner = document.getElementById('bannerNuevaVersion');
+            if (banner) {
+                banner.classList.add('translate-y-4');
+                setTimeout(() => banner.classList.add('hidden'), 300);
+            }
+        };
+
+        window.aplicarActualizacionWeb = function() {
+            try {
+                localStorage.setItem('cache_proveedores', JSON.stringify(appData.proveedores));
+                localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas));
+            } catch(e) {}
+
+            const urlRecarga = `${window.location.origin}${window.location.pathname}?_v=${Date.now()}`;
+            window.location.replace(urlRecarga);
+        };
     </script>
+
+    <!-- Banner Flotante de Notificación de Nueva Versión -->
+    <div id="bannerNuevaVersion" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 bg-cardDark/95 backdrop-blur-md border border-accentCyan/50 rounded-2xl p-4 shadow-2xl shadow-cyan-950/50 hidden transition-all duration-300 transform translate-y-4">
+        <div class="flex items-start gap-3">
+            <div class="p-2.5 bg-accentCyan/20 text-accentCyan rounded-xl border border-accentCyan/30 shrink-0 mt-0.5">
+                <i class="fa-solid fa-arrows-rotate text-lg fa-spin" style="--fa-animation-duration: 4s;"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                    <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+                        <span>Nueva actualización disponible</span>
+                        <span class="inline-block w-2 h-2 rounded-full bg-accentCyan animate-ping"></span>
+                    </h4>
+                    <button type="button" onclick="window.cerrarBannerActualizacion()" class="text-slate-400 hover:text-white transition p-1" title="Cerrar aviso">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+                <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                    Hay mejoras recientes publicadas en el sistema. Actualiza para ver los últimos cambios.
+                </p>
+                <div class="mt-3 flex items-center gap-2">
+                    <button type="button" onclick="window.aplicarActualizacionWeb()" class="px-3.5 py-1.5 rounded-lg bg-accentCyan hover:bg-cyan-500 text-slate-950 font-bold text-xs shadow-md shadow-accentCyan/20 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Actualizar ahora</span>
+                    </button>
+                    <button type="button" onclick="window.cerrarBannerActualizacion()" class="px-3 py-1.5 rounded-lg bg-bgDark hover:bg-borderDark text-slate-400 hover:text-slate-200 text-xs transition">
+                        Más tarde
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
-  
