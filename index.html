@@ -123,10 +123,14 @@
                         <i class="fa-solid fa-cloud-arrow-up text-accentCyan"></i>
                         <span class="hidden sm:inline">Google Sheets API</span>
                     </button>
-                    <button onclick="sincronizarConGoogleSheets()" class="px-3 py-1.5 rounded-lg bg-accentCyan hover:bg-cyan-500 text-slate-950 font-semibold text-xs flex items-center gap-2 shadow-lg shadow-accentCyan/20 transition">
+                    <button id="btnSyncHeader" onclick="sincronizarConGoogleSheets()" class="px-3 py-1.5 rounded-lg bg-accentCyan hover:bg-cyan-500 text-slate-950 font-semibold text-xs flex items-center gap-2 shadow-lg shadow-accentCyan/20 transition" title="Sincronizar con Google Sheets">
                         <i class="fa-solid fa-rotate"></i>
                         <span>Sincronizar</span>
                     </button>
+                    <div id="syncStatusBadge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                        <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span id="syncStatusText">Conectado</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -802,14 +806,18 @@
     </footer>
 
     <script>
+        const DEFAULT_GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxl8TYqyqrkuO3QfUx51xPzlQtR_zHYx799NNxwcXjeBOhC2wibu-4rd7rDtu2WbolaXg/exec';
+
         let appData = {
             currentUserRole: 'admin',
-            googleScriptUrl: 'https://script.google.com/macros/s/AKfycbxl8TYqyqrkuO3QfUx51xPzlQtR_zHYx799NNxwcXjeBOhC2wibu-4rd7rDtu2WbolaXg/exec',
+            googleScriptUrl: localStorage.getItem('google_sheets_url') || DEFAULT_GOOGLE_SCRIPT_URL,
             proveedores: [],
             facturas: []
         };
 
         let datosCargadosDesdeNube = false;
+        let estaSincronizando = false;
+        let pendienteSincronizar = false;
         let chartAnillo = null;
         let chartBarras = null;
         let chartVencidas = null;
@@ -826,7 +834,46 @@
             return str;
         }
 
+        // Función para mostrar estado de conexión/sincronización con Google Sheets
+        function mostrarEstadoSincronizacion(estado, texto) {
+            const badge = document.getElementById('syncStatusBadge');
+            const txt = document.getElementById('syncStatusText');
+            const dot = document.getElementById('syncStatusDot');
+            if (!badge || !txt) return;
+
+            txt.innerText = texto || '';
+            badge.className = "hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition";
+
+            if (estado === 'cargando' || estado === 'sincronizando') {
+                badge.classList.add('bg-accentYellow/10', 'text-accentYellow', 'border-accentYellow/30');
+                if (dot) dot.className = "w-2 h-2 rounded-full bg-accentYellow animate-ping";
+            } else if (estado === 'exito') {
+                badge.classList.add('bg-accentGreen/10', 'text-accentGreen', 'border-accentGreen/30');
+                if (dot) dot.className = "w-2 h-2 rounded-full bg-accentGreen";
+            } else if (estado === 'error') {
+                badge.classList.add('bg-accentRed/10', 'text-accentRed', 'border-accentRed/30');
+                if (dot) dot.className = "w-2 h-2 rounded-full bg-accentRed";
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
+            // 1. Cargar caché de localStorage para carga instantánea (0ms) sin esperar a la red
+            try {
+                const cachedProv = localStorage.getItem('cache_proveedores');
+                const cachedFac = localStorage.getItem('cache_facturas');
+                if (cachedProv) appData.proveedores = JSON.parse(cachedProv);
+                if (cachedFac) appData.facturas = JSON.parse(cachedFac);
+            } catch(e) {
+                console.warn("Aviso: No se pudo leer la caché local:", e);
+            }
+
+            if (appData.proveedores.length > 0 || appData.facturas.length > 0) {
+                actualizarSelectoresProveedores();
+                actualizarDashboard();
+                mostrarEstadoSincronizacion('exito', 'Datos en caché listos');
+            }
+
+            // 2. Verificar sesión activa
             const sesionActiva = sessionStorage.getItem('estado_cuenta_sesion');
             if (sesionActiva) {
                 try {
@@ -838,49 +885,83 @@
             }
             aplicarPermisosRol();
 
+            // 3. Sincronización en segundo plano periódica cada 30 segundos
             setInterval(() => {
                 const activo = document.activeElement;
                 const estaEscribiendo = activo && (activo.tagName === 'INPUT' || activo.tagName === 'SELECT' || activo.tagName === 'TEXTAREA');
-                if (!estaEscribiendo && datosCargadosDesdeNube) {
+                if (!estaEscribiendo && !estaSincronizando) {
                     sincronizarEnSegundoPlanoSilencioso();
                 }
-            }, 15000);
+            }, 30000);
         });
 
-        async function cargarDatosDesdeGoogleSheetsInicio() {
+        async function cargarDatosDesdeGoogleSheetsInicio(esManual = false) {
             if (!appData.googleScriptUrl) return;
+
+            mostrarEstadoSincronizacion('cargando', 'Conectando a Google Sheets...');
+            const btnSync = document.getElementById('btnSyncHeader');
+            if (btnSync) {
+                btnSync.classList.add('opacity-75', 'cursor-wait');
+                const icon = btnSync.querySelector('i');
+                if (icon) icon.classList.add('fa-spin');
+            }
+
             try {
-                const res = await fetch(appData.googleScriptUrl);
+                const urlConTimestamp = `${appData.googleScriptUrl}${appData.googleScriptUrl.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+                const res = await fetch(urlConTimestamp);
+                if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
                 const data = await res.json();
+
                 if (data && !data.error) {
-                    if (data.proveedores && data.proveedores.length > 0) {
+                    if (Array.isArray(data.proveedores)) {
                         appData.proveedores = data.proveedores;
+                        try { localStorage.setItem('cache_proveedores', JSON.stringify(appData.proveedores)); } catch(e){}
                     }
-                    if (data.facturas && data.facturas.length > 0) {
+                    if (Array.isArray(data.facturas)) {
                         appData.facturas = data.facturas;
+                        try { localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas)); } catch(e){}
                     }
                     datosCargadosDesdeNube = true;
+                    mostrarEstadoSincronizacion('exito', 'Conectado a Google Sheets');
+                    if (esManual) {
+                        alert('Sincronización con Google Sheets completada exitosamente.');
+                    }
+                } else if (data && data.error) {
+                    throw new Error(data.error);
                 }
             } catch (err) {
-                console.log("Aviso: Usando datos locales por fallo de red al iniciar:", err);
+                console.error("Aviso: Error al conectar con Google Sheets:", err);
+                mostrarEstadoSincronizacion('error', 'Sin conexión con Google Sheets');
+                if (esManual) {
+                    alert('No se pudo conectar a Google Sheets.\nVerifique que la URL de Apps Script esté desplegada como aplicación web con acceso para "Cualquier persona" (Anyone).\n\nDetalle: ' + err.message);
+                }
+            } finally {
+                if (btnSync) {
+                    btnSync.classList.remove('opacity-75', 'cursor-wait');
+                    const icon = btnSync.querySelector('i');
+                    if (icon) icon.classList.remove('fa-spin');
+                }
+                actualizarSelectoresProveedores();
+                actualizarDashboard();
             }
-            actualizarSelectoresProveedores();
-            actualizarDashboard();
         }
 
         async function sincronizarEnSegundoPlanoSilencioso() {
-            if (!appData.googleScriptUrl || !datosCargadosDesdeNube || appData.facturas.length === 0) return;
+            if (!appData.googleScriptUrl || estaSincronizando) return;
             try {
-                const res = await fetch(appData.googleScriptUrl);
+                const urlTimestamp = `${appData.googleScriptUrl}${appData.googleScriptUrl.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+                const res = await fetch(urlTimestamp);
                 const data = await res.json();
                 if (data && !data.error) {
                     let huboCambios = false;
-                    if (data.proveedores && JSON.stringify(data.proveedores) !== JSON.stringify(appData.proveedores)) {
+                    if (Array.isArray(data.proveedores) && JSON.stringify(data.proveedores) !== JSON.stringify(appData.proveedores)) {
                         appData.proveedores = data.proveedores;
+                        try { localStorage.setItem('cache_proveedores', JSON.stringify(appData.proveedores)); } catch(e){}
                         huboCambios = true;
                     }
-                    if (data.facturas && JSON.stringify(data.facturas) !== JSON.stringify(appData.facturas)) {
+                    if (Array.isArray(data.facturas) && JSON.stringify(data.facturas) !== JSON.stringify(appData.facturas)) {
                         appData.facturas = data.facturas;
+                        try { localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas)); } catch(e){}
                         huboCambios = true;
                     }
                     
@@ -891,6 +972,7 @@
                         actualizarSelectoresProveedores();
                         actualizarDashboard();
                     }
+                    mostrarEstadoSincronizacion('exito', 'Conectado a Google Sheets');
                 }
             } catch (err) {}
         }
@@ -912,8 +994,8 @@
             sessionStorage.setItem('estado_cuenta_sesion', JSON.stringify({ rol: appData.currentUserRole }));
             document.getElementById('modalLogin').classList.add('hidden');
             
-            await cargarDatosDesdeGoogleSheetsInicio();
             aplicarPermisosRol();
+            cargarDatosDesdeGoogleSheetsInicio();
             alert(`Bienvenido. Sesión iniciada como: ${appData.currentUserRole === 'admin' ? 'Administrador' : 'Solo Lectura'}`);
         };
 
@@ -1711,18 +1793,67 @@
                 return;
             }
             appData.googleScriptUrl = url;
+            try {
+                localStorage.setItem('google_sheets_url', url);
+            } catch(e) {}
             window.closeConfigModal();
-            cargarDatosDesdeGoogleSheetsInicio();
-            alert('Configuración guardada correctamente.');
+            cargarDatosDesdeGoogleSheetsInicio(true);
+            alert('Configuración guardada correctamente y sincronizando datos...');
         };
 
         window.sincronizarConGoogleSheets = async function() {
-            await cargarDatosDesdeGoogleSheetsInicio();
-            actualizarDashboard();
-            alert('Sincronización con Google Sheets completada.');
+            await cargarDatosDesdeGoogleSheetsInicio(true);
         };
 
-        async function sincronizarConGoogleSheetsSilencioso() {}
+        async function sincronizarConGoogleSheetsSilencioso() {
+            // Guardar inmediatamente en localStorage para persistencia y soporte offline instantáneo
+            try {
+                localStorage.setItem('cache_proveedores', JSON.stringify(appData.proveedores));
+                localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas));
+            } catch(e) {}
+
+            if (!appData.googleScriptUrl) return;
+
+            if (estaSincronizando) {
+                pendienteSincronizar = true;
+                return;
+            }
+
+            estaSincronizando = true;
+            mostrarEstadoSincronizacion('sincronizando', 'Guardando en Google Sheets...');
+
+            try {
+                const payload = {
+                    proveedores: appData.proveedores,
+                    facturas: appData.facturas
+                };
+
+                const res = await fetch(appData.googleScriptUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    }
+                });
+
+                const data = await res.json();
+                if (data && data.status === 'success') {
+                    mostrarEstadoSincronizacion('exito', 'Conectado a Google Sheets');
+                } else {
+                    console.warn("Aviso al guardar en Google Sheets:", data);
+                    mostrarEstadoSincronizacion('error', 'Error en Google Sheets');
+                }
+            } catch (err) {
+                console.error("Error al sincronizar silenciosamente:", err);
+                mostrarEstadoSincronizacion('error', 'Sin conexión (guardado local)');
+            } finally {
+                estaSincronizando = false;
+                if (pendienteSincronizar) {
+                    pendienteSincronizar = false;
+                    sincronizarConGoogleSheetsSilencioso();
+                }
+            }
+        }
 
         window.descargarPDFConsulta = function() {
             window.print();
@@ -1842,3 +1973,4 @@
     </script>
 </body>
 </html>
+  
