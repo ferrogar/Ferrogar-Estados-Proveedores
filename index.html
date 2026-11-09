@@ -137,6 +137,11 @@
                         <span class="hidden sm:inline">Salir</span>
                     </button>
 
+                    <button onclick="window.abrirModalCargarJsonGlobal()" class="px-3 py-1.5 rounded-lg bg-indigo-600/80 hover:bg-indigo-600 text-white font-medium text-xs flex items-center gap-1.5 border border-indigo-500/40 shadow-sm transition" title="Subir o verificar archivo JSON de Factura Electrónica (DTE)">
+                        <i class="fa-solid fa-file-code text-cyan-300"></i>
+                        <span class="hidden sm:inline">Cargar DTE JSON</span>
+                    </button>
+
                     <button onclick="openConfigModal()" class="px-3 py-1.5 rounded-lg bg-borderDark/60 hover:bg-borderDark text-xs font-medium text-slate-300 hover:text-white flex items-center gap-2 border border-slate-700 transition">
                         <i class="fa-solid fa-cloud-arrow-up text-accentCyan"></i>
                         <span class="hidden sm:inline">Google Sheets API</span>
@@ -1229,18 +1234,21 @@
 
     <!-- MODAL / HOJA APARTE DE FACTURA (DETALLE INDIVIDUAL) -->
     <div id="modalHojaFactura" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center hidden p-2 sm:p-4 overflow-y-auto">
-        <div class="bg-cardDark border border-borderDark rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-6 max-h-[92vh] flex flex-col">
+        <div class="bg-cardDark border border-borderDark rounded-2xl max-w-5xl w-full p-5 sm:p-6 shadow-2xl space-y-5 max-h-[94vh] flex flex-col">
             <!-- Encabezado Factura -->
-            <div class="flex items-start justify-between pb-4 border-b border-borderDark shrink-0">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between pb-4 border-b border-borderDark shrink-0 gap-3">
                 <div class="flex items-center gap-3">
-                    <div class="p-3 bg-accentGreen/10 text-accentGreen rounded-xl border border-accentGreen/30">
+                    <div class="p-3 bg-accentGreen/10 text-accentGreen rounded-xl border border-accentGreen/30 shrink-0">
                         <i class="fa-solid fa-file-invoice-dollar text-2xl"></i>
                     </div>
                     <div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             <span class="text-xs text-slate-400 uppercase font-semibold">Factura / CCF:</span>
                             <h2 id="hojaFacCCF" class="text-lg sm:text-xl font-mono font-extrabold text-accentCyan">-</h2>
                             <span id="hojaFacBadgeEstado" class="text-[11px] font-bold px-2.5 py-0.5 rounded border">-</span>
+                            <span id="hojaFacBadgeTieneDte" class="hidden text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+                                <i class="fa-solid fa-shield-check"></i> DTE ELECTRÓNICO MH
+                            </span>
                         </div>
                         <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400 mt-1">
                             <span><strong class="text-slate-300">Proveedor:</strong> <button type="button" id="hojaFacBtnProv" class="text-accentCyan hover:underline font-bold">-</button></span>
@@ -1250,7 +1258,15 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                    <button type="button" onclick="window.abrirModalVincularJsonAFacturaActual()" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-semibold flex items-center gap-1.5 border border-indigo-500/40 transition" title="Subir o reemplazar archivo JSON de Hacienda para esta factura">
+                        <i class="fa-solid fa-file-code"></i>
+                        <span class="hidden sm:inline">Vincular / Subir</span> JSON DTE
+                    </button>
+                    <button type="button" id="hojaFacBtnDescargarJson" onclick="window.descargarJsonFacturaActual()" class="hidden px-3 py-1.5 rounded-lg bg-bgDark hover:bg-borderDark text-slate-300 text-xs font-semibold flex items-center gap-1.5 border border-borderDark transition" title="Descargar archivo JSON original de esta factura">
+                        <i class="fa-solid fa-download"></i>
+                        <span class="hidden md:inline">Descargar JSON</span>
+                    </button>
                     <button type="button" onclick="window.print()" class="px-3 py-1.5 rounded-lg bg-bgDark hover:bg-borderDark text-slate-300 text-xs font-semibold flex items-center gap-1.5 border border-borderDark transition" title="Imprimir factura">
                         <i class="fa-solid fa-print"></i> Imprimir
                     </button>
@@ -1264,23 +1280,23 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
                 <div class="bg-bgDark p-3 rounded-xl border border-borderDark">
                     <div class="text-[10px] text-slate-400 font-semibold uppercase">Monto Original</div>
-                    <div id="hojaFacMontoOriginal" class="text-lg font-bold text-white mt-0.5">$0.00</div>
+                    <div id="hojaFacMontoOriginal" class="text-lg font-bold text-white mt-0.5 font-mono">$0.00</div>
                 </div>
                 <div class="bg-bgDark p-3 rounded-xl border border-borderDark">
                     <div class="text-[10px] text-slate-400 font-semibold uppercase">Total Abonos</div>
-                    <div id="hojaFacTotalAbonos" class="text-lg font-bold text-accentGreen mt-0.5">$0.00</div>
+                    <div id="hojaFacTotalAbonos" class="text-lg font-bold text-accentGreen mt-0.5 font-mono">$0.00</div>
                 </div>
                 <div class="bg-bgDark p-3 rounded-xl border border-borderDark">
                     <div class="text-[10px] text-slate-400 font-semibold uppercase">Nota de Crédito</div>
-                    <div id="hojaFacMontoNC" class="text-lg font-bold text-accentCyan mt-0.5">$0.00</div>
+                    <div id="hojaFacMontoNC" class="text-lg font-bold text-accentCyan mt-0.5 font-mono">$0.00</div>
                 </div>
                 <div class="bg-bgDark p-3 rounded-xl border border-borderDark">
                     <div class="text-[10px] text-slate-400 font-semibold uppercase">Saldo Actual</div>
-                    <div id="hojaFacSaldoActual" class="text-lg font-bold text-accentRed mt-0.5">$0.00</div>
+                    <div id="hojaFacSaldoActual" class="text-lg font-bold text-accentRed mt-0.5 font-mono">$0.00</div>
                 </div>
             </div>
 
-            <!-- Bloque de Nota y Datos DTE -->
+            <!-- Bloque de Nota y Datos DTE Básicos -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
                 <div class="bg-bgDark/80 p-3.5 rounded-xl border border-borderDark space-y-1">
                     <div class="text-[11px] font-bold text-accentYellow uppercase flex items-center gap-1.5">
@@ -1290,32 +1306,142 @@
                 </div>
                 <div class="bg-bgDark/80 p-3.5 rounded-xl border border-borderDark space-y-1 text-xs">
                     <div class="text-[11px] font-bold text-accentCyan uppercase flex items-center gap-1.5">
-                        <i class="fa-solid fa-qrcode"></i> Datos Electrónicos (DTE)
+                        <i class="fa-solid fa-qrcode"></i> Datos Electrónicos MH
                     </div>
-                    <div><strong class="text-slate-400 text-[10px]">CÓDIGO DE GENERACIÓN:</strong> <span id="hojaFacDteCodigo" class="font-mono text-slate-300 break-all text-[11px]">-</span></div>
+                    <div><strong class="text-slate-400 text-[10px]">CÓDIGO DE GENERACIÓN (UUID):</strong> <span id="hojaFacDteCodigo" class="font-mono text-slate-300 break-all text-[11px]">-</span></div>
                     <div><strong class="text-slate-400 text-[10px]">SELLO DE RECEPCIÓN MH:</strong> <span id="hojaFacDteSello" class="font-mono text-slate-300 break-all text-[11px]">-</span></div>
                     <div><strong class="text-slate-400 text-[10px]">TIPO DE DTE:</strong> <span id="hojaFacDteTipo" class="text-slate-300 text-[11px]">-</span></div>
                 </div>
             </div>
 
-            <!-- Historial de Abonos -->
-            <div class="flex-grow overflow-y-auto border border-borderDark rounded-xl">
-                <div class="p-3 bg-bgDark border-b border-borderDark font-bold text-xs text-white uppercase flex items-center justify-between">
-                    <span><i class="fa-solid fa-list-check text-accentGreen"></i> Historial de Pagos y Abonos Registrados</span>
-                    <span id="hojaFacContadorAbonos" class="text-[10px] text-slate-400">0 abonos</span>
+            <!-- CONTENEDOR SCROLLABLE PARA DETALLE DTE Y ABONOS -->
+            <div class="flex-grow overflow-y-auto space-y-5 pr-1">
+                
+                <!-- SECCIÓN DE PRODUCTOS / ÍTEMS Y DESGLOSE TRIBUTARIO DTE -->
+                <div id="hojaFacSeccionDteCompleto" class="space-y-4">
+                    <!-- Si NO tiene DTE asociado: Banner informativo -->
+                    <div id="hojaFacBannerSinDte" class="bg-indigo-950/20 border border-indigo-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-indigo-500/15 text-indigo-400 rounded-lg text-lg shrink-0">
+                                <i class="fa-solid fa-file-invoice"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white">Factura sin Detalle Electrónico Asociado</h4>
+                                <p class="text-[11px] text-slate-400">Esta factura fue registrada manualmente. Suba el archivo <strong>JSON oficial de Hacienda</strong> para ver la lista completa de productos comprados, cantidades, precios unitarios, IVA 13%, percepción y sello oficial de validación.</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="window.abrirModalVincularJsonAFacturaActual()" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shrink-0 flex items-center gap-2 shadow-lg shadow-indigo-600/20 transition">
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i> Subir JSON DTE
+                        </button>
+                    </div>
+
+                    <!-- Si TIENE DTE asociado: Desglose completo oficial -->
+                    <div id="hojaFacContenidoConDte" class="hidden space-y-4">
+                        <!-- Barra de Estado MH y Receptor -->
+                        <div class="bg-bgDark/80 p-3.5 rounded-xl border border-borderDark flex flex-wrap items-center justify-between gap-3 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                    <i class="fa-solid fa-circle-check"></i> PROCESADO POR HACIENDA
+                                </span>
+                                <span class="text-slate-400 text-[11px]">Validado MH: <strong id="hojaFacDteFechaProc" class="text-slate-200 font-mono">-</strong></span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-300">
+                                <span><strong>Receptor:</strong> <span id="hojaFacDteReceptor" class="text-white font-semibold">-</span></span>
+                                <span class="hidden md:inline">|</span>
+                                <span><strong>Sucursal Cliente (Apéndice):</strong> <span id="hojaFacDteSucApendice" class="text-accentCyan font-semibold">-</span></span>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de Productos / Ítems -->
+                        <div class="border border-borderDark rounded-xl overflow-hidden shadow-inner">
+                            <div class="p-3 bg-bgDark border-b border-borderDark font-bold text-xs text-white uppercase flex items-center justify-between">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-boxes-stacked text-accentCyan"></i> Detalle de Productos e Ítems Comprados (Qué es esta factura)</span>
+                                <span id="hojaFacContadorItems" class="text-[10px] text-slate-400 font-normal">0 productos</span>
+                            </div>
+                            <div class="overflow-x-auto max-h-72">
+                                <table class="w-full text-left text-xs text-slate-300">
+                                    <thead class="bg-bgDark/95 text-slate-400 font-semibold uppercase sticky top-0 border-b border-borderDark text-[11px]">
+                                        <tr>
+                                            <th class="p-2.5 text-center w-10">#</th>
+                                            <th class="p-2.5 w-24">Código</th>
+                                            <th class="p-2.5">Descripción del Producto</th>
+                                            <th class="p-2.5 text-right w-24">Cantidad</th>
+                                            <th class="p-2.5 text-center w-16">Unidad</th>
+                                            <th class="p-2.5 text-right w-24">Precio Unit.</th>
+                                            <th class="p-2.5 text-right w-24">Descuento</th>
+                                            <th class="p-2.5 text-right w-28">Venta Gravada</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="hojaFacTbodyItems" class="divide-y divide-borderDark/50 bg-cardDark text-xs font-sans"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Resumen Tributario y Liquidación Financiera -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-bgDark/60 p-4 rounded-xl border border-borderDark">
+                            <div class="space-y-2 text-xs">
+                                <div class="text-[11px] font-bold text-accentCyan uppercase flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-info"></i> Información Fiscal y Comercial
+                                </div>
+                                <div class="text-[11px] text-slate-300 space-y-1.5">
+                                    <div><strong class="text-slate-400">Condición de Operación:</strong> <span id="hojaFacDteCondicion" class="font-semibold text-white">Crédito</span></div>
+                                    <div><strong class="text-slate-400">Total en Letras:</strong> <span id="hojaFacDteTotalLetras" class="italic text-slate-200 font-serif text-[11px]">-</span></div>
+                                    <div class="pt-1 text-[10px] text-slate-400 border-t border-borderDark/50">
+                                        <strong>Emisor:</strong> <span id="hojaFacDteEmisorDetalle" class="text-slate-300">-</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1.5 text-xs text-slate-300 border-t md:border-t-0 md:border-l border-borderDark md:pl-4">
+                                <div class="flex justify-between py-0.5">
+                                    <span class="text-slate-400">Subtotal Ventas Gravadas:</span>
+                                    <span id="hojaFacDteSubtotal" class="font-mono text-white">$0.00</span>
+                                </div>
+                                <div class="flex justify-between py-0.5">
+                                    <span class="text-slate-400">Total Descuentos:</span>
+                                    <span id="hojaFacDteTotalDescuento" class="font-mono text-accentYellow">-$0.00</span>
+                                </div>
+                                <div class="flex justify-between py-0.5">
+                                    <span class="text-slate-400">IVA 13%:</span>
+                                    <span id="hojaFacDteIva13" class="font-mono text-cyan-300">+$0.00</span>
+                                </div>
+                                <div id="hojaFacFilaPercepcion" class="flex justify-between py-0.5">
+                                    <span class="text-slate-400">IVA Percepción 1%:</span>
+                                    <span id="hojaFacDteIvaPerci1" class="font-mono text-amber-300">+$0.00</span>
+                                </div>
+                                <div id="hojaFacFilaRetencion" class="hidden flex justify-between py-0.5">
+                                    <span class="text-slate-400">IVA Retención 1%:</span>
+                                    <span id="hojaFacDteIvaRete1" class="font-mono text-rose-300">-$0.00</span>
+                                </div>
+                                <div class="flex justify-between py-1 border-t border-borderDark font-bold text-white text-sm">
+                                    <span>TOTAL A PAGAR (DTE):</span>
+                                    <span id="hojaFacDteTotalPagar" class="font-mono text-accentCyan text-base">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <table class="w-full text-left text-xs text-slate-300">
-                    <thead class="bg-bgDark/70 text-slate-400 font-semibold uppercase sticky top-0 border-b border-borderDark">
-                        <tr>
-                            <th class="p-3">N°</th>
-                            <th class="p-3">Fecha Abono</th>
-                            <th class="p-3">Monto Abonado</th>
-                            <th class="p-3">Forma de Pago</th>
-                            <th class="p-3">Banco</th>
-                        </tr>
-                    </thead>
-                    <tbody id="hojaFacTbodyAbonos" class="divide-y divide-borderDark/60 bg-cardDark"></tbody>
-                </table>
+
+                <!-- Historial de Abonos -->
+                <div class="border border-borderDark rounded-xl overflow-hidden shadow-inner">
+                    <div class="p-3 bg-bgDark border-b border-borderDark font-bold text-xs text-white uppercase flex items-center justify-between">
+                        <span><i class="fa-solid fa-list-check text-accentGreen"></i> Historial de Pagos y Abonos Registrados</span>
+                        <span id="hojaFacContadorAbonos" class="text-[10px] text-slate-400">0 abonos</span>
+                    </div>
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-bgDark/70 text-slate-400 font-semibold uppercase sticky top-0 border-b border-borderDark text-[11px]">
+                            <tr>
+                                <th class="p-3">N°</th>
+                                <th class="p-3">Fecha Abono</th>
+                                <th class="p-3">Monto Abonado</th>
+                                <th class="p-3">Forma de Pago</th>
+                                <th class="p-3">Banco</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hojaFacTbodyAbonos" class="divide-y divide-borderDark/60 bg-cardDark"></tbody>
+                    </table>
+                </div>
+
             </div>
 
             <!-- Acciones Footer Modal -->
@@ -1323,9 +1449,166 @@
                 <button type="button" id="hojaFacBtnIrAbonar" class="px-4 py-2 rounded-lg bg-accentYellow hover:bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md transition">
                     <i class="fa-solid fa-hand-holding-dollar"></i> Ir a Aplicar Abonos / NC
                 </button>
-                <button type="button" onclick="window.cerrarHojaFactura()" class="px-4 py-2 rounded-lg bg-bgDark hover:bg-borderDark text-xs font-semibold text-slate-300">
+                <button type="button" onclick="window.cerrarHojaFactura()" class="px-4 py-2 rounded-lg bg-bgDark hover:bg-borderDark text-xs font-semibold text-slate-300 transition">
                     Cerrar Hoja
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL PARA CARGAR / SUBIR ARCHIVO O TEXTO JSON (DTE)     -->
+    <!-- ======================================================== -->
+    <div id="modalCargarJsonDte" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center hidden p-3 overflow-y-auto">
+        <div class="bg-cardDark border border-borderDark rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-borderDark">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-indigo-500/15 text-indigo-400 rounded-xl border border-indigo-500/30">
+                        <i class="fa-solid fa-file-code text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 id="modalCargarJsonTitulo" class="text-sm font-bold text-white uppercase">Cargar Archivo DTE (JSON)</h3>
+                        <p id="modalCargarJsonSubtitulo" class="text-xs text-slate-400">Factura Electrónica MH / Comprobante de Crédito Fiscal</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.cerrarModalCargarJson()" class="text-slate-400 hover:text-white p-1 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-200 mb-1.5">Opción 1: Seleccionar archivo .JSON desde su dispositivo</label>
+                    <input type="file" id="modalInputJsonFile" accept=".json,application/json" onchange="window.procesarArchivoJsonModal(event)" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-bgDark border border-borderDark rounded-xl p-2">
+                </div>
+
+                <div class="relative flex py-1 items-center">
+                    <div class="flex-grow border-t border-borderDark"></div>
+                    <span class="flex-shrink mx-3 text-[10px] text-slate-500 uppercase font-bold">O también</span>
+                    <div class="flex-grow border-t border-borderDark"></div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-200 mb-1.5">Opción 2: Pegar contenido del JSON directamente</label>
+                    <textarea id="modalTextareaJson" rows="5" placeholder='Pegue aquí el texto JSON completo del DTE (ej. {"identificacion": {...}, "cuerpoDocumento": [...]} )...' class="w-full bg-bgDark border border-borderDark rounded-xl p-3 text-xs text-white font-mono focus:outline-none focus:border-indigo-500"></textarea>
+                </div>
+
+                <div id="modalCargarJsonError" class="hidden p-3 rounded-xl bg-accentRed/15 border border-accentRed/30 text-rose-300 text-xs"></div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-borderDark">
+                <button type="button" onclick="window.cerrarModalCargarJson()" class="px-4 py-2 rounded-lg bg-bgDark hover:bg-borderDark text-xs font-semibold text-slate-300">
+                    Cancelar
+                </button>
+                <button type="button" onclick="window.procesarTextoJsonModal()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/20 transition">
+                    <i class="fa-solid fa-play"></i> Procesar JSON
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL DE VERIFICACIÓN / COMPARACIÓN DE FACTURA EXISTENTE -->
+    <!-- ======================================================== -->
+    <div id="modalVerificarDteExistente" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 flex items-center justify-center hidden p-3 overflow-y-auto">
+        <div class="bg-cardDark border border-borderDark rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-5">
+            <!-- Header -->
+            <div class="flex items-start justify-between pb-3 border-b border-borderDark">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-amber-500/15 text-amber-400 rounded-xl border border-amber-500/30">
+                        <i class="fa-solid fa-arrows-split-up-and-left text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            FACTURA YA REGISTRADA EN EL SISTEMA
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-accentCyan/20 text-accentCyan border border-accentCyan/30">Match Encontrado</span>
+                        </h3>
+                        <p class="text-xs text-slate-400">El DTE corresponde a un crédito fiscal existente. Compare los datos y decida cómo vincularlo.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.cerrarModalVerificarDte()" class="text-slate-400 hover:text-white p-1 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Comparación Visual Lado a Lado -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Columna 1: Factura en Sistema -->
+                <div class="bg-bgDark/80 p-4 rounded-xl border border-borderDark space-y-3">
+                    <div class="flex items-center justify-between border-b border-borderDark pb-2">
+                        <span class="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
+                            <i class="fa-solid fa-database text-accentCyan"></i> Factura en el Sistema
+                        </span>
+                        <span id="verifFacBadgeEstado" class="text-[10px] font-bold px-2 py-0.5 rounded border">-</span>
+                    </div>
+                    <div class="space-y-1.5 text-xs text-slate-300">
+                        <div><strong class="text-slate-400">Proveedor:</strong> <span id="verifFacProv" class="text-white font-semibold">-</span></div>
+                        <div><strong class="text-slate-400">CCF / N°:</strong> <span id="verifFacCCF" class="font-mono text-accentCyan font-bold">-</span></div>
+                        <div><strong class="text-slate-400">Fecha Emisión:</strong> <span id="verifFacFecha">-</span></div>
+                        <div><strong class="text-slate-400">Sucursal:</strong> <span id="verifFacSucursal" class="text-slate-200 font-semibold">-</span></div>
+                        <div class="pt-1.5 border-t border-borderDark/60 flex justify-between items-baseline">
+                            <span class="text-slate-400 font-semibold">Monto Registrado:</span>
+                            <span id="verifFacMonto" class="font-mono font-bold text-white text-base">$0.00</span>
+                        </div>
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-slate-400">Saldo Pendiente:</span>
+                            <span id="verifFacSaldo" class="font-mono font-bold text-accentRed">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna 2: Datos del DTE (JSON) -->
+                <div class="bg-bgDark/80 p-4 rounded-xl border border-indigo-500/30 space-y-3">
+                    <div class="flex items-center justify-between border-b border-borderDark pb-2">
+                        <span class="text-xs font-bold text-indigo-300 uppercase flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-code text-indigo-400"></i> Datos del Archivo DTE (JSON)
+                        </span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Hacienda MH</span>
+                    </div>
+                    <div class="space-y-1.5 text-xs text-slate-300">
+                        <div><strong class="text-slate-400">Emisor:</strong> <span id="verifDteProv" class="text-white font-semibold">-</span></div>
+                        <div><strong class="text-slate-400">Control / Correlativo:</strong> <span id="verifDteCCF" class="font-mono text-indigo-300 font-bold">-</span></div>
+                        <div><strong class="text-slate-400">Fecha Emisión:</strong> <span id="verifDteFecha">-</span></div>
+                        <div><strong class="text-slate-400">Sucursal Sugerida:</strong> <span id="verifDteSucursal" class="text-cyan-300 font-semibold">-</span></div>
+                        <div><strong class="text-slate-400">Subtotal Operación:</strong> <span id="verifDteMontoOp" class="font-mono text-slate-200">$0.00</span></div>
+                        <div class="pt-1.5 border-t border-borderDark/60 flex justify-between items-baseline">
+                            <span class="text-slate-400 font-semibold">Total a Pagar (DTE):</span>
+                            <span id="verifDteTotalPagar" class="font-mono font-bold text-accentCyan text-base">$0.00</span>
+                        </div>
+                        <div id="verifDtePercepcionAviso" class="text-[11px] text-amber-300 italic"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diagnóstico de Coincidencia de Montos -->
+            <div id="verifDiagnosticoBox" class="p-3.5 rounded-xl border text-xs"></div>
+
+            <!-- Opciones de Actualización -->
+            <div class="bg-bgDark/40 p-3.5 rounded-xl border border-borderDark space-y-2 text-xs">
+                <div class="font-bold text-slate-300 mb-1">Opciones al Vincular:</div>
+                <label class="flex items-center gap-2 cursor-pointer text-slate-200">
+                    <input type="checkbox" id="verifCheckActualizarMonto" checked class="w-4 h-4 rounded text-accentCyan bg-bgDark border-borderDark focus:ring-accentCyan">
+                    <span>Actualizar monto en sistema al <strong>Total a Pagar del DTE</strong> (<span id="verifTxtNuevoMonto" class="font-mono text-accentCyan">$0.00</span>)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer text-slate-200">
+                    <input type="checkbox" id="verifCheckActualizarSucursal" checked class="w-4 h-4 rounded text-accentCyan bg-bgDark border-borderDark focus:ring-accentCyan">
+                    <span>Actualizar sucursal a la detectada en el DTE (<strong id="verifTxtNuevaSucursal" class="text-cyan-300">-</strong>)</span>
+                </label>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-borderDark">
+                <button type="button" onclick="window.cargarDteComoFacturaNueva()" class="w-full sm:w-auto px-4 py-2 rounded-lg bg-bgDark hover:bg-borderDark text-xs font-semibold text-slate-300 flex items-center justify-center gap-1.5 transition">
+                    <i class="fa-solid fa-plus-circle"></i> No asociar, registrar como Nueva Factura
+                </button>
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <button type="button" onclick="window.cerrarModalVerificarDte()" class="px-4 py-2 rounded-lg bg-bgDark hover:bg-borderDark text-xs font-semibold text-slate-400">
+                        Cancelar
+                    </button>
+                    <button type="button" onclick="window.confirmarAsociacionDte()" class="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition">
+                        <i class="fa-solid fa-link"></i> Asociar JSON a Factura Existente
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1967,8 +2250,10 @@
                 codigoGeneracion: codGen,
                 sello: sello,
                 tipoDte: tipoDte,
-                nota: nota
+                nota: nota,
+                dteData: ultimoDteCargadoFormulario || null
             };
+            ultimoDteCargadoFormulario = null;
 
             appData.facturas.push(nueva);
 
@@ -1996,6 +2281,10 @@
             if (document.getElementById('facNota')) document.getElementById('facNota').value = '';
             if (document.getElementById('textoJsonDTE')) document.getElementById('textoJsonDTE').value = '';
             if (document.getElementById('inputJsonDTE')) document.getElementById('inputJsonDTE').value = '';
+            if (document.getElementById('inputTextoJsonDTE')) document.getElementById('inputTextoJsonDTE').value = '';
+            if (document.getElementById('facJsonFile')) document.getElementById('facJsonFile').value = '';
+            const bannerDte = document.getElementById('bannerDteExito');
+            if (bannerDte) bannerDte.classList.add('hidden');
 
             actualizarDashboard();
             window.renderConsultaSaldos();
@@ -2667,7 +2956,7 @@
             let csv = '\uFEFF';
             csv += `ESTADO DE CUENTA - PROVEEDOR: ${prov} - SUCURSAL: ${filtroSucursal} - FILTRO: ${filtroEstado}\n`;
             csv += `Generado el: ${new Date().toLocaleString()}\n\n`;
-            csv += 'N° CCF / DTE,Fecha Emision,Sucursal,Monto Factura,Total Abonos/NC,Saldo Actual,Antiguedad (Dias),Estado,Nota / Observacion,Codigo Generacion,Sello Recepcion MH,Tipo DTE\n';
+            csv += 'N° CCF / DTE,Fecha Emision,Sucursal,Monto Factura,Total Abonos/NC,Saldo Actual,Antiguedad (Dias),Estado,Nota / Observacion,Codigo Generacion,Sello Recepcion MH,Tipo DTE,Productos / Items DTE\n';
 
             facs.forEach(f => {
                 const { saldo, diasAntiguedad, estado, abonoTotal } = calcularDatosFactura(f);
@@ -2687,7 +2976,19 @@
                 const sello = `"${String(f.sello || '').replace(/"/g, '""')}"`;
                 const tipoDte = `"${String(f.tipoDte || '').replace(/"/g, '""')}"`;
 
-                csv += `${ccf},${fecha},${sucursal},${monto},${abonos},${saldoStr},${antig},${est},${nota},${codGen},${sello},${tipoDte}\n`;
+                let itemsDetalle = '';
+                if (f.dteData) {
+                    try {
+                        const dteObj = typeof f.dteData === 'string' ? JSON.parse(f.dteData) : f.dteData;
+                        const cuerpo = dteObj.cuerpoDocumento || dteObj.items || [];
+                        if (Array.isArray(cuerpo)) {
+                            itemsDetalle = cuerpo.map(it => `${it.cantidad || 1}x ${it.descripcion || ''} ($${Number(it.ventaGravada || 0).toFixed(2)})`).join('; ');
+                        }
+                    } catch(e){}
+                }
+                const itemsStr = `"${itemsDetalle.replace(/"/g, '""')}"`;
+
+                csv += `${ccf},${fecha},${sucursal},${monto},${abonos},${saldoStr},${antig},${est},${nota},${codGen},${sello},${tipoDte},${itemsStr}\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -2874,16 +3175,615 @@
         };
 
         // ==========================================
-        // LECTURA DE DTE (JSON ELECTRÓNICO)
+        // VARIABLES GLOBALES PARA MANEJO DE DTE (JSON)
         // ==========================================
-        window.procesarArchivoJsonDTE = function(e) {
+        let dteContextoCarga = {
+            modo: 'global', // 'global' | 'vincular' | 'formulario'
+            facturaTarget: null,
+            datosDte: null,
+            matchFactura: null
+        };
+        let ultimoDteCargadoFormulario = null;
+        let facturaActivaHoja = null;
+
+        // Extraer solo dígitos de un string (para comparación de correlativos de CCF)
+        function extraerSoloNumeros(str) {
+            if (!str) return '';
+            const nums = String(str).replace(/\D/g, '');
+            // Eliminar ceros a la izquierda para comparar ej: 000000000011657 con 11657
+            return nums.replace(/^0+/, '') || nums;
+        }
+
+        // Mapear automáticamente la sucursal del sistema a partir del DTE
+        function mapearSucursalDesdeDte(dte) {
+            if (!dte) return 'FG MATRIZ';
+            let textoBusqueda = '';
+
+            // 1. Buscar en apéndice ("Suc. Cliente" u otros)
+            if (dte.apendice && Array.isArray(dte.apendice)) {
+                dte.apendice.forEach(ap => {
+                    textoBusqueda += ' ' + (ap.valor || '') + ' ' + (ap.campo || '') + ' ' + (ap.etiqueta || '');
+                });
+            }
+
+            // 2. Buscar en receptor
+            if (dte.receptor) {
+                textoBusqueda += ' ' + (dte.receptor.nombre || '') + ' ' + (dte.receptor.nombreComercial || '');
+                if (dte.receptor.direccion && dte.receptor.direccion.complemento) {
+                    textoBusqueda += ' ' + dte.receptor.direccion.complemento;
+                }
+            }
+
+            textoBusqueda = textoBusqueda.toUpperCase();
+
+            if (textoBusqueda.includes('AUTOPISTA')) return 'CONSTRUGAR AUTOPISTA';
+            if (textoBusqueda.includes('AGUILA')) return 'CONSTRUGAR AGUILA';
+            if (textoBusqueda.includes('HIERROGAR')) return 'FG HIERROGAR';
+            if (textoBusqueda.includes('COMALAPA')) return 'FG COMALAPA';
+            if (textoBusqueda.includes('VIÑEDO') || textoBusqueda.includes('VINEDO')) return 'FG VIÑEDO';
+            if (textoBusqueda.includes('MATRIZ') || textoBusqueda.includes('CASA MATRIZ') || textoBusqueda.includes('SAN MARCOS')) return 'FG MATRIZ';
+
+            return 'FG MATRIZ';
+        }
+
+        // Extraer y normalizar con precisión absoluta todos los parámetros del DTE oficial
+        function extraerDatosDTE(dte) {
+            if (!dte || typeof dte !== 'object') return null;
+
+            // Identificación
+            const ident = dte.identificacion || {};
+            const version = ident.version || 3;
+            const tipoDte = String(ident.tipoDte || dte.tipoDte || '03').trim();
+            const codGen = ident.codigoGeneracion || dte.codigoGeneracion || (dte.responseMH && dte.responseMH.codigoGeneracion) || '';
+            const numControl = ident.numeroControl || dte.numeroControl || codGen || '';
+            const fecEmi = formatearSoloFecha(ident.fecEmi || dte.fecha || dte.fechaEmision || new Date().toISOString());
+            const horEmi = ident.horEmi || '';
+
+            // Correlativo numérico final del CCF (ej: de "DTE-03-S001P001-000000000011657" obtiene "11657")
+            let correlativoCcf = '';
+            if (numControl) {
+                const partes = String(numControl).split('-');
+                const ultimaParte = partes[partes.length - 1];
+                correlativoCcf = extraerSoloNumeros(ultimaParte) || extraerSoloNumeros(numControl);
+            }
+
+            // Emisor / Proveedor
+            const emisor = dte.emisor || {};
+            let provNombre = emisor.nombre || emisor.nombreComercial || emisor.razonSocial || dte.proveedor || dte.nombreProveedor || '';
+            if (typeof provNombre === 'object') provNombre = provNombre.nombre || '';
+            provNombre = String(provNombre).trim().toUpperCase();
+
+            // Receptor
+            const receptor = dte.receptor || {};
+            const receptorNombre = receptor.nombre || receptor.nombreComercial || 'FERRETERIA FERROGAR, S.A. DE C.V.';
+
+            // Cuerpo del documento (Productos / Ítems)
+            const items = [];
+            const cuerpo = dte.cuerpoDocumento || dte.items || [];
+            if (Array.isArray(cuerpo)) {
+                cuerpo.forEach((it, idx) => {
+                    items.push({
+                        numItem: it.numItem !== undefined ? it.numItem : (idx + 1),
+                        codigo: it.codigo || '-',
+                        descripcion: it.descripcion || 'Producto / Servicio sin descripción',
+                        cantidad: parseFloat(it.cantidad) || 0,
+                        uniMedida: it.uniMedida || '59',
+                        precioUni: parseFloat(it.precioUni) || 0,
+                        montoDescu: parseFloat(it.montoDescu) || 0,
+                        ventaGravada: parseFloat(it.ventaGravada || it.ventaExenta || it.ventaNoSuj) || 0,
+                        tributos: it.tributos || []
+                    });
+                });
+            }
+
+            // Resumen financiero e impuestos
+            const res = dte.resumen || {};
+            const subTotal = parseFloat(res.subTotal || res.subTotalVentas || res.totalGravada) || 0;
+            const totalDescu = parseFloat(res.totalDescu) || 0;
+            
+            // Buscar IVA 13% en tributos
+            let iva13 = 0;
+            if (Array.isArray(res.tributos)) {
+                const tribIva = res.tributos.find(t => String(t.codigo) === '20');
+                if (tribIva) iva13 = parseFloat(tribIva.valor) || 0;
+            }
+            if (iva13 === 0 && res.iva) iva13 = parseFloat(res.iva) || 0;
+
+            const ivaPerci1 = parseFloat(res.ivaPerci1) || 0;
+            const ivaRete1 = parseFloat(res.ivaRete1) || 0;
+            const montoTotalOperacion = parseFloat(res.montoTotalOperacion) || (subTotal + iva13);
+            const totalPagar = parseFloat(res.totalPagar) || (montoTotalOperacion + ivaPerci1 - ivaRete1);
+            const totalLetras = res.totalLetras || '';
+            const condicionOperacion = res.condicionOperacion === 2 ? 'Crédito' : (res.condicionOperacion === 1 ? 'Contado' : 'Crédito');
+
+            // Sello y respuesta MH
+            const respMH = dte.responseMH || dte.respuestaMH || {};
+            const sello = respMH.selloRecibido || dte.selloRecibido || dte.sello || '';
+            const estadoMH = respMH.estado || 'PROCESADO';
+            const fhProcesamiento = respMH.fhProcesamiento || `${fecEmi} ${horEmi}`;
+
+            // Sucursal sugerida del apéndice
+            const sucursalSugerida = mapearSucursalDesdeDte(dte);
+
+            // Apéndice detallado (para mostrar en la vista)
+            let sucClienteApendice = '';
+            if (dte.apendice && Array.isArray(dte.apendice)) {
+                const apSuc = dte.apendice.find(a => (a.campo || '').toLowerCase().includes('suc') || (a.etiqueta || '').toLowerCase().includes('suc'));
+                if (apSuc) sucClienteApendice = apSuc.valor || '';
+            }
+
+            return {
+                raw: dte,
+                version,
+                tipoDte,
+                codigoGeneracion: codGen,
+                numeroControl: numControl,
+                correlativoCcf,
+                fecha: fecEmi,
+                hora: horEmi,
+                provNombre,
+                emisor: {
+                    nombre: provNombre,
+                    nit: emisor.nit || '',
+                    nrc: emisor.nrc || '',
+                    telefono: emisor.telefono || '',
+                    correo: emisor.correo || '',
+                    descActividad: emisor.descActividad || ''
+                },
+                receptor: {
+                    nombre: receptorNombre,
+                    nit: receptor.nit || '',
+                    nrc: receptor.nrc || '',
+                    sucursalApendice: sucClienteApendice || sucursalSugerida
+                },
+                items,
+                resumen: {
+                    subTotal,
+                    totalDescu,
+                    iva13,
+                    ivaPerci1,
+                    ivaRete1,
+                    montoTotalOperacion,
+                    totalPagar,
+                    totalLetras,
+                    condicionOperacion
+                },
+                montoOperacion: montoTotalOperacion,
+                totalPagar: totalPagar,
+                sello,
+                estadoMH,
+                fhProcesamiento,
+                sucursalSugerida
+            };
+        }
+
+        // ==========================================
+        // ALGORITMO DE DETECCIÓN INTELIGENTE DE FACTURAS EXISTENTES
+        // ==========================================
+        function buscarFacturaExistentePorDTE(datosDte) {
+            if (!datosDte || !appData.facturas || appData.facturas.length === 0) return null;
+
+            const provDteUpper = (datosDte.provNombre || '').toUpperCase();
+            const numControlUpper = (datosDte.numeroControl || '').toUpperCase();
+            const codGenUpper = (datosDte.codigoGeneracion || '').toUpperCase();
+            const correlativoDte = datosDte.correlativoCcf;
+            const correlativoNumsDte = extraerSoloNumeros(correlativoDte);
+            const fechaDte = datosDte.fecha;
+            const totalPagar = datosDte.totalPagar;
+            const montoOp = datosDte.montoOperacion;
+
+            // Criterio 1: Coincidencia EXACTA por UUID (Código de Generación)
+            if (codGenUpper) {
+                const matchUuid = appData.facturas.find(f => f.codigoGeneracion && String(f.codigoGeneracion).trim().toUpperCase() === codGenUpper);
+                if (matchUuid) {
+                    return { factura: matchUuid, motivo: 'UUID (Código de Generación exacto)' };
+                }
+            }
+
+            // Criterio 2: Mismo Proveedor + Coincidencia en Número CCF o Correlativo
+            const facturasMismoProv = appData.facturas.filter(f => {
+                const p = String(f.proveedor || '').trim().toUpperCase();
+                return p === provDteUpper || provDteUpper.includes(p) || p.includes(provDteUpper);
+            });
+
+            if (facturasMismoProv.length > 0) {
+                // 2.a: Match exacto de CCF con numeroControl o correlativo
+                for (const f of facturasMismoProv) {
+                    const ccfUpper = String(f.ccf || '').trim().toUpperCase();
+                    const ccfNums = extraerSoloNumeros(ccfUpper);
+
+                    if (ccfUpper === numControlUpper || (correlativoDte && ccfUpper === correlativoDte.toUpperCase())) {
+                        return { factura: f, motivo: 'Proveedor y Número de CCF exacto' };
+                    }
+
+                    if (correlativoNumsDte && ccfNums && ccfNums === correlativoNumsDte) {
+                        return { factura: f, motivo: `Proveedor y Correlativo Numérico coincidente (#${correlativoNumsDte})` };
+                    }
+                }
+
+                // 2.b: Match por Proveedor + Misma Fecha + Monto Cercano (tolerancia a percepción 1% / retención)
+                for (const f of facturasMismoProv) {
+                    const fFecha = formatearSoloFecha(f.fecha);
+                    const fMonto = parseFloat(f.monto) || 0;
+                    if (fFecha === fechaDte) {
+                        const difTotal = Math.abs(fMonto - totalPagar);
+                        const difOp = Math.abs(fMonto - montoOp);
+                        if (difTotal < 0.05 || difOp < 0.05 || difTotal <= 25.0) {
+                            return { factura: f, motivo: 'Proveedor, Fecha y Monto similar' };
+                        }
+                    }
+                }
+            }
+
+            // Criterio 3: Coincidencia general de CCF por correlativo numérico si es un número distintivo (> 3 dígitos)
+            if (correlativoNumsDte && correlativoNumsDte.length >= 3) {
+                const matchesGenerales = appData.facturas.filter(f => extraerSoloNumeros(f.ccf) === correlativoNumsDte);
+                if (matchesGenerales.length === 1) {
+                    return { factura: matchesGenerales[0], motivo: `Correlativo CCF #${correlativoNumsDte} registrado en el sistema` };
+                }
+            }
+
+            return null;
+        }
+
+        // ==========================================
+        // APERTURA Y CONTROL DE MODALES DE CARGA DTE
+        // ==========================================
+        window.abrirModalCargarJsonGlobal = function() {
+            dteContextoCarga = {
+                modo: 'global',
+                facturaTarget: null,
+                datosDte: null,
+                matchFactura: null
+            };
+            document.getElementById('modalCargarJsonTitulo').innerText = 'CARGAR FACTURA ELECTRÓNICA (DTE / JSON)';
+            document.getElementById('modalCargarJsonSubtitulo').innerText = 'Suba el archivo JSON para asociar a una factura existente o registrar una nueva.';
+            
+            const fileInput = document.getElementById('modalInputJsonFile');
+            if (fileInput) fileInput.value = '';
+            const textarea = document.getElementById('modalTextareaJson');
+            if (textarea) textarea.value = '';
+            const errBox = document.getElementById('modalCargarJsonError');
+            if (errBox) errBox.classList.add('hidden');
+
+            document.getElementById('modalCargarJsonDte').classList.remove('hidden');
+        };
+
+        window.abrirModalVincularJsonAFacturaActual = function() {
+            if (!facturaActivaHoja) {
+                alert('No hay una factura seleccionada actualmente.');
+                return;
+            }
+            dteContextoCarga = {
+                modo: 'vincular',
+                facturaTarget: facturaActivaHoja,
+                datosDte: null,
+                matchFactura: null
+            };
+            document.getElementById('modalCargarJsonTitulo').innerText = `VINCULAR ARCHIVO JSON A FACTURA: ${facturaActivaHoja.ccf}`;
+            document.getElementById('modalCargarJsonSubtitulo').innerText = `Proveedor: ${facturaActivaHoja.proveedor} | Monto actual: $${Number(facturaActivaHoja.monto).toFixed(2)}`;
+
+            const fileInput = document.getElementById('modalInputJsonFile');
+            if (fileInput) fileInput.value = '';
+            const textarea = document.getElementById('modalTextareaJson');
+            if (textarea) textarea.value = '';
+            const errBox = document.getElementById('modalCargarJsonError');
+            if (errBox) errBox.classList.add('hidden');
+
+            document.getElementById('modalCargarJsonDte').classList.remove('hidden');
+        };
+
+        window.cerrarModalCargarJson = function() {
+            document.getElementById('modalCargarJsonDte').classList.add('hidden');
+        };
+
+        window.cerrarModalVerificarDte = function() {
+            document.getElementById('modalVerificarDteExistente').classList.add('hidden');
+        };
+
+        // Procesadores de evento del modal de carga
+        window.procesarArchivoJsonModal = function(e) {
             const file = e.target.files && e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(evt) {
                 try {
                     const parsed = JSON.parse(evt.target.result);
-                    window.aplicarDatosDteJson(parsed);
+                    window.procesarEntradaJson(parsed);
+                } catch(err) {
+                    mostrarErrorModalJson('Error al interpretar archivo JSON: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        window.procesarTextoJsonModal = function() {
+            const txt = document.getElementById('modalTextareaJson').value.trim();
+            if (!txt) {
+                mostrarErrorModalJson('Por favor seleccione un archivo .json o pegue el texto JSON del DTE.');
+                return;
+            }
+            try {
+                const parsed = JSON.parse(txt);
+                window.procesarEntradaJson(parsed);
+            } catch(err) {
+                mostrarErrorModalJson('Error en sintaxis JSON: ' + err.message);
+            }
+        };
+
+        function mostrarErrorModalJson(msg) {
+            const errBox = document.getElementById('modalCargarJsonError');
+            if (errBox) {
+                errBox.innerText = msg;
+                errBox.classList.remove('hidden');
+            } else {
+                alert(msg);
+            }
+        }
+
+        // ==========================================
+        // PROCESAMIENTO CENTRAL DE DTE Y VINCULACIÓN
+        // ==========================================
+        window.procesarEntradaJson = async function(dteRaw) {
+            const datosDte = extraerDatosDTE(dteRaw);
+            if (!datosDte) {
+                mostrarErrorModalJson('El archivo no contiene una estructura DTE válida.');
+                return;
+            }
+
+            window.cerrarModalCargarJson();
+
+            // CASO A: Se abrió desde la hoja de una factura específica para vincularle directamente el JSON
+            if (dteContextoCarga.modo === 'vincular' && dteContextoCarga.facturaTarget) {
+                const fTarget = dteContextoCarga.facturaTarget;
+                
+                // Comparar montos
+                const montoActual = parseFloat(fTarget.monto) || 0;
+                const totalDte = datosDte.totalPagar;
+                const difMonto = Math.abs(montoActual - totalDte);
+
+                let actualizarMonto = false;
+                if (difMonto > 0.01) {
+                    const mensajePercepcion = datosDte.resumen.ivaPerci1 > 0 
+                        ? ` (Incluye percepción de IVA 1%: $${datosDte.resumen.ivaPerci1.toFixed(2)})` 
+                        : '';
+                    actualizarMonto = confirm(
+                        `El monto registrado en el sistema ($${montoActual.toFixed(2)}) difiere del Total a Pagar del DTE ($${totalDte.toFixed(2)})${mensajePercepcion}.\n\n` +
+                        `¿Desea actualizar el monto de la factura en el sistema a $${totalDte.toFixed(2)}?`
+                    );
+                }
+
+                await window.ejecutarAsociacionDteAFactura(fTarget, datosDte, actualizarMonto, true);
+                window.verHojaFactura(fTarget.proveedor, fTarget.ccf);
+                alert(`¡JSON vinculado con éxito a la factura ${fTarget.ccf}!\nSe cargaron ${datosDte.items.length} productos con sus precios e impuestos.`);
+                return;
+            }
+
+            // CASO B: Carga Global o desde formulario -> Verificar si ya existe en el sistema
+            const match = buscarFacturaExistentePorDTE(datosDte);
+
+            if (match && match.factura) {
+                // FACTURA ENCONTRADA -> Mostrar modal de verificación y comparativa
+                dteContextoCarga.matchFactura = match.factura;
+                dteContextoCarga.datosDte = datosDte;
+                window.mostrarModalComparativaFacturaExistente(match.factura, datosDte, match.motivo);
+            } else {
+                // FACTURA NO ENCONTRADA
+                if (dteContextoCarga.modo === 'formulario') {
+                    // Si viene desde la pestaña de registrar factura
+                    aplicarDatosAlFormularioRegistro(datosDte);
+                    alert(`Datos del DTE cargados en el formulario (${datosDte.items.length} productos detectados). Complete y guarde.`);
+                } else {
+                    // Modal global -> Ofrecer registrarla como nueva
+                    const deseaRegistrar = confirm(
+                        `No se encontró ninguna factura existente en el sistema que coincida con este DTE.\n\n` +
+                        `Proveedor: ${datosDte.provNombre}\n` +
+                        `CCF: ${datosDte.numeroControl}\n` +
+                        `Fecha: ${datosDte.fecha}\n` +
+                        `Total a Pagar: $${datosDte.totalPagar.toFixed(2)}\n\n` +
+                        `¿Desea ir al formulario de Registrar Factura con estos datos precargados?`
+                    );
+                    if (deseaRegistrar) {
+                        window.switchTab('facturas');
+                        aplicarDatosAlFormularioRegistro(datosDte);
+                    }
+                }
+            }
+        };
+
+        // Mostrar el modal interactivo de verificación
+        window.mostrarModalComparativaFacturaExistente = function(f, dte, motivo) {
+            const { saldo, estado } = calcularDatosFactura(f);
+            const montoFac = parseFloat(f.monto) || 0;
+            const totalDte = dte.totalPagar;
+            const montoOpDte = dte.montoOperacion;
+            const difTotal = Math.abs(montoFac - totalDte);
+
+            // Columna Sistema
+            document.getElementById('verifFacProv').innerText = f.proveedor;
+            document.getElementById('verifFacCCF').innerText = f.ccf;
+            document.getElementById('verifFacFecha').innerText = formatearSoloFecha(f.fecha);
+            document.getElementById('verifFacSucursal').innerText = f.sucursal || '-';
+            document.getElementById('verifFacMonto').innerText = formatMoney(montoFac);
+            document.getElementById('verifFacSaldo').innerText = formatMoney(saldo);
+            
+            const badgeEstado = document.getElementById('verifFacBadgeEstado');
+            badgeEstado.className = `text-[10px] font-bold px-2 py-0.5 rounded border ${
+                estado === 'CANCELADA' ? 'bg-accentGreen/15 text-accentGreen border-accentGreen/30' : (estado === 'VENCIDA' ? 'bg-accentRed/15 text-accentRed border-accentRed/30' : 'bg-accentYellow/15 text-accentYellow border-accentYellow/30')
+            }`;
+            badgeEstado.innerText = estado;
+
+            // Columna DTE
+            document.getElementById('verifDteProv').innerText = dte.provNombre;
+            document.getElementById('verifDteCCF').innerText = `${dte.numeroControl} (${dte.correlativoCcf})`;
+            document.getElementById('verifDteFecha').innerText = dte.fecha;
+            document.getElementById('verifDteSucursal').innerText = dte.sucursalSugerida;
+            document.getElementById('verifDteMontoOp').innerText = formatMoney(montoOpDte);
+            document.getElementById('verifDteTotalPagar').innerText = formatMoney(totalDte);
+
+            const perciBox = document.getElementById('verifDtePercepcionAviso');
+            if (dte.resumen.ivaPerci1 > 0) {
+                perciBox.innerText = `* Incluye percepción de IVA 1%: ${formatMoney(dte.resumen.ivaPerci1)}`;
+            } else {
+                perciBox.innerText = '';
+            }
+
+            // Diagnóstico de montos
+            const diagBox = document.getElementById('verifDiagnosticoBox');
+            const checkActualizarMonto = document.getElementById('verifCheckActualizarMonto');
+            const txtNuevoMonto = document.getElementById('verifTxtNuevoMonto');
+            txtNuevoMonto.innerText = formatMoney(totalDte);
+            document.getElementById('verifTxtNuevaSucursal').innerText = dte.sucursalSugerida;
+
+            if (difTotal < 0.01) {
+                diagBox.className = "p-3.5 rounded-xl border bg-emerald-500/15 border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2.5";
+                diagBox.innerHTML = `
+                    <i class="fa-solid fa-circle-check text-base"></i>
+                    <div>
+                        <strong>¡Montos coincidentes exactamente (${formatMoney(totalDte)})!</strong>
+                        <p class="text-[11px] text-emerald-200/80">Coincidencia detectada por: <em>${motivo}</em>. Puede vincular el detalle de productos directamente.</p>
+                    </div>
+                `;
+                checkActualizarMonto.checked = false;
+            } else {
+                const causaDif = dte.resumen.ivaPerci1 > 0 
+                    ? `por diferencia de percepción IVA 1% ($${dte.resumen.ivaPerci1.toFixed(2)})` 
+                    : `diferencia de $${difTotal.toFixed(2)}`;
+                diagBox.className = "p-3.5 rounded-xl border bg-amber-500/15 border-amber-500/40 text-amber-300 text-xs flex items-start gap-2.5";
+                diagBox.innerHTML = `
+                    <i class="fa-solid fa-triangle-exclamation text-base mt-0.5"></i>
+                    <div>
+                        <strong>Diferencia de Montos Detectada:</strong>
+                        <p class="text-[11px] text-amber-200/90 mt-0.5">
+                            Monto en sistema: <strong>${formatMoney(montoFac)}</strong> vs Total a Pagar DTE: <strong>${formatMoney(totalDte)}</strong> (${causaDif}).
+                        </p>
+                    </div>
+                `;
+                checkActualizarMonto.checked = true;
+            }
+
+            document.getElementById('modalVerificarDteExistente').classList.remove('hidden');
+        };
+
+        // Confirmar vinculación desde el modal comparativo
+        window.confirmarAsociacionDte = async function() {
+            const f = dteContextoCarga.matchFactura;
+            const dte = dteContextoCarga.datosDte;
+            if (!f || !dte) return;
+
+            const actualizarMonto = document.getElementById('verifCheckActualizarMonto').checked;
+            const actualizarSucursal = document.getElementById('verifCheckActualizarSucursal').checked;
+
+            window.cerrarModalVerificarDte();
+
+            await window.ejecutarAsociacionDteAFactura(f, dte, actualizarMonto, actualizarSucursal);
+
+            window.verHojaFactura(f.proveedor, f.ccf);
+            alert(`¡Factura ${f.ccf} asociada correctamente al DTE!\nSe vincularon ${dte.items.length} productos y datos de validación MH.`);
+        };
+
+        // Registrar DTE como factura nueva desde el modal comparativo
+        window.cargarDteComoFacturaNueva = function() {
+            const dte = dteContextoCarga.datosDte;
+            window.cerrarModalVerificarDte();
+            window.switchTab('facturas');
+            if (dte) aplicarDatosAlFormularioRegistro(dte);
+        };
+
+        // Función ejecutora de la asociación física a los datos de la factura
+        window.ejecutarAsociacionDteAFactura = async function(f, dte, actualizarMonto, actualizarSucursal) {
+            f.codigoGeneracion = dte.codigoGeneracion;
+            f.sello = dte.sello;
+            f.tipoDte = dte.tipoDte;
+            f.dteData = dte.raw;
+
+            if (actualizarMonto && dte.totalPagar > 0) {
+                f.monto = dte.totalPagar;
+            }
+
+            if (actualizarSucursal && dte.sucursalSugerida) {
+                f.sucursal = dte.sucursalSugerida;
+            }
+
+            // Si la factura no tenía nota, sugerir resumen de productos
+            if ((!f.nota || !f.nota.trim()) && dte.items.length > 0) {
+                f.nota = dte.items.map(it => `${it.cantidad}x ${it.descripcion}`).join(' | ').substring(0, 300);
+            }
+
+            // Persistir inmediatamente en caché y nube
+            try {
+                localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas));
+            } catch(e) {}
+
+            actualizarDashboard();
+            window.renderConsultaSaldos();
+            if (window.renderReportePorSucursal) window.renderReportePorSucursal();
+            if (window.renderCalendario) window.renderCalendario();
+
+            await sincronizarConGoogleSheetsSilencioso(f.proveedor);
+        };
+
+        // Llenar formulario de registrar factura
+        async function aplicarDatosAlFormularioRegistro(datosDte) {
+            ultimoDteCargadoFormulario = datosDte.raw;
+
+            if (datosDte.fecha) document.getElementById('facFecha').value = datosDte.fecha;
+            if (datosDte.numeroControl) document.getElementById('facCCF').value = datosDte.numeroControl;
+            if (datosDte.totalPagar > 0) document.getElementById('facMonto').value = datosDte.totalPagar.toFixed(2);
+            if (datosDte.codigoGeneracion) document.getElementById('facCodigoGeneracion').value = datosDte.codigoGeneracion;
+            if (datosDte.sello) document.getElementById('facSello').value = datosDte.sello;
+            if (datosDte.tipoDte) document.getElementById('facTipoDte').value = datosDte.tipoDte;
+            if (datosDte.sucursalSugerida) {
+                const sucSelect = document.getElementById('facSucursal');
+                if (sucSelect) sucSelect.value = datosDte.sucursalSugerida;
+            }
+
+            // Proveedor
+            if (datosDte.provNombre) {
+                const provExistente = appData.proveedores.find(p => p.nombre.toUpperCase() === datosDte.provNombre || datosDte.provNombre.includes(p.nombre.toUpperCase()) || p.nombre.toUpperCase().includes(datosDte.provNombre));
+                if (provExistente) {
+                    document.getElementById('facProveedor').value = provExistente.nombre;
+                } else {
+                    const registrar = confirm(`El emisor del DTE "${datosDte.provNombre}" no está registrado.\n\n¿Desea agregarlo a la lista de proveedores ahora?`);
+                    if (registrar) {
+                        const nuevoProv = {
+                            nombre: datosDte.provNombre,
+                            giro: datosDte.emisor.descActividad || '',
+                            nrc: datosDte.emisor.nrc || '',
+                            nit: datosDte.emisor.nit || '',
+                            tel: datosDte.emisor.telefono || ''
+                        };
+                        appData.proveedores.push(nuevoProv);
+                        actualizarSelectoresProveedores();
+                        document.getElementById('facProveedor').value = datosDte.provNombre;
+                        await sincronizarConGoogleSheetsSilencioso(datosDte.provNombre);
+                    }
+                }
+            }
+
+            // Nota resumen de productos
+            if (datosDte.items.length > 0 && !document.getElementById('facNota').value) {
+                document.getElementById('facNota').value = datosDte.items.map(it => `${it.cantidad}x ${it.descripcion}`).join(' | ').substring(0, 300);
+            }
+
+            const banner = document.getElementById('bannerDteExito');
+            const txtBanner = document.getElementById('bannerDteTexto');
+            if (banner && txtBanner) {
+                txtBanner.innerHTML = `<i class="fa-solid fa-circle-check"></i> DTE cargado: <strong>${datosDte.items.length} productos</strong> por <strong>${formatMoney(datosDte.totalPagar)}</strong> (${datosDte.sucursalSugerida})`;
+                banner.classList.remove('hidden');
+            }
+        }
+
+        // Carga de JSON desde los inputs de la pestaña "Registrar Factura"
+        window.procesarArchivoJsonDTE = function(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            dteContextoCarga = { modo: 'formulario', facturaTarget: null };
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const parsed = JSON.parse(evt.target.result);
+                    window.procesarEntradaJson(parsed);
                 } catch(err) {
                     alert('Error al leer el archivo JSON: ' + err.message);
                 }
@@ -2892,128 +3792,46 @@
         };
 
         window.procesarTextoJsonDTE = function() {
-            const txt = document.getElementById('textoJsonDTE').value.trim();
+            const txtElem = document.getElementById('inputTextoJsonDTE') || document.getElementById('textoJsonDTE');
+            const txt = txtElem ? txtElem.value.trim() : '';
             if (!txt) {
                 alert('Por favor pegue el contenido JSON en el área de texto.');
                 return;
             }
+            dteContextoCarga = { modo: 'formulario', facturaTarget: null };
             try {
                 const parsed = JSON.parse(txt);
-                window.aplicarDatosDteJson(parsed);
+                window.procesarEntradaJson(parsed);
             } catch(err) {
                 alert('Error al procesar el texto JSON. Verifique la sintaxis: ' + err.message);
             }
         };
 
-        window.aplicarDatosDteJson = async function(dte) {
-            if (!dte || typeof dte !== 'object') {
-                alert('El JSON proporcionado no tiene una estructura válida.');
+        // Descargar archivo JSON de la factura actualmente abierta
+        window.descargarJsonFacturaActual = function() {
+            if (!facturaActivaHoja || !facturaActivaHoja.dteData) {
+                alert('Esta factura no tiene archivo JSON asociado.');
                 return;
             }
 
-            // 1. Extraer proveedor / emisor
-            let provNombre = '';
-            if (dte.emisor) {
-                provNombre = dte.emisor.nombre || dte.emisor.nombreComercial || dte.emisor.razonSocial || '';
-            } else if (dte.proveedor) {
-                provNombre = typeof dte.proveedor === 'string' ? dte.proveedor : (dte.proveedor.nombre || '');
-            } else if (dte.nombreProveedor) {
-                provNombre = dte.nombreProveedor;
-            }
-            provNombre = String(provNombre).trim().toUpperCase();
+            const dataStr = typeof facturaActivaHoja.dteData === 'string' 
+                ? facturaActivaHoja.dteData 
+                : JSON.stringify(facturaActivaHoja.dteData, null, 2);
 
-            // 2. Extraer CCF / Número de Documento / Código Generación
-            let ccf = '';
-            let codGen = '';
-            if (dte.identificacion) {
-                codGen = dte.identificacion.codigoGeneracion || '';
-                ccf = dte.identificacion.numeroControl || codGen || '';
-            }
-            if (!ccf) ccf = dte.ccf || dte.numeroFactura || dte.numeroControl || dte.documento || codGen || '';
-            if (!codGen && dte.codigoGeneracion) codGen = dte.codigoGeneracion;
-
-            // 3. Extraer Fecha Emisión
-            let fecha = '';
-            if (dte.identificacion && dte.identificacion.fecEmi) {
-                fecha = dte.identificacion.fecEmi;
-            } else if (dte.fecha || dte.fechaEmision) {
-                fecha = dte.fecha || dte.fechaEmision;
-            }
-            fecha = formatearSoloFecha(fecha);
-
-            // 4. Extraer Monto
-            let monto = 0;
-            if (dte.resumen) {
-                monto = parseFloat(dte.resumen.totalPagar || dte.resumen.montoTotalOperacion || dte.resumen.totalGravada || dte.resumen.subTotal) || 0;
-            } else if (dte.monto !== undefined) {
-                monto = parseFloat(dte.monto) || 0;
-            } else if (dte.total !== undefined) {
-                monto = parseFloat(dte.total) || 0;
-            }
-
-            // 5. Sello MH
-            let sello = '';
-            if (dte.respuestaMH && dte.respuestaMH.selloRecibido) {
-                sello = dte.respuestaMH.selloRecibido;
-            } else if (dte.selloRecibido || dte.sello) {
-                sello = dte.selloRecibido || dte.sello;
-            }
-
-            // 6. Tipo DTE
-            let tipoDte = '03';
-            if (dte.identificacion && dte.identificacion.tipoDte) {
-                tipoDte = String(dte.identificacion.tipoDte).trim();
-            } else if (dte.tipoDte) {
-                tipoDte = String(dte.tipoDte).trim();
-            }
-
-            // Asignar a campos del formulario
-            if (fecha) document.getElementById('facFecha').value = fecha;
-            if (ccf) document.getElementById('facCCF').value = ccf;
-            if (monto > 0) document.getElementById('facMonto').value = monto.toFixed(2);
-            if (codGen) document.getElementById('facCodigoGeneracion').value = codGen;
-            if (sello) document.getElementById('facSello').value = sello;
-            if (tipoDte) document.getElementById('facTipoDte').value = tipoDte;
-
-            // Manejo de Proveedor: Verificar si existe o auto-registrar
-            if (provNombre) {
-                const provExistente = appData.proveedores.find(p => p.nombre.toUpperCase() === provNombre || provNombre.includes(p.nombre.toUpperCase()) || p.nombre.toUpperCase().includes(provNombre));
-                if (provExistente) {
-                    document.getElementById('facProveedor').value = provExistente.nombre;
-                } else {
-                    const registrar = confirm(`El emisor del DTE "${provNombre}" no está en su lista de proveedores.\n\n¿Desea agregarlo automáticamente ahora?`);
-                    if (registrar) {
-                        const nuevoProv = {
-                            nombre: provNombre,
-                            giro: (dte.emisor && (dte.emisor.descActividad || dte.emisor.giro)) || '',
-                            nrc: (dte.emisor && dte.emisor.nrc) || '',
-                            nit: (dte.emisor && dte.emisor.nit) || '',
-                            tel: (dte.emisor && (dte.emisor.telefono || dte.emisor.tel)) || ''
-                        };
-                        appData.proveedores.push(nuevoProv);
-                        actualizarSelectoresProveedores();
-                        document.getElementById('facProveedor').value = provNombre;
-                        await sincronizarConGoogleSheetsSilencioso(provNombre);
-                    }
-                }
-            }
-
-            // Sugerir nota si hay observaciones o ítems
-            let notaAuto = '';
-            if (dte.motivo || dte.descripcion || dte.observaciones) {
-                notaAuto = dte.motivo || dte.descripcion || dte.observaciones;
-            } else if (dte.cuerpoDocumento && Array.isArray(dte.cuerpoDocumento) && dte.cuerpoDocumento.length > 0) {
-                notaAuto = dte.cuerpoDocumento.map(it => `${it.cantidad || 1}x ${it.descripcion || ''}`).join(' | ');
-            }
-            if (notaAuto && !document.getElementById('facNota').value) {
-                document.getElementById('facNota').value = notaAuto.substring(0, 200);
-            }
-
-            alert('Datos del DTE / JSON cargados exitosamente en el formulario.');
+            const blob = new Blob([dataStr], { type: 'application/json;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const nombreArchivo = `DTE_${facturaActivaHoja.ccf.replace(/[^a-zA-Z0-9_-]/g, '_')}_${facturaActivaHoja.codigoGeneracion || 'MH'}.json`;
+            link.setAttribute('href', url);
+            link.setAttribute('download', nombreArchivo);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         };
 
         // ==========================================
-        // HOJA APARTE DE PROVEEDOR Y FACTURA
+        // HOJA APARTE DE PROVEEDOR Y FACTURA (DETALLE INDIVIDUAL)
         // ==========================================
         window.verHojaProveedor = function(nombreProv) {
             if (!nombreProv) return;
@@ -3089,6 +3907,7 @@
             document.getElementById('modalHojaProveedor').classList.add('hidden');
         };
 
+        // Ver expediente completo de la factura con desglose de productos DTE
         window.verHojaFactura = function(prov, ccf) {
             if (!prov || !ccf) return;
             const f = appData.facturas.find(x => String(x.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase() && String(x.ccf).trim().toUpperCase() === String(ccf).trim().toUpperCase());
@@ -3097,7 +3916,161 @@
                 return;
             }
 
+            facturaActivaHoja = f;
+
             const { saldo, diasAntiguedad, estado, abonoTotal } = calcularDatosFactura(f);
+
+            document.getElementById('hojaFacCCF').innerText = f.ccf;
+            const btnProv = document.getElementById('hojaFacBtnProv');
+            btnProv.innerText = f.proveedor;
+            btnProv.onclick = () => {
+                window.cerrarHojaFactura();
+                window.verHojaProveedor(f.proveedor);
+            };
+
+            document.getElementById('hojaFacSucursal').innerText = f.sucursal || '-';
+            document.getElementById('hojaFacFechaEmision').innerText = formatearSoloFecha(f.fecha);
+            document.getElementById('hojaFacDiasAntiguedad').innerText = `${diasAntiguedad} días transcurridos`;
+
+            let colorBadge = estado === 'CANCELADA' ? 'bg-accentGreen/10 text-accentGreen border-accentGreen/30' : (estado === 'VENCIDA' ? 'bg-accentRed/10 text-accentRed border-accentRed/30' : 'bg-accentYellow/10 text-accentYellow border-accentYellow/30');
+            const badge = document.getElementById('hojaFacBadgeEstado');
+            badge.className = `text-[11px] font-bold px-2.5 py-0.5 rounded border ${colorBadge}`;
+            badge.innerText = estado;
+
+            document.getElementById('hojaFacMontoOriginal').innerText = formatMoney(f.monto);
+            document.getElementById('hojaFacTotalAbonos').innerText = formatMoney((abonoTotal - (parseFloat(f.nc) || 0)));
+            document.getElementById('hojaFacMontoNC').innerText = formatMoney(f.nc || 0);
+            document.getElementById('hojaFacSaldoActual').innerText = formatMoney(saldo);
+
+            document.getElementById('hojaFacNotaTexto').innerText = f.nota && f.nota.trim() ? f.nota : 'Sin notas registradas para esta factura.';
+
+            document.getElementById('hojaFacDteCodigo').innerText = f.codigoGeneracion || 'No aplica / No registrado';
+            document.getElementById('hojaFacDteSello').innerText = f.sello || 'No aplica / No registrado';
+            document.getElementById('hojaFacDteTipo').innerText = f.tipoDte ? `${f.tipoDte} - Comprobante de Crédito Fiscal` : '03 - Comprobante de Crédito Fiscal';
+
+            // ========================================================
+            // RENDERIZADO DEL DETALLE ELECTRÓNICO (PRODUCTOS DTE)
+            // ========================================================
+            const bannerSinDte = document.getElementById('hojaFacBannerSinDte');
+            const contenidoConDte = document.getElementById('hojaFacContenidoConDte');
+            const badgeTieneDte = document.getElementById('hojaFacBadgeTieneDte');
+            const btnDescargarJson = document.getElementById('hojaFacBtnDescargarJson');
+            const tbodyItems = document.getElementById('hojaFacTbodyItems');
+            const contadorItems = document.getElementById('hojaFacContadorItems');
+
+            let parsedDte = null;
+            if (f.dteData) {
+                if (typeof f.dteData === 'object') parsedDte = f.dteData;
+                else {
+                    try { parsedDte = JSON.parse(f.dteData); } catch(e){}
+                }
+            }
+
+            if (parsedDte) {
+                const infoDte = extraerDatosDTE(parsedDte);
+
+                if (bannerSinDte) bannerSinDte.classList.add('hidden');
+                if (contenidoConDte) contenidoConDte.classList.remove('hidden');
+                if (badgeTieneDte) badgeTieneDte.classList.remove('hidden');
+                if (btnDescargarJson) btnDescargarJson.classList.remove('hidden');
+
+                // Datos de Hacienda y Receptor
+                document.getElementById('hojaFacDteFechaProc').innerText = infoDte.fhProcesamiento || '-';
+                document.getElementById('hojaFacDteReceptor').innerText = infoDte.receptor.nombre || '-';
+                document.getElementById('hojaFacDteSucApendice').innerText = infoDte.receptor.sucursalApendice || f.sucursal || '-';
+
+                // Renderizar tabla de productos
+                tbodyItems.innerHTML = '';
+                const items = infoDte.items || [];
+                if (contadorItems) contadorItems.innerText = `${items.length} producto${items.length === 1 ? '' : 's'}`;
+
+                items.forEach((it, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-bgDark/40 transition";
+                    tr.innerHTML = `
+                        <td class="p-2.5 text-center font-mono font-bold text-slate-400">${it.numItem || (idx + 1)}</td>
+                        <td class="p-2.5 font-mono text-cyan-300 font-semibold">${it.codigo}</td>
+                        <td class="p-2.5 font-medium text-white">${it.descripcion}</td>
+                        <td class="p-2.5 text-right font-mono font-bold text-white">${Number(it.cantidad).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td class="p-2.5 text-center text-slate-400 font-mono text-[11px]">${it.uniMedida === 59 ? 'Unid (59)' : it.uniMedida}</td>
+                        <td class="p-2.5 text-right font-mono">${formatMoney(it.precioUni)}</td>
+                        <td class="p-2.5 text-right font-mono ${it.montoDescu > 0 ? 'text-amber-300 font-semibold' : 'text-slate-500'}">${formatMoney(it.montoDescu)}</td>
+                        <td class="p-2.5 text-right font-mono font-bold text-emerald-400">${formatMoney(it.ventaGravada)}</td>
+                    `;
+                    tbodyItems.appendChild(tr);
+                });
+
+                if (items.length === 0) {
+                    tbodyItems.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-500 italic">No se especificaron ítems individuales en el cuerpo del DTE.</td></tr>`;
+                }
+
+                // Resumen Financiero y Tributario
+                document.getElementById('hojaFacDteCondicion').innerText = infoDte.resumen.condicionOperacion;
+                document.getElementById('hojaFacDteTotalLetras').innerText = infoDte.resumen.totalLetras || '-';
+                document.getElementById('hojaFacDteEmisorDetalle').innerText = `${infoDte.emisor.nombre} (NIT: ${infoDte.emisor.nit || '-'} | NRC: ${infoDte.emisor.nrc || '-'})`;
+
+                document.getElementById('hojaFacDteSubtotal').innerText = formatMoney(infoDte.resumen.subTotal);
+                document.getElementById('hojaFacDteTotalDescuento').innerText = formatMoney(infoDte.resumen.totalDescu);
+                document.getElementById('hojaFacDteIva13').innerText = formatMoney(infoDte.resumen.iva13);
+
+                const filaPerci = document.getElementById('hojaFacFilaPercepcion');
+                if (infoDte.resumen.ivaPerci1 > 0) {
+                    if (filaPerci) filaPerci.classList.remove('hidden');
+                    document.getElementById('hojaFacDteIvaPerci1').innerText = formatMoney(infoDte.resumen.ivaPerci1);
+                } else {
+                    if (filaPerci) filaPerci.classList.add('hidden');
+                }
+
+                const filaRete = document.getElementById('hojaFacFilaRetencion');
+                if (infoDte.resumen.ivaRete1 > 0) {
+                    if (filaRete) filaRete.classList.remove('hidden');
+                    document.getElementById('hojaFacDteIvaRete1').innerText = formatMoney(infoDte.resumen.ivaRete1);
+                } else {
+                    if (filaRete) filaRete.classList.add('hidden');
+                }
+
+                document.getElementById('hojaFacDteTotalPagar').innerText = formatMoney(infoDte.resumen.totalPagar);
+
+            } else {
+                // No tiene DTE
+                if (bannerSinDte) bannerSinDte.classList.remove('hidden');
+                if (contenidoConDte) contenidoConDte.classList.add('hidden');
+                if (badgeTieneDte) badgeTieneDte.classList.add('hidden');
+                if (btnDescargarJson) btnDescargarJson.classList.add('hidden');
+            }
+
+            // Historial de Abonos
+            const tbody = document.getElementById('hojaFacTbodyAbonos');
+            tbody.innerHTML = '';
+            const abonos = f.abonos || [];
+            document.getElementById('hojaFacContadorAbonos').innerText = `${abonos.length} abono${abonos.length === 1 ? '' : 's'} registrado${abonos.length === 1 ? '' : 's'}`;
+
+            abonos.forEach((ab, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-bgDark/40";
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-slate-400">#${idx + 1}</td>
+                    <td class="p-3 font-semibold text-white">${formatearSoloFecha(ab.fecha)}</td>
+                    <td class="p-3 font-bold text-accentGreen font-mono">${formatMoney(ab.monto)}</td>
+                    <td class="p-3">${ab.metodo || 'TRANSFERENCIA'}</td>
+                    <td class="p-3">${ab.banco || 'NINGUNO'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if (abonos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No hay abonos registrados para esta factura.</td></tr>`;
+            }
+
+            // Botón Ir a abonar
+            const btnIrAbonar = document.getElementById('hojaFacBtnIrAbonar');
+            btnIrAbonar.onclick = () => {
+                window.cerrarHojaFactura();
+                window.irAAbonarFactura(f.proveedor, f.ccf);
+            };
+
+            document.getElementById('modalHojaFactura').classList.remove('hidden');
+        };
 
             document.getElementById('hojaFacCCF').innerText = f.ccf;
             const btnProv = document.getElementById('hojaFacBtnProv');
