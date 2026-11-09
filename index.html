@@ -75,6 +75,7 @@
         }
         /* Oculto en pantalla normal, visible al imprimir */
         #pdf-proveedor-titulo, #pdf-sucursal-titulo { display: none; }
+        #modalLogin.hidden { display: none !important; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased">
@@ -1727,7 +1728,11 @@
                 try {
                     const datosSesion = JSON.parse(sesionActiva);
                     appData.currentUserRole = datosSesion.rol || 'admin';
-                    document.getElementById('modalLogin').classList.add('hidden');
+                    const modal = document.getElementById('modalLogin');
+                    if (modal) {
+                        modal.classList.add('hidden');
+                        modal.style.display = 'none';
+                    }
                     cargarDatosDesdeGoogleSheetsInicio();
                 } catch(e) {}
             }
@@ -1874,19 +1879,19 @@
             const u = rawUser.toUpperCase();
             const p = rawPass;
 
-            // Validación estricta de contraseñas autorizadas:
-            // 1. Administrador: Usuario Ferrogar y Contraseña Fg2026 (tolerante a mayúsculas/minúsculas)
-            const esAdmin = (u === 'FERROGAR') && (p === 'Fg2026' || p.toLowerCase() === 'fg2026');
+            // Validación estricta de credenciales oficiales autorizadas:
+            // 1. Administrador: Usuario Ferrogar (o Admin) y Contraseña Fg2026 (o fg2026)
+            const esAdmin = (u === 'FERROGAR' || u === 'ADMIN') && (p === 'Fg2026' || p.toLowerCase() === 'fg2026');
 
-            // 2. Solo Lectura: Usuario Consultas y Contraseña 2026
-            const esViewer = (u === 'CONSULTAS') && (p === '2026');
+            // 2. Solo Lectura: Usuario Consultas (o Consulta / Viewer) y Contraseña 2026
+            const esViewer = (u === 'CONSULTAS' || u === 'CONSULTA' || u === 'VIEWER') && (p === '2026');
 
             if (!esAdmin && !esViewer) {
                 if (errBox && errTxt) {
-                    errTxt.innerHTML = `<strong>Credenciales incorrectas:</strong> Verifique usuario y contraseña.`;
+                    errTxt.innerHTML = `<strong>Credenciales incorrectas:</strong> Verifique su usuario y contraseña.`;
                     errBox.classList.remove('hidden');
                 } else {
-                    alert('Credenciales incorrectas. Verifique su usuario y contraseña.');
+                    alert('Credenciales incorrectas. Verifique usuario y contraseña.');
                 }
                 return false;
             }
@@ -1897,7 +1902,10 @@
             appData.currentUserRole = rolElegido;
 
             const modal = document.getElementById('modalLogin');
-            if (modal) modal.classList.add('hidden');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }
 
             try {
                 const sesionData = JSON.stringify({ rol: rolElegido });
@@ -1918,9 +1926,15 @@
         window.cerrarSesion = function() {
             sessionStorage.removeItem('estado_cuenta_sesion');
             localStorage.removeItem('estado_cuenta_sesion');
-            document.getElementById('modalLogin').classList.remove('hidden');
-            document.getElementById('loginUser').value = '';
-            document.getElementById('loginPass').value = '';
+            const modal = document.getElementById('modalLogin');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
+            }
+            const uInput = document.getElementById('loginUser');
+            const pInput = document.getElementById('loginPass');
+            if (uInput) uInput.value = '';
+            if (pInput) pInput.value = '';
             const errBox = document.getElementById('loginErrorMsg');
             if (errBox) errBox.classList.add('hidden');
         };
@@ -4131,67 +4145,6 @@
 
             if (abonos.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No hay abonos registrados para esta factura.</td></tr>`;
-            }
-
-            // Botón Ir a abonar
-            const btnIrAbonar = document.getElementById('hojaFacBtnIrAbonar');
-            btnIrAbonar.onclick = () => {
-                window.cerrarHojaFactura();
-                window.irAAbonarFactura(f.proveedor, f.ccf);
-            };
-
-            document.getElementById('modalHojaFactura').classList.remove('hidden');
-        };
-
-            document.getElementById('hojaFacCCF').innerText = f.ccf;
-            const btnProv = document.getElementById('hojaFacBtnProv');
-            btnProv.innerText = f.proveedor;
-            btnProv.onclick = () => {
-                window.cerrarHojaFactura();
-                window.verHojaProveedor(f.proveedor);
-            };
-
-            document.getElementById('hojaFacSucursal').innerText = f.sucursal || '-';
-            document.getElementById('hojaFacFechaEmision').innerText = formatearSoloFecha(f.fecha);
-            document.getElementById('hojaFacDiasAntiguedad').innerText = `${diasAntiguedad} días transcurridos`;
-
-            let colorBadge = estado === 'CANCELADA' ? 'bg-accentGreen/10 text-accentGreen border-accentGreen/30' : (estado === 'VENCIDA' ? 'bg-accentRed/10 text-accentRed border-accentRed/30' : 'bg-accentYellow/10 text-accentYellow border-accentYellow/30');
-            const badge = document.getElementById('hojaFacBadgeEstado');
-            badge.className = `text-[11px] font-bold px-2.5 py-0.5 rounded border ${colorBadge}`;
-            badge.innerText = estado;
-
-            document.getElementById('hojaFacMontoOriginal').innerText = formatMoney(f.monto);
-            document.getElementById('hojaFacTotalAbonos').innerText = formatMoney((abonoTotal - (parseFloat(f.nc) || 0)));
-            document.getElementById('hojaFacMontoNC').innerText = formatMoney(f.nc || 0);
-            document.getElementById('hojaFacSaldoActual').innerText = formatMoney(saldo);
-
-            document.getElementById('hojaFacNotaTexto').innerText = f.nota && f.nota.trim() ? f.nota : 'Sin notas registradas para esta factura.';
-
-            document.getElementById('hojaFacDteCodigo').innerText = f.codigoGeneracion || 'No aplica / No registrado';
-            document.getElementById('hojaFacDteSello').innerText = f.sello || 'No aplica / No registrado';
-            document.getElementById('hojaFacDteTipo').innerText = f.tipoDte || '03 - Comprobante de Crédito Fiscal';
-
-            // Abonos
-            const tbody = document.getElementById('hojaFacTbodyAbonos');
-            tbody.innerHTML = '';
-            const abonos = f.abonos || [];
-            document.getElementById('hojaFacContadorAbonos').innerText = `${abonos.length} abonos registrados`;
-
-            abonos.forEach((ab, idx) => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-bgDark/40";
-                tr.innerHTML = `
-                    <td class="p-3 font-mono font-bold text-slate-400">#${idx + 1}</td>
-                    <td class="p-3 font-semibold text-white">${formatearSoloFecha(ab.fecha)}</td>
-                    <td class="p-3 font-bold text-accentGreen">${formatMoney(ab.monto)}</td>
-                    <td class="p-3">${ab.metodo || 'TRANSFERENCIA'}</td>
-                    <td class="p-3">${ab.banco || 'NINGUNO'}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            if (abonos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">No hay abonos registrados para esta factura.</td></tr>`;
             }
 
             // Botón Ir a abonar
