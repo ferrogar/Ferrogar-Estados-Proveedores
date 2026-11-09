@@ -94,7 +94,7 @@
                 <span id="loginErrorText">Credenciales incorrectas.</span>
             </div>
             
-            <form onsubmit="window.procesarLogin(event)" class="space-y-4">
+            <form onsubmit="window.procesarLogin(event); return false;" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Usuario</label>
                     <div class="relative">
@@ -1860,53 +1860,59 @@
             }
         };
 
-        window.procesarLogin = async function(e) {
-            e.preventDefault();
-            const rawUser = document.getElementById('loginUser').value.trim();
-            const rawPass = document.getElementById('loginPass').value.trim();
+        window.procesarLogin = function(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            const rawUser = document.getElementById('loginUser') ? document.getElementById('loginUser').value.trim() : '';
+            const rawPass = document.getElementById('loginPass') ? document.getElementById('loginPass').value.trim() : '';
             const errBox = document.getElementById('loginErrorMsg');
             const errTxt = document.getElementById('loginErrorText');
 
             const u = rawUser.toUpperCase();
             const p = rawPass;
-            const pLower = p.toLowerCase();
 
-            // Administrador: Permite Ferrogar, ferrogar, FERROGAR o admin con claves Fg2026, fg2026, FG2026, 2026, etc.
-            const esAdmin = (u === 'FERROGAR' || u === 'ADMIN') && 
-                            (p === 'Fg2026' || pLower === 'fg2026' || p === '2026' || pLower === 'ferrogar2026' || pLower === 'ferrogar' || pLower === 'admin');
+            // Validación estricta de contraseñas autorizadas:
+            // 1. Administrador: Usuario Ferrogar y Contraseña Fg2026 (tolerante a mayúsculas/minúsculas)
+            const esAdmin = (u === 'FERROGAR') && (p === 'Fg2026' || p.toLowerCase() === 'fg2026');
 
-            // Consultas / Solo Lectura: Permite Consultas, consultas, CONSULTAS o viewer con claves 2026, consultas, etc.
-            const esViewer = (u === 'CONSULTAS' || u === 'CONSULTA' || u === 'VIEWER') && 
-                             (p === '2026' || pLower === 'consultas' || pLower === 'consultas2026');
+            // 2. Solo Lectura: Usuario Consultas y Contraseña 2026
+            const esViewer = (u === 'CONSULTAS') && (p === '2026');
 
-            if (esAdmin) {
-                appData.currentUserRole = 'admin';
-            } else if (esViewer) {
-                appData.currentUserRole = 'viewer';
-            } else {
+            if (!esAdmin && !esViewer) {
                 if (errBox && errTxt) {
-                    errTxt.innerHTML = `<strong>Credenciales incorrectas:</strong> Verifique su usuario y contraseña.`;
+                    errTxt.innerHTML = `<strong>Credenciales incorrectas:</strong> Verifique usuario y contraseña.`;
                     errBox.classList.remove('hidden');
                 } else {
                     alert('Credenciales incorrectas. Verifique su usuario y contraseña.');
                 }
-                return;
+                return false;
             }
 
             if (errBox) errBox.classList.add('hidden');
 
-            const sesionData = JSON.stringify({ rol: appData.currentUserRole });
-            sessionStorage.setItem('estado_cuenta_sesion', sesionData);
+            const rolElegido = esAdmin ? 'admin' : 'viewer';
+            appData.currentUserRole = rolElegido;
 
-            const checkRecordar = document.getElementById('checkRecordarSesion');
-            if (checkRecordar && checkRecordar.checked) {
-                localStorage.setItem('estado_cuenta_sesion', sesionData);
-            }
+            const modal = document.getElementById('modalLogin');
+            if (modal) modal.classList.add('hidden');
 
-            document.getElementById('modalLogin').classList.add('hidden');
-            
-            aplicarPermisosRol();
-            cargarDatosDesdeGoogleSheetsInicio();
+            try {
+                const sesionData = JSON.stringify({ rol: rolElegido });
+                sessionStorage.setItem('estado_cuenta_sesion', sesionData);
+
+                const checkRecordar = document.getElementById('checkRecordarSesion');
+                if (checkRecordar && checkRecordar.checked) {
+                    localStorage.setItem('estado_cuenta_sesion', sesionData);
+                }
+            } catch(err) {}
+
+            try { aplicarPermisosRol(); } catch(err) {}
+            try { cargarDatosDesdeGoogleSheetsInicio(); } catch(err) {}
+
+            return false;
         };
 
         window.cerrarSesion = function() {
