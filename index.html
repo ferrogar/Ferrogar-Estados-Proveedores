@@ -99,7 +99,7 @@
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Usuario</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-user"></i></span>
-                        <input type="text" id="loginUser" required placeholder="Ferrogar o Consultas" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full bg-bgDark border border-borderDark rounded-lg pl-10 pr-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                        <input type="text" id="loginUser" required placeholder="Ingrese usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full bg-bgDark border border-borderDark rounded-lg pl-10 pr-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
                     </div>
                 </div>
                 <div>
@@ -124,20 +124,6 @@
                     <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
                 </button>
             </form>
-
-            <div class="pt-2 border-t border-borderDark/60 text-[11px] text-slate-400 space-y-1 bg-bgDark/40 p-3 rounded-xl border border-borderDark/40">
-                <div class="font-semibold text-slate-300 flex items-center gap-1">
-                    <i class="fa-solid fa-circle-info text-accentCyan text-[10px]"></i> Credenciales autorizadas:
-                </div>
-                <div class="flex justify-between items-center text-slate-300">
-                    <span>👑 <strong>Administrador:</strong></span>
-                    <span class="font-mono text-cyan-300">Ferrogar / Fg2026</span>
-                </div>
-                <div class="flex justify-between items-center text-slate-300">
-                    <span>👁️ <strong>Solo Lectura:</strong></span>
-                    <span class="font-mono text-amber-300">Consultas / 2026</span>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -1899,10 +1885,10 @@
                 appData.currentUserRole = 'viewer';
             } else {
                 if (errBox && errTxt) {
-                    errTxt.innerHTML = `<strong>Credenciales no reconocidas:</strong><br>Verifique mayúsculas o espacios.<br>• Admin: <em>Ferrogar</em> (Clave: <em>Fg2026</em>)<br>• Consultas: <em>Consultas</em> (Clave: <em>2026</em>)`;
+                    errTxt.innerHTML = `<strong>Credenciales incorrectas:</strong> Verifique su usuario y contraseña.`;
                     errBox.classList.remove('hidden');
                 } else {
-                    alert('Credenciales incorrectas. Verifique usuario y contraseña.\n\n• Administrador: Ferrogar / Fg2026\n• Solo Lectura: Consultas / 2026');
+                    alert('Credenciales incorrectas. Verifique su usuario y contraseña.');
                 }
                 return;
             }
