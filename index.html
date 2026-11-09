@@ -79,14 +79,19 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased">
 
-    <div id="modalLogin" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-cardDark border border-borderDark rounded-2xl max-w-md w-full p-8 shadow-2xl space-y-6">
+    <div id="modalLogin" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-cardDark border border-borderDark rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5">
             <div class="text-center space-y-2">
-                <div class="inline-flex p-3 bg-accentCyan/10 text-accentCyan rounded-2xl border border-accentCyan/30 mb-2">
+                <div class="inline-flex p-3 bg-accentCyan/10 text-accentCyan rounded-2xl border border-accentCyan/30 mb-1">
                     <i class="fa-solid fa-lock text-2xl"></i>
                 </div>
                 <h2 class="text-xl font-extrabold text-white tracking-tight">ACCESO AL SISTEMA</h2>
-                <p class="text-xs text-slate-400">Ingrese sus credenciales corporativas para continuar</p>
+                <p class="text-xs text-slate-400">Ingrese sus credenciales para acceder al control de estados de cuenta</p>
+            </div>
+
+            <div id="loginErrorMsg" class="hidden p-3 rounded-xl bg-accentRed/15 border border-accentRed/30 text-rose-300 text-xs flex items-start gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-base shrink-0 mt-0.5"></i>
+                <span id="loginErrorText">Credenciales incorrectas.</span>
             </div>
             
             <form onsubmit="window.procesarLogin(event)" class="space-y-4">
@@ -94,20 +99,45 @@
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Usuario</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-user"></i></span>
-                        <input type="text" id="loginUser" required placeholder="Usuario" class="w-full bg-bgDark border border-borderDark rounded-lg pl-10 pr-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                        <input type="text" id="loginUser" required placeholder="Ferrogar o Consultas" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full bg-bgDark border border-borderDark rounded-lg pl-10 pr-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Contraseña</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-key"></i></span>
-                        <input type="password" id="loginPass" required placeholder="••••••••" class="w-full bg-bgDark border border-borderDark rounded-lg pl-10 pr-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                        <input type="password" id="loginPass" required placeholder="••••••••" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full bg-bgDark border border-borderDark rounded-lg pl-10 pr-10 py-2 text-xs text-white focus:outline-none focus:border-accentCyan font-mono">
+                        <button type="button" onclick="window.toggleLoginPassVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white" title="Mostrar/Ocultar contraseña">
+                            <i id="iconTogglePass" class="fa-solid fa-eye text-xs"></i>
+                        </button>
                     </div>
                 </div>
-                <button type="submit" class="w-full py-2.5 rounded-lg bg-accentCyan hover:bg-cyan-500 text-slate-950 font-bold text-xs shadow-lg shadow-accentCyan/20 transition flex items-center justify-center gap-2">
+
+                <div class="flex items-center justify-between text-[11px] text-slate-400">
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="checkRecordarSesion" checked class="w-3.5 h-3.5 rounded text-accentCyan bg-bgDark border-borderDark focus:ring-accentCyan">
+                        <span>Recordar sesión en este equipo</span>
+                    </label>
+                </div>
+
+                <button type="submit" id="btnLoginSubmit" class="w-full py-2.5 rounded-lg bg-accentCyan hover:bg-cyan-500 text-slate-950 font-bold text-xs shadow-lg shadow-accentCyan/20 transition flex items-center justify-center gap-2">
                     <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
                 </button>
             </form>
+
+            <div class="pt-2 border-t border-borderDark/60 text-[11px] text-slate-400 space-y-1 bg-bgDark/40 p-3 rounded-xl border border-borderDark/40">
+                <div class="font-semibold text-slate-300 flex items-center gap-1">
+                    <i class="fa-solid fa-circle-info text-accentCyan text-[10px]"></i> Credenciales autorizadas:
+                </div>
+                <div class="flex justify-between items-center text-slate-300">
+                    <span>👑 <strong>Administrador:</strong></span>
+                    <span class="font-mono text-cyan-300">Ferrogar / Fg2026</span>
+                </div>
+                <div class="flex justify-between items-center text-slate-300">
+                    <span>👁️ <strong>Solo Lectura:</strong></span>
+                    <span class="font-mono text-amber-300">Consultas / 2026</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1705,8 +1735,8 @@
                 mostrarEstadoSincronizacion('exito', 'Datos en caché listos');
             }
 
-            // 2. Verificar sesión activa
-            const sesionActiva = sessionStorage.getItem('estado_cuenta_sesion');
+            // 2. Verificar sesión activa (en sessionStorage o localStorage persistente)
+            const sesionActiva = sessionStorage.getItem('estado_cuenta_sesion') || localStorage.getItem('estado_cuenta_sesion');
             if (sesionActiva) {
                 try {
                     const datosSesion = JSON.parse(sesionActiva);
@@ -1825,33 +1855,82 @@
             } catch (err) {}
         }
 
+        window.toggleLoginPassVisibility = function() {
+            const passInput = document.getElementById('loginPass');
+            const icon = document.getElementById('iconTogglePass');
+            if (!passInput) return;
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                if (icon) {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            } else {
+                passInput.type = 'password';
+                if (icon) {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            }
+        };
+
         window.procesarLogin = async function(e) {
             e.preventDefault();
-            const usuario = document.getElementById('loginUser').value.trim();
-            const pass = document.getElementById('loginPass').value.trim();
+            const rawUser = document.getElementById('loginUser').value.trim();
+            const rawPass = document.getElementById('loginPass').value.trim();
+            const errBox = document.getElementById('loginErrorMsg');
+            const errTxt = document.getElementById('loginErrorText');
 
-            if (usuario === 'Ferrogar' && pass === 'Fg2026') {
+            const u = rawUser.toUpperCase();
+            const p = rawPass;
+            const pLower = p.toLowerCase();
+
+            // Administrador: Permite Ferrogar, ferrogar, FERROGAR o admin con claves Fg2026, fg2026, FG2026, 2026, etc.
+            const esAdmin = (u === 'FERROGAR' || u === 'ADMIN') && 
+                            (p === 'Fg2026' || pLower === 'fg2026' || p === '2026' || pLower === 'ferrogar2026' || pLower === 'ferrogar' || pLower === 'admin');
+
+            // Consultas / Solo Lectura: Permite Consultas, consultas, CONSULTAS o viewer con claves 2026, consultas, etc.
+            const esViewer = (u === 'CONSULTAS' || u === 'CONSULTA' || u === 'VIEWER') && 
+                             (p === '2026' || pLower === 'consultas' || pLower === 'consultas2026');
+
+            if (esAdmin) {
                 appData.currentUserRole = 'admin';
-            } else if (usuario === 'Consultas' && pass === '2026') {
+            } else if (esViewer) {
                 appData.currentUserRole = 'viewer';
             } else {
-                alert('Credenciales incorrectas. Verifique usuario y contraseña.');
+                if (errBox && errTxt) {
+                    errTxt.innerHTML = `<strong>Credenciales no reconocidas:</strong><br>Verifique mayúsculas o espacios.<br>• Admin: <em>Ferrogar</em> (Clave: <em>Fg2026</em>)<br>• Consultas: <em>Consultas</em> (Clave: <em>2026</em>)`;
+                    errBox.classList.remove('hidden');
+                } else {
+                    alert('Credenciales incorrectas. Verifique usuario y contraseña.\n\n• Administrador: Ferrogar / Fg2026\n• Solo Lectura: Consultas / 2026');
+                }
                 return;
             }
 
-            sessionStorage.setItem('estado_cuenta_sesion', JSON.stringify({ rol: appData.currentUserRole }));
+            if (errBox) errBox.classList.add('hidden');
+
+            const sesionData = JSON.stringify({ rol: appData.currentUserRole });
+            sessionStorage.setItem('estado_cuenta_sesion', sesionData);
+
+            const checkRecordar = document.getElementById('checkRecordarSesion');
+            if (checkRecordar && checkRecordar.checked) {
+                localStorage.setItem('estado_cuenta_sesion', sesionData);
+            }
+
             document.getElementById('modalLogin').classList.add('hidden');
             
             aplicarPermisosRol();
             cargarDatosDesdeGoogleSheetsInicio();
-            alert(`Bienvenido. Sesión iniciada como: ${appData.currentUserRole === 'admin' ? 'Administrador' : 'Solo Lectura'}`);
         };
 
         window.cerrarSesion = function() {
             sessionStorage.removeItem('estado_cuenta_sesion');
+            localStorage.removeItem('estado_cuenta_sesion');
             document.getElementById('modalLogin').classList.remove('hidden');
             document.getElementById('loginUser').value = '';
             document.getElementById('loginPass').value = '';
+            const errBox = document.getElementById('loginErrorMsg');
+            if (errBox) errBox.classList.add('hidden');
         };
 
         function aplicarPermisosRol() {
