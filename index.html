@@ -1648,18 +1648,18 @@
                             <label class="block font-semibold text-slate-300 mb-1" id="lblBnkMontoAprobado">Monto Aprobado Inicial *</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 font-mono">$</span>
-                                <input type="number" step="0.01" min="0" id="bnkFormMontoAprobado" required placeholder="0.00" class="w-full bg-cardDark border border-borderDark rounded-lg pl-6 pr-2.5 py-1.5 text-white font-mono font-bold focus:outline-none focus:border-accentCyan">
+                                <input type="number" step="0.01" min="0" id="bnkFormMontoAprobado" placeholder="0.00" class="w-full bg-cardDark border border-borderDark rounded-lg pl-6 pr-2.5 py-1.5 text-white font-mono font-bold focus:outline-none focus:border-accentCyan">
                             </div>
                         </div>
                         <div>
-                            <label class="block font-semibold text-slate-300 mb-1" id="lblBnkSaldoActual">Saldo Capital Actual *</label>
+                            <label class="block font-semibold text-slate-300 mb-1" id="lblBnkSaldoActual">Saldo Capital Actual</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 font-mono">$</span>
-                                <input type="number" step="0.01" min="0" id="bnkFormSaldoActual" required placeholder="0.00" class="w-full bg-cardDark border border-borderDark rounded-lg pl-6 pr-2.5 py-1.5 text-white font-mono font-bold text-emerald-400 focus:outline-none focus:border-accentCyan">
+                                <input type="number" step="0.01" min="0" id="bnkFormSaldoActual" placeholder="0.00" class="w-full bg-cardDark border border-borderDark rounded-lg pl-6 pr-2.5 py-1.5 text-white font-mono font-bold text-emerald-400 focus:outline-none focus:border-accentCyan">
                             </div>
                         </div>
                         <div id="campoCuotaPactada">
-                            <label class="block font-semibold text-slate-300 mb-1">Cuota Mensual Pactada (Seg. Carta) *</label>
+                            <label class="block font-semibold text-slate-300 mb-1">Cuota Mensual Pactada (Seg. Carta)</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 font-mono">$</span>
                                 <input type="number" step="0.01" min="0" id="bnkFormCuotaPactada" placeholder="0.00" class="w-full bg-cardDark border border-borderDark rounded-lg pl-6 pr-2.5 py-1.5 text-white font-mono font-bold text-accentCyan focus:outline-none focus:border-accentCyan">
@@ -1670,12 +1670,12 @@
                     <!-- Tasas de Interés y Base de Cálculo -->
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-1">
                         <div>
-                            <label class="block font-semibold text-slate-300 mb-1">Tasa Interés Nominal Anual (%) *</label>
-                            <input type="number" step="0.01" min="0" id="bnkFormTasaNominal" required placeholder="Ej. 8.50" class="w-full bg-cardDark border border-borderDark rounded-lg px-2.5 py-1.5 text-white font-mono focus:outline-none focus:border-accentCyan">
+                            <label class="block font-semibold text-slate-300 mb-1">Tasa Interés Nominal Anual (%)</label>
+                            <input type="number" step="0.01" min="0" id="bnkFormTasaNominal" placeholder="Ej. 8.50" class="w-full bg-cardDark border border-borderDark rounded-lg px-2.5 py-1.5 text-white font-mono focus:outline-none focus:border-accentCyan">
                         </div>
                         <div>
-                            <label class="block font-semibold text-slate-300 mb-1">Tasa Interés Efectiva Anual (%) *</label>
-                            <input type="number" step="0.01" min="0" id="bnkFormTasaEfectiva" required placeholder="Ej. 9.35" class="w-full bg-cardDark border border-borderDark rounded-lg px-2.5 py-1.5 text-white font-mono focus:outline-none focus:border-accentCyan">
+                            <label class="block font-semibold text-slate-300 mb-1">Tasa Interés Efectiva Anual (%)</label>
+                            <input type="number" step="0.01" min="0" id="bnkFormTasaEfectiva" placeholder="Ej. 9.35" class="w-full bg-cardDark border border-borderDark rounded-lg px-2.5 py-1.5 text-white font-mono focus:outline-none focus:border-accentCyan">
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-300 mb-1">Tasa Interés Moratorio Anual (%)</label>
@@ -2756,12 +2756,16 @@
                 console.warn("Aviso: No se pudo leer la caché local:", e);
             }
 
-            if (appData.proveedores.length > 0 || appData.facturas.length > 0) {
+            if (appData.proveedores.length > 0 || appData.facturas.length > 0 || (appData.bancos && appData.bancos.length > 0)) {
                 actualizarSelectoresProveedores();
                 actualizarDashboard();
                 window.renderConsultaSaldos();
                 if (window.renderReportePorSucursal) window.renderReportePorSucursal();
+                if (window.renderCalendarioPagos) window.renderCalendarioPagos();
+                if (window.renderBancos) window.renderBancos();
                 if (window.renderCalendario) window.renderCalendario();
+                if (window.renderCalendarioPagos) window.renderCalendarioPagos();
+                if (window.renderBancos) window.renderBancos();
                 mostrarEstadoSincronizacion('exito', 'Datos en caché listos');
             }
 
@@ -2854,6 +2858,8 @@
                 actualizarDashboard();
                 window.renderConsultaSaldos();
                 if (window.renderReportePorSucursal) window.renderReportePorSucursal();
+                if (window.renderCalendarioPagos) window.renderCalendarioPagos();
+                if (window.renderBancos) window.renderBancos();
             }
         }
 
@@ -2891,6 +2897,8 @@
                         window.renderConsultaSaldos();
                         if (window.renderReportePorSucursal) window.renderReportePorSucursal();
                         if (window.renderCalendario) window.renderCalendario();
+                        if (window.renderCalendarioPagos) window.renderCalendarioPagos();
+                        if (window.renderBancos) window.renderBancos();
                     }
                     mostrarEstadoSincronizacion('exito', 'Conectado a Google Sheets');
                 }
@@ -4420,6 +4428,7 @@
                     proveedores: appData.proveedores,
                     facturas: appData.facturas,
                     bancos: appData.bancos || [],
+                    programacionPagos: appData.programacionPagos || [],
                     proveedorAfectado: proveedorAfectado || null
                 };
 
@@ -6785,14 +6794,14 @@
         window.filtrarProductosBancarios = function(tipo) {
             window.filtroBancosActual = tipo || 'TODOS';
             
-            const filtros = ['TODOS', 'decreciente', 'rotativo', 'tarjeta', 'cuenta'];
-            filtros.forEach(f => {
-                const btn = document.getElementById(`btnFiltroBnk-${f}`);
+            const tipos = ['TODOS', 'decreciente', 'rotativo', 'tarjeta', 'cuenta'];
+            tipos.forEach(t => {
+                const btn = document.getElementById(`btn-bnk-tab-${t}`) || document.getElementById(`btnFiltroBnk-${t}`);
                 if (btn) {
-                    if (f === window.filtroBancosActual) {
-                        btn.className = "px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs transition";
+                    if (t === window.filtroBancosActual) {
+                        btn.className = "px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold transition shadow-md shadow-emerald-500/20";
                     } else {
-                        btn.className = "px-3 py-1.5 rounded-lg bg-cardDark text-slate-300 hover:text-white border border-borderDark text-xs font-semibold transition";
+                        btn.className = "px-3 py-1.5 rounded-lg bg-bgDark text-slate-300 hover:text-white transition";
                     }
                 }
             });
@@ -6804,8 +6813,13 @@
             if (!appData.bancos) appData.bancos = [];
 
             let totalDeudaBancaria = 0;
-            let totalLimitesAprobados = 0;
-            let totalDisponibleBancos = 0;
+            let cantObligaciones = 0;
+            let saldoDecrecientes = 0;
+            let saldoRotativos = 0;
+            let limiteRotativos = 0;
+            let saldoTarjetas = 0;
+            let limiteTarjetas = 0;
+            let saldoCuentas = 0;
             let cuotasMesBancos = 0;
 
             appData.bancos.forEach(b => {
@@ -6813,44 +6827,92 @@
                 const montoAprobado = parseFloat(b.montoAprobado) || 0;
                 const cuota = parseFloat(b.cuotaMensualPactada || b.pagoMinimo || 0);
 
-                if (b.tipo === 'decreciente' || b.tipo === 'rotativo') {
+                if (b.tipo === 'decreciente') {
                     totalDeudaBancaria += saldo;
-                    totalLimitesAprobados += montoAprobado;
-                    if (b.tipo === 'rotativo') {
-                        totalDisponibleBancos += Math.max(0, montoAprobado - saldo);
-                    }
+                    saldoDecrecientes += saldo;
                     cuotasMesBancos += cuota;
+                    if (saldo > 0) cantObligaciones++;
+                } else if (b.tipo === 'rotativo') {
+                    totalDeudaBancaria += saldo;
+                    saldoRotativos += saldo;
+                    limiteRotativos += montoAprobado;
+                    cuotasMesBancos += cuota;
+                    if (saldo > 0 || montoAprobado > 0) cantObligaciones++;
                 } else if (b.tipo === 'tarjeta') {
                     totalDeudaBancaria += saldo;
-                    totalLimitesAprobados += montoAprobado;
-                    totalDisponibleBancos += Math.max(0, montoAprobado - saldo);
+                    saldoTarjetas += saldo;
+                    limiteTarjetas += montoAprobado;
                     cuotasMesBancos += cuota;
+                    if (saldo > 0 || montoAprobado > 0) cantObligaciones++;
                 } else if (b.tipo === 'cuenta') {
-                    totalDisponibleBancos += saldo;
+                    saldoCuentas += saldo;
+                } else {
+                    totalDeudaBancaria += saldo;
+                    saldoDecrecientes += saldo;
+                    cuotasMesBancos += cuota;
+                    if (saldo > 0) cantObligaciones++;
                 }
             });
 
-            const elDeuda = document.getElementById('kpiBancoDeudaTotal');
-            const elLimites = document.getElementById('kpiBancoLimitesTotal');
-            const elDisp = document.getElementById('kpiBancoDisponibleTotal');
-            const elCuotas = document.getElementById('kpiBancoCuotasMes');
-
+            // 1. KPI Deuda Total
+            const elDeuda = document.getElementById('bnkKpiDeudaTotal') || document.getElementById('kpiBancoDeudaTotal');
+            const elCantOblig = document.getElementById('bnkKpiCantObligaciones');
             if (elDeuda) elDeuda.textContent = formatMoney(totalDeudaBancaria);
-            if (elLimites) elLimites.textContent = formatMoney(totalLimitesAprobados);
-            if (elDisp) elDisp.textContent = formatMoney(totalDisponibleBancos);
+            if (elCantOblig) elCantOblig.textContent = `${cantObligaciones} obligaciones activas`;
+
+            // 2. KPI Decrecientes
+            const elDec = document.getElementById('bnkKpiDecrecientes');
+            const elCantDec = document.getElementById('bnkKpiCantDecrecientes');
+            if (elDec) elDec.textContent = formatMoney(saldoDecrecientes);
+            if (elCantDec) elCantDec.textContent = `Saldo capital actual`;
+
+            // 3. KPI Rotativos
+            const elRot = document.getElementById('bnkKpiRotativos');
+            const elDispRot = document.getElementById('bnkKpiDispRotativos');
+            if (elRot) elRot.textContent = formatMoney(saldoRotativos);
+            if (elDispRot) elDispRot.textContent = `Disponible: ${formatMoney(Math.max(0, limiteRotativos - saldoRotativos))}`;
+
+            // 4. KPI Tarjetas
+            const elTarj = document.getElementById('bnkKpiTarjetas');
+            const elDispTarj = document.getElementById('bnkKpiDispTarjetas');
+            if (elTarj) elTarj.textContent = formatMoney(saldoTarjetas);
+            if (elDispTarj) elDispTarj.textContent = `Disponible: ${formatMoney(Math.max(0, limiteTarjetas - saldoTarjetas))}`;
+
+            // 5. KPI Cuentas
+            const elCuentas = document.getElementById('bnkKpiCuentas');
+            const elSaldoCont = document.getElementById('bnkKpiSaldoContable');
+            if (elCuentas) elCuentas.textContent = formatMoney(saldoCuentas);
+            if (elSaldoCont) elSaldoCont.textContent = `Saldo disponible neto`;
+
+            // 6. KPI Cuotas Mes
+            const elCuotas = document.getElementById('bnkKpiCuotasMes') || document.getElementById('kpiBancoCuotasMes');
             if (elCuotas) elCuotas.textContent = formatMoney(cuotasMesBancos);
+
+            // Actualizar contadores de las pestañas
+            const cntTodos = document.getElementById('bnkCountTodos');
+            const cntDec = document.getElementById('bnkCountDecrecientes');
+            const cntRot = document.getElementById('bnkCountRotativos');
+            const cntTarj = document.getElementById('bnkCountTarjetas');
+            const cntCta = document.getElementById('bnkCountCuentas');
+
+            if (cntTodos) cntTodos.textContent = appData.bancos.length;
+            if (cntDec) cntDec.textContent = appData.bancos.filter(b => b.tipo === 'decreciente' || !b.tipo).length;
+            if (cntRot) cntRot.textContent = appData.bancos.filter(b => b.tipo === 'rotativo').length;
+            if (cntTarj) cntTarj.textContent = appData.bancos.filter(b => b.tipo === 'tarjeta').length;
+            if (cntCta) cntCta.textContent = appData.bancos.filter(b => b.tipo === 'cuenta').length;
 
             window.renderListaBancos();
         };
 
         window.renderListaBancos = function() {
-            const contenedor = document.getElementById('gridProductosBancarios');
+            const contenedor = document.getElementById('contenedorTarjetasBancarias') || document.getElementById('gridProductosBancarios');
             if (!contenedor) return;
             contenedor.innerHTML = '';
 
-            const busqueda = (document.getElementById('inputBuscarBanco')?.value || '').toLowerCase().trim();
+            const busqueda = (document.getElementById('filtroBuscadorBancos')?.value || document.getElementById('inputBuscarBanco')?.value || '').toLowerCase().trim();
             let lista = (appData.bancos || []).filter(b => {
-                const cumpleTipo = (window.filtroBancosActual === 'TODOS' || b.tipo === window.filtroBancosActual);
+                const tipoProd = b.tipo || 'decreciente';
+                const cumpleTipo = (window.filtroBancosActual === 'TODOS' || tipoProd === window.filtroBancosActual);
                 if (!cumpleTipo) return false;
                 if (!busqueda) return true;
                 const banco = (b.banco || '').toLowerCase();
@@ -6935,20 +6997,24 @@
                         </div>
 
                         <div class="space-y-1 text-[11px] text-slate-300 bg-bgDark/40 p-2.5 rounded-lg border border-borderDark/40 font-mono">
-                            ${b.tipo !== 'cuenta' ? `
+                            ${b.tipo !== 'cuenta' && cuotaPactada > 0 ? `
                                 <div class="flex justify-between">
                                     <span class="text-slate-400">Cuota Mensual:</span>
                                     <span class="font-bold text-accentCyan">${formatMoney(cuotaPactada)}</span>
                                 </div>
                             ` : ''}
-                            <div class="flex justify-between">
-                                <span class="text-slate-400">Tasa Nominal:</span>
-                                <span class="text-white">${tasaNom.toFixed(2)}% anual</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-400">Tasa Efectiva:</span>
-                                <span class="text-accentCyan">${tasaEf.toFixed(2)}% anual</span>
-                            </div>
+                            ${tasaNom > 0 ? `
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Tasa Nominal:</span>
+                                    <span class="text-white">${tasaNom.toFixed(2)}% anual</span>
+                                </div>
+                            ` : ''}
+                            ${tasaEf > 0 ? `
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Tasa Efectiva:</span>
+                                    <span class="text-accentCyan">${tasaEf.toFixed(2)}% anual</span>
+                                </div>
+                            ` : ''}
                             ${seguroDanos > 0 ? `
                                 <div class="flex justify-between">
                                     <span class="text-slate-400">Seguro Daños + IVA:</span>
@@ -6957,7 +7023,7 @@
                             ` : ''}
                             <div class="flex justify-between">
                                 <span class="text-slate-400">Base Días:</span>
-                                <span class="text-slate-300">${b.baseCalculo || '360'} Días (Año Comercial)</span>
+                                <span class="text-slate-300">${b.baseCalculo || '360'} Días (${b.baseCalculo === '365' ? 'Calendario' : 'Comercial'})</span>
                             </div>
                         </div>
                     </div>
@@ -7052,24 +7118,24 @@
                 if (bqFechas) bqFechas.classList.add('hidden');
                 if (cpSeguros) cpSeguros.classList.add('hidden');
                 if (cpCuota) cpCuota.classList.add('hidden');
-                if (lblMonto) lblMonto.textContent = 'Límite de Crédito Aprobado *';
-                if (lblSaldo) lblSaldo.textContent = 'Saldo Utilizado a la Fecha *';
+                if (lblMonto) lblMonto.textContent = 'Límite de Crédito Aprobado';
+                if (lblSaldo) lblSaldo.textContent = 'Saldo Utilizado a la Fecha';
             } else if (tipo === 'cuenta') {
                 if (bqTarjeta) bqTarjeta.classList.add('hidden');
                 if (bqCuenta) bqCuenta.classList.remove('hidden');
                 if (bqFechas) bqFechas.classList.add('hidden');
                 if (cpSeguros) cpSeguros.classList.add('hidden');
                 if (cpCuota) cpCuota.classList.add('hidden');
-                if (lblMonto) lblMonto.textContent = 'Monto Apertura / Límite *';
-                if (lblSaldo) lblSaldo.textContent = 'Saldo Contable Disponible *';
+                if (lblMonto) lblMonto.textContent = 'Monto Apertura / Límite';
+                if (lblSaldo) lblSaldo.textContent = 'Saldo Contable Disponible';
             } else {
                 if (bqTarjeta) bqTarjeta.classList.add('hidden');
                 if (bqCuenta) bqCuenta.classList.add('hidden');
                 if (bqFechas) bqFechas.classList.remove('hidden');
                 if (cpSeguros) cpSeguros.classList.remove('hidden');
                 if (cpCuota) cpCuota.classList.remove('hidden');
-                if (lblMonto) lblMonto.textContent = 'Monto Aprobado Inicial *';
-                if (lblSaldo) lblSaldo.textContent = 'Saldo Capital Actual *';
+                if (lblMonto) lblMonto.textContent = 'Monto Aprobado Inicial';
+                if (lblSaldo) lblSaldo.textContent = 'Saldo Capital Actual';
             }
         };
 
@@ -7079,11 +7145,20 @@
 
             const id = document.getElementById('bnkFormId')?.value;
             const tipo = document.getElementById('bnkFormTipo')?.value || 'decreciente';
-            const banco = document.getElementById('bnkFormBanco')?.value;
+            const banco = document.getElementById('bnkFormBanco')?.value || 'BANCO AGRÍCOLA';
             const referencia = document.getElementById('bnkFormReferencia')?.value.trim();
-            const titular = document.getElementById('bnkFormTitular')?.value.trim();
-            const montoAprobado = parseFloat(document.getElementById('bnkFormMontoAprobado')?.value) || 0;
-            const saldoActual = parseFloat(document.getElementById('bnkFormSaldoActual')?.value) || 0;
+            const titular = document.getElementById('bnkFormTitular')?.value.trim() || 'FERRETERIA FERROGAR, S.A. DE C.V.';
+            let montoAprobado = parseFloat(document.getElementById('bnkFormMontoAprobado')?.value) || 0;
+            let saldoActual = parseFloat(document.getElementById('bnkFormSaldoActual')?.value) || 0;
+
+            if (!referencia) {
+                showNotification("Debe ingresar la referencia o número de cuenta / crédito", "error");
+                return;
+            }
+
+            if (montoAprobado === 0 && saldoActual > 0) montoAprobado = saldoActual;
+            if (saldoActual === 0 && montoAprobado > 0) saldoActual = montoAprobado;
+
             const cuotaMensualPactada = parseFloat(document.getElementById('bnkFormCuotaPactada')?.value) || 0;
             const tasaNominal = parseFloat(document.getElementById('bnkFormTasaNominal')?.value) || 0;
             const tasaEfectiva = parseFloat(document.getElementById('bnkFormTasaEfectiva')?.value) || 0;
@@ -7103,11 +7178,6 @@
             const limiteSobregiro = parseFloat(document.getElementById('bnkFormLimiteSobregiro')?.value) || 0;
             const tasaSobregiro = parseFloat(document.getElementById('bnkFormTasaSobregiro')?.value) || 0;
             const notas = document.getElementById('bnkFormNotas')?.value.trim() || '';
-
-            if (!referencia || montoAprobado <= 0) {
-                showNotification("Debe ingresar la referencia y un monto válido", "error");
-                return;
-            }
 
             let prod = null;
             if (id) {
@@ -7454,7 +7524,7 @@
         };
 
         // ==========================================
-        // IMPORTADOR DE JSON BANCARIO
+        // IMPORTADOR DE JSON BANCARIO (UNIVERSAL)
         // ==========================================
         window.abrirModalCargarJsonBancario = function() {
             const txtArea = document.getElementById('textoJsonBancario');
@@ -7478,13 +7548,16 @@
                     window.procesarEntradaJsonBancario(data);
                 } catch(err) {
                     showNotification("El archivo seleccionado no tiene un formato JSON válido: " + err.message, "error");
+                } finally {
+                    e.target.value = '';
                 }
             };
             reader.readAsText(file);
         };
 
         window.procesarTextoJsonBancario = function() {
-            const raw = document.getElementById('textoJsonBancario')?.value.trim();
+            const txtEl = document.getElementById('textoJsonBancario');
+            const raw = txtEl?.value.trim();
             if (!raw) {
                 showNotification("Pegue el contenido JSON bancario a procesar", "error");
                 return;
@@ -7492,6 +7565,7 @@
             try {
                 const data = JSON.parse(raw);
                 window.procesarEntradaJsonBancario(data);
+                if (txtEl) txtEl.value = '';
             } catch(err) {
                 showNotification("Error de sintaxis en JSON: " + err.message, "error");
             }
@@ -7500,59 +7574,168 @@
         window.procesarEntradaJsonBancario = function(data) {
             if (!data) return;
 
-            const items = Array.isArray(data) ? data : (data.productos || data.movimientos || data.cuentas || [data]);
-            let creados = 0;
+            // Desempaquetar si viene anidado en data, response, estadoCuenta, etc.
+            let root = data;
+            if (root.data && typeof root.data === 'object' && !Array.isArray(root.data)) root = root.data;
+            if (root.response && typeof root.response === 'object' && !Array.isArray(root.response)) root = root.response;
+            if (root.estadoCuenta && typeof root.estadoCuenta === 'object' && !Array.isArray(root.estadoCuenta)) root = root.estadoCuenta;
+
+            // Detectar lista de productos o usar el objeto único
+            let items = [];
+            if (Array.isArray(data)) {
+                items = data;
+            } else if (Array.isArray(root.bancos)) {
+                items = root.bancos;
+            } else if (Array.isArray(root.productos)) {
+                items = root.productos;
+            } else if (Array.isArray(root.cuentas)) {
+                items = root.cuentas;
+            } else if (Array.isArray(root.tarjetas)) {
+                items = root.tarjetas;
+            } else if (Array.isArray(root.prestamos)) {
+                items = root.prestamos;
+            } else if (Array.isArray(root.creditos)) {
+                items = root.creditos;
+            } else if (Array.isArray(root.items)) {
+                items = root.items;
+            } else if (Array.isArray(root.list)) {
+                items = root.list;
+            } else {
+                items = [root];
+            }
+
             if (!appData.bancos) appData.bancos = [];
+            let procesados = 0;
 
-            items.forEach(it => {
-                const banco = it.banco || it.entidad || it.institucion || 'BANCO AGRÍCOLA';
-                const tipo = (it.tipo || it.tipoProducto || 'tarjeta').toLowerCase();
-                const referencia = it.referencia || it.numeroCuenta || it.cuenta || it.tarjeta || it.contrato || ('REF-' + Date.now().toString().slice(-4));
-                const titular = it.titular || it.nombreTitular || 'FERRETERIA FERROGAR, S.A. DE C.V.';
-                const montoAprobado = parseFloat(it.montoAprobado || it.limiteCredito || it.limite || 0);
-                const saldoActual = parseFloat(it.saldoActual || it.saldo || it.balance || 0);
-                const cuota = parseFloat(it.cuotaMensualPactada || it.cuota || it.pagoMinimo || 0);
-                const tasaNom = parseFloat(it.tasaNominal || it.tasaInteres || 0);
-                const tasaEf = parseFloat(it.tasaEfectiva || 0);
-                const tasaMor = parseFloat(it.tasaMoratoria || 0);
-                const seguroDanos = parseFloat(it.seguroDanos || 0);
-                const seguroDeuda = parseFloat(it.seguroDeuda || 0);
+            items.forEach((it, idx) => {
+                if (!it || typeof it !== 'object') return;
 
-                let existente = appData.bancos.find(b => b.referencia === referencia);
+                // 1. Banco
+                const banco = String(it.banco || it.bancoNombre || it.nombreBanco || it.bank || it.institucion || it.entidad || it.emisor || 'BANCO AGRÍCOLA').toUpperCase();
+
+                // 2. Referencia / Cuenta / Crédito / Tarjeta
+                let referencia = it.referencia || it.ref || it.numeroCuenta || it.noCuenta || it.cuenta || it.numero_cuenta || it.num_cuenta || it.numeroTarjeta || it.tarjeta || it.numero_tarjeta || it.card_number || it.contrato || it.noContrato || it.numeroContrato || it.credito || it.idCredito || it.id;
+                if (!referencia || String(referencia).trim() === "") {
+                    referencia = `REF-${banco.slice(0, 3)}-${Date.now().toString().slice(-4)}${idx}`;
+                }
+                referencia = String(referencia).trim();
+
+                // 3. Normalizar Tipo de Producto
+                const tipoRaw = String(it.tipo || it.tipoProducto || it.tipo_producto || it.tipoCuenta || it.tipo_cuenta || it.tipoCredito || it.categoria || '').toLowerCase();
+                let tipo = 'decreciente';
+                if (tipoRaw.includes('rotat') || tipoRaw.includes('linea') || tipoRaw.includes('revolv')) {
+                    tipo = 'rotativo';
+                } else if (tipoRaw.includes('tarjet') || tipoRaw.includes('card') || tipoRaw.includes('tc')) {
+                    tipo = 'tarjeta';
+                } else if (tipoRaw.includes('cuent') || tipoRaw.includes('corrient') || tipoRaw.includes('ahorr') || tipoRaw.includes('check')) {
+                    tipo = 'cuenta';
+                } else if (tipoRaw.includes('decrec') || tipoRaw.includes('prestam') || tipoRaw.includes('credito') || tipoRaw.includes('cuota')) {
+                    tipo = 'decreciente';
+                } else if (it.limiteCredito || it.diaCorte || it.pagoMinimo) {
+                    tipo = 'tarjeta';
+                } else if (it.saldoRetenido || it.limiteSobregiro) {
+                    tipo = 'cuenta';
+                }
+
+                // 4. Titular y Montos
+                const titular = it.titular || it.nombreTitular || it.cliente || it.nombreCliente || it.nombre || 'FERRETERIA FERROGAR, S.A. DE C.V.';
+                let montoAprobado = parseFloat(it.montoAprobado || it.monto_aprobado || it.montoInicial || it.monto_inicial || it.limiteCredito || it.limite_credito || it.limite || it.monto || it.principal || it.creditoAprobado || 0);
+                let saldoActual = parseFloat(it.saldoActual || it.saldo_actual || it.saldoCapital || it.saldo_capital || it.saldo || it.balance || it.saldoContable || it.saldoDisponible || it.deudaTotal || 0);
+
+                if (montoAprobado === 0 && saldoActual > 0) montoAprobado = saldoActual;
+                if (saldoActual === 0 && montoAprobado > 0) saldoActual = montoAprobado;
+
+                // 5. Parámetros Financieros (Requerimiento imagen y leyes SSF El Salvador)
+                const cuotaMensualPactada = parseFloat(it.cuotaMensualPactada || it.cuota_mensual || it.cuotaPactada || it.cuota_pactada || it.cuota || it.pagoMinimo || it.pago_minimo || it.valorCuota || 0);
+                const tasaNominal = parseFloat(it.tasaNominal || it.tasa_nominal || it.tasaInteres || it.tasa_interes || it.tasa || it.interesNominal || 0);
+                const tasaEfectiva = parseFloat(it.tasaEfectiva || it.tasa_efectiva || it.tasaEfectivaAnual || it.tea || 0);
+                const tasaMoratoria = parseFloat(it.tasaMoratoria || it.tasa_moratoria || it.moratorio || 0);
+                const baseCalculo = String(it.baseCalculo || it.base_calculo || it.baseDias || it.base_dias || '360').trim();
+                const seguroDanos = parseFloat(it.seguroDanos || it.seguro_danos || it.seguroDanios || it.seguro_danios || 0);
+                const seguroDeuda = parseFloat(it.seguroDeuda || it.seguro_deuda || it.seguroVida || it.seguro_vida || it.desgravamen || 0);
+                const diaPago = parseInt(it.diaPago || it.dia_pago || it.fechaPago || 15, 10);
+                const diaCorte = parseInt(it.diaCorte || it.dia_corte || it.fechaCorte || 0, 10);
+                const diaLimitePago = parseInt(it.diaLimitePago || it.dia_limite_pago || it.diaLimite || 0, 10);
+                const pagoMinimo = parseFloat(it.pagoMinimo || it.pago_minimo || 0);
+                const pagoContado = parseFloat(it.pagoContado || it.pago_contado || 0);
+                const saldoRetenido = parseFloat(it.saldoRetenido || it.saldo_retenido || 0);
+                const limiteSobregiro = parseFloat(it.limiteSobregiro || it.limite_sobregiro || 0);
+                const tasaSobregiro = parseFloat(it.tasaSobregiro || it.tasa_sobregiro || 0);
+                const plazoMeses = parseInt(it.plazoMeses || it.plazo_meses || it.plazo || 0, 10);
+                const fechaInicio = it.fechaInicio || it.fecha_inicio || it.fechaDesembolso || it.fecha_desembolso || '';
+                const fechaVencimiento = it.fechaVencimiento || it.fecha_vencimiento || it.fechaFin || it.fecha_fin || '';
+                const notas = it.notas || it.nota || it.observaciones || it.descripcion || '';
+
+                // Extraer abonos o movimientos si existen en el JSON
+                const rawAbonos = it.abonos || it.pagos || it.movimientos || it.transacciones || [];
+                const abonos = [];
+                if (Array.isArray(rawAbonos)) {
+                    rawAbonos.forEach(ab => {
+                        if (ab && typeof ab === 'object') {
+                            abonos.push({
+                                fecha: ab.fecha || ab.fechaPago || ab.date || new Date().toISOString().slice(0, 10),
+                                monto: parseFloat(ab.monto || ab.valor || ab.amount || 0),
+                                capital: parseFloat(ab.capital || ab.abonoCapital || 0),
+                                interes: parseFloat(ab.interes || ab.intereses || 0),
+                                seguros: parseFloat(ab.seguros || 0),
+                                referencia: ab.referencia || ab.comprobante || ab.ref || 'Abono Registrado'
+                            });
+                        }
+                    });
+                }
+
+                // Buscar producto existente por número de referencia
+                let existente = appData.bancos.find(b => String(b.referencia).trim().toUpperCase() === referencia.toUpperCase());
                 if (!existente) {
                     existente = {
                         id: 'BNK_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-                        abonos: [],
+                        abonos: abonos,
                         creadoEl: new Date().toISOString()
                     };
                     appData.bancos.push(existente);
+                } else {
+                    if (abonos.length > 0) {
+                        existente.abonos = abonos;
+                    }
                 }
 
                 existente.banco = banco;
                 existente.tipo = tipo;
                 existente.referencia = referencia;
                 existente.titular = titular;
-                if (montoAprobado > 0) existente.montoAprobado = montoAprobado;
-                if (saldoActual > 0) existente.saldoActual = saldoActual;
-                if (cuota > 0) existente.cuotaMensualPactada = cuota;
-                if (tasaNom > 0) existente.tasaNominal = tasaNom;
-                if (tasaEf > 0) existente.tasaEfectiva = tasaEf;
-                if (tasaMor > 0) existente.tasaMoratoria = tasaMor;
-                if (seguroDanos > 0) existente.seguroDanos = seguroDanos;
-                if (seguroDeuda > 0) existente.seguroDeuda = seguroDeuda;
-                if (it.diaPago) existente.diaPago = parseInt(it.diaPago, 10);
-                if (it.diaCorte) existente.diaCorte = parseInt(it.diaCorte, 10);
-                if (it.diaLimitePago) existente.diaLimitePago = parseInt(it.diaLimitePago, 10);
+                existente.montoAprobado = montoAprobado;
+                existente.saldoActual = saldoActual;
+                existente.cuotaMensualPactada = cuotaMensualPactada;
+                existente.tasaNominal = tasaNominal;
+                existente.tasaEfectiva = tasaEfectiva;
+                existente.tasaMoratoria = tasaMoratoria;
+                existente.baseCalculo = baseCalculo;
+                existente.seguroDanos = seguroDanos;
+                existente.seguroDeuda = seguroDeuda;
+                existente.diaPago = diaPago;
+                existente.diaCorte = diaCorte;
+                existente.diaLimitePago = diaLimitePago;
+                existente.pagoMinimo = pagoMinimo;
+                existente.pagoContado = pagoContado;
+                existente.saldoRetenido = saldoRetenido;
+                existente.limiteSobregiro = limiteSobregiro;
+                existente.tasaSobregiro = tasaSobregiro;
+                existente.plazoMeses = plazoMeses;
+                existente.fechaInicio = fechaInicio;
+                existente.fechaVencimiento = fechaVencimiento;
+                if (notas) existente.notas = notas;
+                existente.actualizadoEl = new Date().toISOString();
 
-                creados++;
+                procesados++;
             });
 
             try {
                 localStorage.setItem('cache_bancos', JSON.stringify(appData.bancos));
             } catch(err) {}
 
+            window.filtroBancosActual = 'TODOS';
             window.cerrarModalCargarJsonBancario();
-            showNotification(`Se importaron / actualizaron ${creados} registros bancarios desde JSON`, "success");
+            showNotification(`Se cargaron y actualizaron exitosamente ${procesados} registros bancarios`, "success");
             window.renderBancos();
             if (window.renderCalendarioPagos) window.renderCalendarioPagos();
             if (window.sincronizarConGoogleSheetsSilencioso) {
