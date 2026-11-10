@@ -1406,6 +1406,9 @@
                         <p class="text-xs text-slate-400">Préstamos Decrecientes, Líneas Rotativas, Tarjetas de Crédito y Cuentas Corrientes (El Salvador)</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" onclick="window.abrirModalAbonoBancarioDirecto()" class="px-3.5 py-2 rounded-lg bg-emerald-600/25 hover:bg-emerald-600/35 text-emerald-300 border border-emerald-500/40 font-bold text-xs flex items-center gap-1.5 transition shadow-sm">
+                            <i class="fa-solid fa-hand-holding-dollar"></i> Registrar Abono / Pago
+                        </button>
                         <button type="button" onclick="window.abrirModalNuevoProductoBancario()" class="px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition shadow-lg shadow-emerald-500/20">
                             <i class="fa-solid fa-circle-plus"></i> Nuevo Producto Bancario
                         </button>
@@ -1601,7 +1604,7 @@
             </div>
 
             <!-- Formulario con scroll -->
-            <form onsubmit="window.guardarProductoBancario(event)" class="flex-grow overflow-y-auto space-y-4 pr-1 text-xs">
+            <form id="formNuevoProductoBancario" novalidate onsubmit="window.guardarProductoBancario(event)" class="flex-grow overflow-y-auto space-y-4 pr-1 text-xs">
                 <input type="hidden" id="bnkFormId">
                 <input type="hidden" id="bnkFormTipo" value="decreciente">
 
@@ -1791,7 +1794,7 @@
                     <button type="button" onclick="window.cerrarModalNuevoProductoBancario()" class="px-4 py-2 rounded-lg bg-bgDark hover:bg-borderDark text-xs text-slate-300 font-semibold transition">
                         Cancelar
                     </button>
-                    <button type="submit" id="btnGuardarProdBancario" class="px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition">
+                    <button type="submit" id="btnGuardarProdBancario" onclick="window.guardarProductoBancario(event)" class="px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition">
                         <i class="fa-solid fa-floppy-disk"></i> Guardar Producto Bancario
                     </button>
                 </div>
@@ -1891,17 +1894,18 @@
                 </table>
             </div>
 
-            <!-- Vista 2: Historial de Pagos Registrados -->
+            <!-- Vista 2: Historial de Pagos y Movimientos Registrados -->
             <div id="vistaHojaPagos" class="hidden flex-grow overflow-y-auto border border-borderDark rounded-xl">
                 <table class="w-full text-left text-xs text-slate-300">
                     <thead class="bg-bgDark text-slate-400 font-semibold uppercase sticky top-0 border-b border-borderDark text-[11px]">
                         <tr>
-                            <th class="p-2.5">Fecha de Pago</th>
-                            <th class="p-2.5">Monto Pagado ($)</th>
-                            <th class="p-2.5">Abono a Capital</th>
-                            <th class="p-2.5">Intereses Cubiertos</th>
-                            <th class="p-2.5">Seguros</th>
+                            <th class="p-2.5">Fecha</th>
+                            <th class="p-2.5">Monto / Operación</th>
+                            <th class="p-2.5">Detalle / Afectación Capital</th>
+                            <th class="p-2.5">Intereses</th>
+                            <th class="p-2.5">Seguros / Cargos</th>
                             <th class="p-2.5">Comprobante / Ref</th>
+                            <th class="p-2.5 text-center">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="tbody-pagos-banco" class="divide-y divide-borderDark/60 bg-cardDark"></tbody>
@@ -1920,7 +1924,7 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-white text-base">CARGAR JSON BANCARIO</h3>
-                        <p class="text-xs text-slate-400">Importe estados de cuenta, movimientos o datos de tarjetas/préstamos</p>
+                        <p class="text-xs text-slate-400">Importe estados de cuenta, movimientos, tarjetas, préstamos o DTEs</p>
                     </div>
                 </div>
                 <button type="button" onclick="window.cerrarModalCargarJsonBancario()" class="text-slate-400 hover:text-white p-1 text-lg">
@@ -1928,18 +1932,23 @@
                 </button>
             </div>
 
+            <!-- Caja de Estado / Alerta dentro del Modal -->
+            <div id="jsonBancarioMsgBox" class="hidden"></div>
+
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Subir Archivo .JSON Bancario:</label>
-                    <input type="file" id="inputJsonBancarioFile" accept=".json,application/json" onchange="window.procesarArchivoJsonBancario(event)" class="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+                    <label class="block font-semibold text-slate-300 mb-1">1. Seleccionar Archivo .JSON Bancario:</label>
+                    <input type="file" id="inputJsonBancarioFile" accept=".json,application/json" onchange="window.procesarArchivoJsonBancario(event)" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+                    <p class="text-[11px] text-slate-400 mt-1">El archivo se cargará en el recuadro inferior para que pueda revisarlo antes de subirlo.</p>
                 </div>
                 <div class="relative flex py-1 items-center">
                     <div class="flex-grow border-t border-borderDark"></div>
-                    <span class="flex-shrink mx-3 text-slate-500 text-[10px] uppercase font-bold">O pegar contenido JSON</span>
+                    <span class="flex-shrink mx-3 text-slate-500 text-[10px] uppercase font-bold">O pegar / revisar contenido JSON</span>
                     <div class="flex-grow border-t border-borderDark"></div>
                 </div>
                 <div>
-                    <textarea id="textoJsonBancario" rows="5" placeholder='{"banco": "BANCO AGRICOLA", "tipo": "tarjeta", "referencia": "4509", "saldoActual": 3200.50, ...}' class="w-full bg-bgDark border border-borderDark rounded-lg p-2.5 text-white font-mono text-[11px] focus:outline-none focus:border-indigo-500"></textarea>
+                    <label class="block font-semibold text-slate-300 mb-1">2. Contenido JSON Bancario:</label>
+                    <textarea id="textoJsonBancario" rows="6" placeholder='{"banco": "BANCO AGRÍCOLA", "tipo": "tarjeta", "referencia": "4509", "saldoActual": 3200.50, ...}' class="w-full bg-bgDark border border-borderDark rounded-lg p-2.5 text-white font-mono text-[11px] focus:outline-none focus:border-indigo-500"></textarea>
                 </div>
             </div>
 
@@ -1947,10 +1956,231 @@
                 <button type="button" onclick="window.cerrarModalCargarJsonBancario()" class="px-4 py-2 rounded-lg bg-bgDark hover:bg-borderDark text-xs text-slate-300 font-semibold transition">
                     Cancelar
                 </button>
-                <button type="button" onclick="window.procesarTextoJsonBancario()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 transition">
-                    <i class="fa-solid fa-bolt"></i> Procesar JSON
+                <button type="button" id="btnSubirJsonBancario" onclick="window.procesarTextoJsonBancario()" class="px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Cargar y Guardar en Cuentas Bancarias
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRAR ABONO / PAGO BANCARIO ADAPTATIVO -->
+    <div id="modalAbonoBancario" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center hidden p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-cardDark border border-borderDark rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[95vh] flex flex-col">
+            <!-- Encabezado Modal -->
+            <div class="flex items-center justify-between pb-3 border-b border-borderDark shrink-0">
+                <div class="flex items-center gap-3">
+                    <div id="modalAbonoIconBox" class="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/30 text-xl">
+                        <i id="modalAbonoIcon" class="fa-solid fa-hand-holding-dollar"></i>
+                    </div>
+                    <div>
+                        <h3 id="modalAbonoTitulo" class="font-bold text-white text-base">APLICAR ABONO / PAGO BANCARIO</h3>
+                        <p id="modalAbonoSubtitulo" class="text-xs text-slate-400">Seleccione el producto bancario y registre el abono</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.cerrarModalAbonoBancario()" class="text-slate-400 hover:text-white p-1 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Formulario con scroll -->
+            <form id="formAbonoBancario" novalidate onsubmit="window.guardarAbonoBancario(event)" class="space-y-3.5 text-xs overflow-y-auto pr-1">
+                <input type="hidden" id="abonoBnkProdId">
+
+                <!-- 1. Selección de Producto Bancario -->
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Producto Bancario a Afectar *</label>
+                    <select id="abonoBnkSelectProd" onchange="window.alCambiarProductoAbono()" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500"></select>
+                </div>
+
+                <!-- 2. Tarjeta resumen del estado actual del producto -->
+                <div id="abonoBnkResumenCard" class="bg-bgDark/80 p-3 rounded-xl border border-borderDark space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span id="abonoBnkBadgeTipo" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 uppercase">-</span>
+                        <span class="text-slate-400 font-mono text-[11px]">Ref: <strong id="abonoBnkRefTexto" class="text-white">-</strong></span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-1 border-t border-borderDark/50 text-xs">
+                        <div>
+                            <span id="abonoBnkLblSaldoActual" class="text-[10px] text-slate-400 uppercase block">Saldo Capital Deudor</span>
+                            <span id="abonoBnkValSaldoActual" class="font-bold font-mono text-rose-400 text-sm">$0.00</span>
+                        </div>
+                        <div>
+                            <span id="abonoBnkLblSecundario" class="text-[10px] text-slate-400 uppercase block">Cuota Pactada</span>
+                            <span id="abonoBnkValSecundario" class="font-bold font-mono text-accentCyan text-sm">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. BLOQUE ADAPTATIVO: PRÉSTAMO DECRECIENTE -->
+                <div id="bloqueAbonoDecreciente" class="space-y-3">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button type="button" onclick="window.autoLlenarCuotaDecreciente()" class="px-2.5 py-1 rounded-lg bg-accentCyan/15 hover:bg-accentCyan/25 text-accentCyan border border-accentCyan/30 text-[11px] font-semibold transition">
+                            <i class="fa-solid fa-calculator"></i> Llenar Cuota Pactada
+                        </button>
+                        <button type="button" onclick="window.calcularDesgloseAutomaticoDecreciente()" class="px-2.5 py-1 rounded-lg bg-bgDark hover:bg-borderDark text-slate-300 text-[11px] font-semibold border border-borderDark transition">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Desglosar Capital / Interés
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-300 mb-1">Monto Total Pagado ($) *</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 font-mono">$</span>
+                                <input type="number" step="0.01" min="0.01" id="abonoDecMontoTotal" oninput="window.alCambiarMontoTotalDecreciente()" placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg pl-6 pr-2.5 py-2 text-white font-mono font-bold text-accentCyan focus:outline-none focus:border-accentCyan">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-300 mb-1">Fecha del Pago *</label>
+                            <input type="date" id="abonoDecFecha" class="w-full bg-bgDark border border-borderDark rounded-lg px-2.5 py-2 text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <!-- Desglose de Pago (Capital, Intereses, Seguros, Mora) -->
+                    <div class="bg-cardDark p-3 rounded-xl border border-borderDark space-y-2">
+                        <div class="text-[11px] font-bold text-emerald-400 uppercase flex items-center gap-1">
+                            <i class="fa-solid fa-layer-group"></i> Desglose del Pago (Afectación Contable)
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Abono Capital ($) *</label>
+                                <input type="number" step="0.01" min="0" id="abonoDecCapital" placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg px-2 py-1.5 text-white font-mono font-bold text-emerald-400 focus:outline-none focus:border-emerald-500">
+                                <span class="text-[9px] text-slate-500">Reduce saldo deudor</span>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Interés Ordinario ($)</label>
+                                <input type="number" step="0.01" min="0" id="abonoDecInteres" placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg px-2 py-1.5 text-white font-mono text-rose-300 focus:outline-none focus:border-accentCyan">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Seguros ($)</label>
+                                <input type="number" step="0.01" min="0" id="abonoDecSeguros" placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg px-2 py-1.5 text-white font-mono text-amber-300 focus:outline-none focus:border-accentCyan">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Mora / Otros ($)</label>
+                                <input type="number" step="0.01" min="0" id="abonoDecMora" placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg px-2 py-1.5 text-white font-mono text-slate-400 focus:outline-none focus:border-accentCyan">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. BLOQUE ADAPTATIVO: PRÉSTAMO ROTATIVO (LÍNEA ROTATIVA) -->
+                <div id="bloqueAbonoRotativo" class="hidden space-y-3">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button type="button" onclick="window.autoLlenarRotativoTotal()" class="px-2.5 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 text-[11px] font-semibold transition">
+                            <i class="fa-solid fa-arrows-rotate"></i> Pagar Saldo Total Utilizado
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-300 mb-1">Monto a Abonar a la Línea ($) *</label>
+                            <input type="number" step="0.01" min="0.01" id="abonoRotMonto" placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-white font-mono font-bold text-cyan-400 focus:outline-none focus:border-cyan-400">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-300 mb-1">Fecha del Abono *</label>
+                            <input type="date" id="abonoRotFecha" class="w-full bg-bgDark border border-borderDark rounded-lg px-2.5 py-2 text-white focus:outline-none focus:border-cyan-400">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Abono a Principal (Libera Disponible) ($)</label>
+                            <input type="number" step="0.01" min="0" id="abonoRotCapital" placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg px-2 py-1.5 text-white font-mono text-emerald-400 focus:outline-none focus:border-cyan-400">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Intereses del Mes ($)</label>
+                            <input type="number" step="0.01" min="0" id="abonoRotInteres" placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg px-2 py-1.5 text-white font-mono text-rose-300 focus:outline-none focus:border-cyan-400">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. BLOQUE ADAPTATIVO: TARJETA DE CRÉDITO -->
+                <div id="bloqueAbonoTarjeta" class="hidden space-y-3">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button type="button" onclick="window.autoLlenarTarjetaContado()" class="px-2.5 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 text-[11px] font-semibold transition">
+                            <i class="fa-solid fa-bolt"></i> Pago de Contado (Sin Intereses)
+                        </button>
+                        <button type="button" onclick="window.autoLlenarTarjetaMinimo()" class="px-2.5 py-1 rounded-lg bg-bgDark hover:bg-borderDark text-slate-300 border border-borderDark text-[11px] font-semibold transition">
+                            <i class="fa-solid fa-credit-card"></i> Pago Mínimo
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-300 mb-1">Monto Pagado a la Tarjeta ($) *</label>
+                            <input type="number" step="0.01" min="0.01" id="abonoTarjMonto" placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-white font-mono font-bold text-purple-400 focus:outline-none focus:border-purple-400">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-300 mb-1">Fecha del Pago *</label>
+                            <input type="date" id="abonoTarjFecha" class="w-full bg-bgDark border border-borderDark rounded-lg px-2.5 py-2 text-white focus:outline-none focus:border-purple-400">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. BLOQUE ADAPTATIVO: CUENTA CORRIENTE (ESTADO DE CUENTA) -->
+                <div id="bloqueAbonoCuenta" class="hidden space-y-3">
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1.5">Tipo de Movimiento en Cuenta Corriente *</label>
+                        <input type="hidden" id="abonoCtaTipoMov" value="deposito">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" id="btnMovCta-deposito" onclick="window.cambiarTipoMovimientoCuenta('deposito')" class="p-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold flex items-center justify-center gap-2 transition shadow-md shadow-emerald-500/20">
+                                <i class="fa-solid fa-arrow-down-left"></i>
+                                <span>DEPÓSITO / ABONO (+)</span>
+                            </button>
+                            <button type="button" id="btnMovCta-cargo" onclick="window.cambiarTipoMovimientoCuenta('cargo')" class="p-2.5 rounded-xl bg-bgDark text-slate-300 hover:text-white font-semibold flex items-center justify-center gap-2 border border-borderDark transition">
+                                <i class="fa-solid fa-arrow-up-right"></i>
+                                <span>CARGO / RETIRO (-)</span>
+                            </button>
+                        </div>
+                        <p id="abonoCtaAyudaTipo" class="text-[11px] text-emerald-400 mt-1">El depósito sumará fondos al saldo disponible de la cuenta bancaria (+).</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-300 mb-1" id="lblAbonoCtaMonto">Monto a Depositar ($) *</label>
+                            <input type="number" step="0.01" min="0.01" id="abonoCtaMonto" placeholder="0.00" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-white font-mono font-bold text-emerald-400 focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-300 mb-1">Fecha del Movimiento *</label>
+                            <input type="date" id="abonoCtaFecha" class="w-full bg-bgDark border border-borderDark rounded-lg px-2.5 py-2 text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Concepto / Detalle de la Operación *</label>
+                        <input type="text" id="abonoCtaConcepto" placeholder="Ej. Depósito ventas del día, Pago de cheques nómina..." class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <!-- 7. Datos de Soporte y Comprobante (Comunes a todos) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-borderDark">
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Comprobante / N° Transacción / Cheque</label>
+                        <input type="text" id="abonoBnkComprobante" placeholder="Ej. TRANSF-9948, CHQ-1049..." class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Método / Canal de Pago</label>
+                        <select id="abonoBnkMetodo" class="w-full bg-bgDark border border-borderDark rounded-lg px-2.5 py-2 text-white focus:outline-none focus:border-emerald-500">
+                            <option value="TRANSFERENCIA BANCARIA">Transferencia Bancaria</option>
+                            <option value="DÉBITO EN CUENTA">Débito Automático en Cuenta</option>
+                            <option value="CHEQUE">Cheque Bancario</option>
+                            <option value="EFECTIVO EN VENTANILLA">Efectivo en Ventanilla</option>
+                            <option value="OTRO">Otro Medio</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Notas / Observaciones del Abono</label>
+                    <input type="text" id="abonoBnkNotas" placeholder="Opcional: información contable o de conciliación..." class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <!-- Botones Acción -->
+                <div class="flex items-center justify-end gap-2 pt-3 border-t border-borderDark shrink-0">
+                    <button type="button" onclick="window.cerrarModalAbonoBancario()" class="px-4 py-2 rounded-lg bg-bgDark hover:bg-borderDark text-xs text-slate-300 font-semibold transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btnGuardarAbonoBancario" class="px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition">
+                        <i class="fa-solid fa-check"></i> Aplicar Abono / Movimiento
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -2703,6 +2933,59 @@
             return str;
         }
 
+        // Notificaciones Toast Modernas y Globales (Éxito, Error, Advertencia, Información)
+        window.showNotification = function(mensaje, tipo = 'info') {
+            try {
+                let container = document.getElementById('globalNotificationContainer');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'globalNotificationContainer';
+                    container.className = "fixed bottom-5 right-5 z-[9999] flex flex-col gap-2.5 max-w-sm pointer-events-none";
+                    document.body.appendChild(container);
+                }
+
+                const toast = document.createElement('div');
+                toast.className = "pointer-events-auto flex items-start gap-3 p-3.5 rounded-xl shadow-2xl border text-xs font-semibold backdrop-blur-md transition-all duration-300 transform translate-y-3 opacity-0";
+
+                let icon = 'fa-circle-info';
+                let colors = 'bg-slate-900/95 border-slate-700 text-slate-200 shadow-slate-950/40';
+
+                if (tipo === 'success') {
+                    icon = 'fa-circle-check';
+                    colors = 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200 shadow-emerald-500/20';
+                } else if (tipo === 'error') {
+                    icon = 'fa-triangle-exclamation';
+                    colors = 'bg-rose-950/95 border-rose-500/50 text-rose-200 shadow-rose-500/20';
+                } else if (tipo === 'warning') {
+                    icon = 'fa-circle-exclamation';
+                    colors = 'bg-amber-950/95 border-amber-500/50 text-amber-200 shadow-amber-500/20';
+                }
+
+                toast.className += ' ' + colors;
+                toast.innerHTML = `
+                    <i class="fa-solid ${icon} text-base shrink-0 mt-0.5"></i>
+                    <div class="flex-grow">${mensaje}</div>
+                    <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white shrink-0 p-0.5">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+
+                container.appendChild(toast);
+                requestAnimationFrame(() => {
+                    toast.classList.remove('translate-y-3', 'opacity-0');
+                    toast.classList.add('translate-y-0', 'opacity-100');
+                });
+
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100');
+                    toast.classList.add('opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, 4000);
+            } catch(e) {
+                console.log("Notificación:", mensaje);
+            }
+        };
+
         // Función para mostrar estado de conexión/sincronización con Google Sheets
         function mostrarEstadoSincronizacion(estado, texto) {
             const badge = document.getElementById('syncStatusBadge');
@@ -2827,12 +3110,16 @@
                         }
                     }
                     if (Array.isArray(data.bancos)) {
-                        appData.bancos = data.bancos;
-                        try { localStorage.setItem('cache_bancos', JSON.stringify(appData.bancos)); } catch(e){}
+                        if (data.bancos.length > 0 || !appData.bancos || appData.bancos.length === 0) {
+                            appData.bancos = data.bancos;
+                            try { localStorage.setItem('cache_bancos', JSON.stringify(appData.bancos)); } catch(e){}
+                        }
                     }
                     if (Array.isArray(data.programacionPagos)) {
-                        appData.programacionPagos = data.programacionPagos;
-                        try { localStorage.setItem('cache_pagos_programados', JSON.stringify(appData.programacionPagos)); } catch(e){}
+                        if (data.programacionPagos.length > 0 || !appData.programacionPagos || appData.programacionPagos.length === 0) {
+                            appData.programacionPagos = data.programacionPagos;
+                            try { localStorage.setItem('cache_pagos_programados', JSON.stringify(appData.programacionPagos)); } catch(e){}
+                        }
                     }
                     datosCargadosDesdeNube = true;
                     mostrarEstadoSincronizacion('exito', 'Conectado a Google Sheets');
@@ -2886,6 +3173,16 @@
                             try { localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas)); } catch(e){}
                             huboCambios = true;
                         }
+                    }
+                    if (Array.isArray(data.bancos) && data.bancos.length > 0 && JSON.stringify(data.bancos) !== JSON.stringify(appData.bancos)) {
+                        appData.bancos = data.bancos;
+                        try { localStorage.setItem('cache_bancos', JSON.stringify(appData.bancos)); } catch(e){}
+                        huboCambios = true;
+                    }
+                    if (Array.isArray(data.programacionPagos) && data.programacionPagos.length > 0 && JSON.stringify(data.programacionPagos) !== JSON.stringify(appData.programacionPagos)) {
+                        appData.programacionPagos = data.programacionPagos;
+                        try { localStorage.setItem('cache_pagos_programados', JSON.stringify(appData.programacionPagos)); } catch(e){}
+                        huboCambios = true;
                     }
                     
                     const activo = document.activeElement;
@@ -7037,9 +7334,14 @@
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
-                        <button type="button" onclick="window.verHojaBancoDetalle('${b.id}')" class="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition">
-                            <i class="fa-solid fa-table-list"></i> Ver Ficha & Amortización
-                        </button>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="window.abrirModalAbonoBancarioDirecto('${b.id}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-sm transition">
+                                <i class="fa-solid ${b.tipo === 'cuenta' ? 'fa-money-bill-transfer' : 'fa-hand-holding-dollar'}"></i> ${b.tipo === 'cuenta' ? 'Movimiento' : 'Abonar'}
+                            </button>
+                            <button type="button" onclick="window.verHojaBancoDetalle('${b.id}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 font-bold text-xs border border-emerald-500/30 flex items-center gap-1 transition">
+                                <i class="fa-solid fa-table-list"></i> Ficha
+                            </button>
+                        </div>
                     </div>
                 `;
                 contenedor.appendChild(card);
@@ -7140,20 +7442,22 @@
         };
 
         window.guardarProductoBancario = function(e) {
-            if (e) e.preventDefault();
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             if (!appData.bancos) appData.bancos = [];
 
             const id = document.getElementById('bnkFormId')?.value;
             const tipo = document.getElementById('bnkFormTipo')?.value || 'decreciente';
             const banco = document.getElementById('bnkFormBanco')?.value || 'BANCO AGRÍCOLA';
-            const referencia = document.getElementById('bnkFormReferencia')?.value.trim();
+            let referencia = document.getElementById('bnkFormReferencia')?.value.trim();
             const titular = document.getElementById('bnkFormTitular')?.value.trim() || 'FERRETERIA FERROGAR, S.A. DE C.V.';
             let montoAprobado = parseFloat(document.getElementById('bnkFormMontoAprobado')?.value) || 0;
             let saldoActual = parseFloat(document.getElementById('bnkFormSaldoActual')?.value) || 0;
 
             if (!referencia) {
-                showNotification("Debe ingresar la referencia o número de cuenta / crédito", "error");
-                return;
+                referencia = `${tipo.substring(0, 3).toUpperCase()}-${banco.substring(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`;
             }
 
             if (montoAprobado === 0 && saldoActual > 0) montoAprobado = saldoActual;
@@ -7222,11 +7526,14 @@
 
             try {
                 localStorage.setItem('cache_bancos', JSON.stringify(appData.bancos));
-            } catch(err) {}
+            } catch(err) {
+                console.warn("Error al guardar cache_bancos:", err);
+            }
 
             window.cerrarModalNuevoProductoBancario();
-            showNotification("Producto bancario guardado correctamente", "success");
+            window.filtroBancosActual = 'TODOS';
             window.renderBancos();
+            window.showNotification(`Producto bancario "${banco} - ${referencia}" guardado correctamente`, "success");
             if (window.renderCalendarioPagos) window.renderCalendarioPagos();
             if (window.sincronizarConGoogleSheetsSilencioso) {
                 window.sincronizarConGoogleSheetsSilencioso();
@@ -7419,6 +7726,525 @@
             }
         };
 
+        // ==========================================
+        // CONTROL Y GESTIÓN DE ABONOS BANCARIOS (ADAPTATIVO)
+        // ==========================================
+        window.abrirModalAbonoBancarioDirecto = function(prodId) {
+            if (!appData.bancos || appData.bancos.length === 0) {
+                window.showNotification("Primero debe registrar al menos un producto bancario", "warning");
+                return;
+            }
+
+            const selectProd = document.getElementById('abonoBnkSelectProd');
+            if (selectProd) {
+                selectProd.innerHTML = '';
+                appData.bancos.forEach(b => {
+                    const opt = document.createElement('option');
+                    opt.value = b.id;
+                    let tipoLabel = 'Préstamo';
+                    if (b.tipo === 'rotativo') tipoLabel = 'Línea Rotativa';
+                    else if (b.tipo === 'tarjeta') tipoLabel = 'Tarjeta Crédito';
+                    else if (b.tipo === 'cuenta') tipoLabel = 'Cuenta Corriente';
+
+                    opt.textContent = `${b.banco} - ${tipoLabel} (${b.referencia}) [Saldo: $${(parseFloat(b.saldoActual)||0).toFixed(2)}]`;
+                    selectProd.appendChild(opt);
+                });
+
+                if (prodId) {
+                    selectProd.value = prodId;
+                } else if (window.bancoActualDetalle) {
+                    selectProd.value = window.bancoActualDetalle.id;
+                }
+            }
+
+            window.alCambiarProductoAbono();
+
+            const modal = document.getElementById('modalAbonoBancario');
+            if (modal) modal.classList.remove('hidden');
+        };
+
+        window.cerrarModalAbonoBancario = function() {
+            const modal = document.getElementById('modalAbonoBancario');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.alCambiarProductoAbono = function() {
+            const selectProd = document.getElementById('abonoBnkSelectProd');
+            const prodId = selectProd ? selectProd.value : null;
+            const prod = (appData.bancos || []).find(b => b.id === prodId) || (appData.bancos && appData.bancos[0]);
+            if (!prod) return;
+
+            const elHiddenId = document.getElementById('abonoBnkProdId');
+            if (elHiddenId) elHiddenId.value = prod.id;
+
+            const hoy = new Date().toISOString().slice(0, 10);
+
+            // Resumen de estado actual
+            const elBadge = document.getElementById('abonoBnkBadgeTipo');
+            const elRef = document.getElementById('abonoBnkRefTexto');
+            const elLblSaldo = document.getElementById('abonoBnkLblSaldoActual');
+            const elValSaldo = document.getElementById('abonoBnkValSaldoActual');
+            const elLblSec = document.getElementById('abonoBnkLblSecundario');
+            const elValSec = document.getElementById('abonoBnkValSecundario');
+            const elTitulo = document.getElementById('modalAbonoTitulo');
+            const elSub = document.getElementById('modalAbonoSubtitulo');
+            const iconBox = document.getElementById('modalAbonoIconBox');
+            const icon = document.getElementById('modalAbonoIcon');
+
+            if (elRef) elRef.textContent = prod.referencia || '-';
+            if (elSub) elSub.textContent = `${prod.banco} | Titular: ${prod.titular || 'FERRETERIA FERROGAR, S.A. DE C.V.'}`;
+
+            const bqDec = document.getElementById('bloqueAbonoDecreciente');
+            const bqRot = document.getElementById('bloqueAbonoRotativo');
+            const bqTarj = document.getElementById('bloqueAbonoTarjeta');
+            const bqCta = document.getElementById('bloqueAbonoCuenta');
+
+            if (bqDec) bqDec.classList.add('hidden');
+            if (bqRot) bqRot.classList.add('hidden');
+            if (bqTarj) bqTarj.classList.add('hidden');
+            if (bqCta) bqCta.classList.add('hidden');
+
+            if (prod.tipo === 'tarjeta') {
+                if (elBadge) {
+                    elBadge.textContent = 'TARJETA DE CRÉDITO';
+                    elBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/30 uppercase';
+                }
+                if (elTitulo) elTitulo.textContent = 'REGISTRAR PAGO A TARJETA DE CRÉDITO';
+                if (iconBox) iconBox.className = 'p-2.5 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/30 text-xl';
+                if (icon) icon.className = 'fa-solid fa-credit-card';
+
+                if (elLblSaldo) elLblSaldo.textContent = 'Saldo Utilizado a la Fecha';
+                if (elValSaldo) {
+                    elValSaldo.textContent = formatMoney(prod.saldoActual);
+                    elValSaldo.className = 'font-bold font-mono text-purple-400 text-sm';
+                }
+                if (elLblSec) elLblSec.textContent = 'Límite de Crédito';
+                if (elValSec) elValSec.textContent = formatMoney(prod.montoAprobado);
+
+                if (bqTarj) bqTarj.classList.remove('hidden');
+
+                const elF = document.getElementById('abonoTarjFecha');
+                if (elF) elF.value = hoy;
+                const elM = document.getElementById('abonoTarjMonto');
+                if (elM) elM.value = (parseFloat(prod.pagoMinimo) > 0 ? prod.pagoMinimo : (parseFloat(prod.saldoActual) || ''));
+
+            } else if (prod.tipo === 'rotativo') {
+                if (elBadge) {
+                    elBadge.textContent = 'PRÉSTAMO ROTATIVO';
+                    elBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 uppercase';
+                }
+                if (elTitulo) elTitulo.textContent = 'REGISTRAR ABONO A LÍNEA ROTATIVA';
+                if (iconBox) iconBox.className = 'p-2.5 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/30 text-xl';
+                if (icon) icon.className = 'fa-solid fa-arrows-rotate';
+
+                if (elLblSaldo) elLblSaldo.textContent = 'Línea de Crédito en Uso';
+                if (elValSaldo) {
+                    elValSaldo.textContent = formatMoney(prod.saldoActual);
+                    elValSaldo.className = 'font-bold font-mono text-cyan-400 text-sm';
+                }
+                if (elLblSec) elLblSec.textContent = 'Cupo Disponible';
+                if (elValSec) elValSec.textContent = formatMoney(Math.max(0, (parseFloat(prod.montoAprobado) || 0) - (parseFloat(prod.saldoActual) || 0)));
+
+                if (bqRot) bqRot.classList.remove('hidden');
+
+                const elF = document.getElementById('abonoRotFecha');
+                if (elF) elF.value = hoy;
+                const elM = document.getElementById('abonoRotMonto');
+                if (elM) elM.value = (parseFloat(prod.saldoActual) > 0 ? prod.saldoActual : '');
+                const elCap = document.getElementById('abonoRotCapital');
+                if (elCap) elCap.value = (parseFloat(prod.saldoActual) > 0 ? prod.saldoActual : '');
+                const elInt = document.getElementById('abonoRotInteres');
+                if (elInt) elInt.value = '';
+
+            } else if (prod.tipo === 'cuenta') {
+                if (elBadge) {
+                    elBadge.textContent = 'CUENTA CORRIENTE BANCARIA';
+                    elBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 uppercase';
+                }
+                if (elTitulo) elTitulo.textContent = 'REGISTRAR MOVIMIENTO EN CUENTA CORRIENTE';
+                if (iconBox) iconBox.className = 'p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/30 text-xl';
+                if (icon) icon.className = 'fa-solid fa-money-check-dollar';
+
+                if (elLblSaldo) elLblSaldo.textContent = 'Saldo Disponible Contable';
+                if (elValSaldo) {
+                    elValSaldo.textContent = formatMoney(prod.saldoActual);
+                    elValSaldo.className = 'font-bold font-mono text-emerald-400 text-sm';
+                }
+                if (elLblSec) elLblSec.textContent = 'Límite Sobregiro';
+                if (elValSec) elValSec.textContent = formatMoney(prod.limiteSobregiro || 0);
+
+                if (bqCta) bqCta.classList.remove('hidden');
+
+                window.cambiarTipoMovimientoCuenta('deposito');
+                const elF = document.getElementById('abonoCtaFecha');
+                if (elF) elF.value = hoy;
+                const elM = document.getElementById('abonoCtaMonto');
+                if (elM) elM.value = '';
+                const elC = document.getElementById('abonoCtaConcepto');
+                if (elC) elC.value = '';
+
+            } else {
+                // Préstamo Decreciente
+                if (elBadge) {
+                    elBadge.textContent = 'PRÉSTAMO DECRECIENTE';
+                    elBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 uppercase';
+                }
+                if (elTitulo) elTitulo.textContent = 'APLICAR ABONO / PAGO A CRÉDITO';
+                if (iconBox) iconBox.className = 'p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/30 text-xl';
+                if (icon) icon.className = 'fa-solid fa-chart-line-down';
+
+                if (elLblSaldo) elLblSaldo.textContent = 'Saldo Capital Deudor';
+                if (elValSaldo) {
+                    elValSaldo.textContent = formatMoney(prod.saldoActual);
+                    elValSaldo.className = 'font-bold font-mono text-rose-400 text-sm';
+                }
+                if (elLblSec) elLblSec.textContent = 'Cuota Mensual Pactada';
+                if (elValSec) elValSec.textContent = formatMoney(prod.cuotaMensualPactada || 0);
+
+                if (bqDec) bqDec.classList.remove('hidden');
+
+                const elF = document.getElementById('abonoDecFecha');
+                if (elF) elF.value = hoy;
+
+                const cuota = parseFloat(prod.cuotaMensualPactada) || 0;
+                const elMonto = document.getElementById('abonoDecMontoTotal');
+                if (elMonto) elMonto.value = cuota > 0 ? cuota.toFixed(2) : '';
+
+                window.calcularDesgloseAutomaticoDecreciente();
+            }
+        };
+
+        window.autoLlenarCuotaDecreciente = function() {
+            const prodId = document.getElementById('abonoBnkProdId')?.value;
+            const prod = (appData.bancos || []).find(b => b.id === prodId);
+            if (!prod) return;
+
+            const cuota = parseFloat(prod.cuotaMensualPactada) || 0;
+            const elM = document.getElementById('abonoDecMontoTotal');
+            if (elM) elM.value = cuota > 0 ? cuota.toFixed(2) : '';
+            window.calcularDesgloseAutomaticoDecreciente();
+        };
+
+        window.calcularDesgloseAutomaticoDecreciente = function() {
+            const prodId = document.getElementById('abonoBnkProdId')?.value;
+            const prod = (appData.bancos || []).find(b => b.id === prodId);
+            if (!prod) return;
+
+            const montoTotal = parseFloat(document.getElementById('abonoDecMontoTotal')?.value) || 0;
+            const saldo = parseFloat(prod.saldoActual) || 0;
+            const tasaNominalAnual = (parseFloat(prod.tasaNominal) || 0) / 100;
+            const seguroDanos = parseFloat(prod.seguroDanos) || 0;
+            const seguroDeuda = parseFloat(prod.seguroDeuda) || 0;
+            const segurosTotal = seguroDanos + seguroDeuda;
+
+            const interesMensual = saldo * (tasaNominalAnual / 12);
+            let interesCalculado = Math.min(interesMensual, montoTotal);
+            let segurosCalculados = Math.min(segurosTotal, Math.max(0, montoTotal - interesCalculado));
+            let capitalCalculado = Math.max(0, montoTotal - interesCalculado - segurosCalculados);
+
+            if (capitalCalculado > saldo && saldo > 0) {
+                capitalCalculado = saldo;
+            }
+
+            const elCap = document.getElementById('abonoDecCapital');
+            const elInt = document.getElementById('abonoDecInteres');
+            const elSeg = document.getElementById('abonoDecSeguros');
+            const elMor = document.getElementById('abonoDecMora');
+
+            if (elCap) elCap.value = capitalCalculado > 0 ? capitalCalculado.toFixed(2) : (montoTotal > 0 ? montoTotal.toFixed(2) : '');
+            if (elInt) elInt.value = interesCalculado > 0 ? interesCalculado.toFixed(2) : '0.00';
+            if (elSeg) elSeg.value = segurosCalculados > 0 ? segurosCalculados.toFixed(2) : '0.00';
+            if (elMor) elMor.value = '0.00';
+        };
+
+        window.alCambiarMontoTotalDecreciente = function() {
+            window.calcularDesgloseAutomaticoDecreciente();
+        };
+
+        window.autoLlenarRotativoTotal = function() {
+            const prodId = document.getElementById('abonoBnkProdId')?.value;
+            const prod = (appData.bancos || []).find(b => b.id === prodId);
+            if (!prod) return;
+            const saldo = parseFloat(prod.saldoActual) || 0;
+            const elM = document.getElementById('abonoRotMonto');
+            const elCap = document.getElementById('abonoRotCapital');
+            if (elM) elM.value = saldo.toFixed(2);
+            if (elCap) elCap.value = saldo.toFixed(2);
+        };
+
+        window.autoLlenarTarjetaContado = function() {
+            const prodId = document.getElementById('abonoBnkProdId')?.value;
+            const prod = (appData.bancos || []).find(b => b.id === prodId);
+            if (!prod) return;
+            const saldo = parseFloat(prod.pagoContado) || parseFloat(prod.saldoActual) || 0;
+            const elM = document.getElementById('abonoTarjMonto');
+            if (elM) elM.value = saldo.toFixed(2);
+        };
+
+        window.autoLlenarTarjetaMinimo = function() {
+            const prodId = document.getElementById('abonoBnkProdId')?.value;
+            const prod = (appData.bancos || []).find(b => b.id === prodId);
+            if (!prod) return;
+            const minimo = parseFloat(prod.pagoMinimo) || 0;
+            const elM = document.getElementById('abonoTarjMonto');
+            if (elM) elM.value = minimo > 0 ? minimo.toFixed(2) : (parseFloat(prod.saldoActual) || 0).toFixed(2);
+        };
+
+        window.cambiarTipoMovimientoCuenta = function(tipo) {
+            const hidden = document.getElementById('abonoCtaTipoMov');
+            if (hidden) hidden.value = tipo;
+
+            const btnDep = document.getElementById('btnMovCta-deposito');
+            const btnCarg = document.getElementById('btnMovCta-cargo');
+            const lblMonto = document.getElementById('lblAbonoCtaMonto');
+            const ayuda = document.getElementById('abonoCtaAyudaTipo');
+            const inputMonto = document.getElementById('abonoCtaMonto');
+
+            if (tipo === 'deposito') {
+                if (btnDep) btnDep.className = "p-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold flex items-center justify-center gap-2 transition shadow-md shadow-emerald-500/20";
+                if (btnCarg) btnCarg.className = "p-2.5 rounded-xl bg-bgDark text-slate-300 hover:text-white font-semibold flex items-center justify-center gap-2 border border-borderDark transition";
+                if (lblMonto) lblMonto.textContent = "Monto a Depositar / Acreditar ($) *";
+                if (ayuda) {
+                    ayuda.textContent = "El depósito sumará fondos al saldo disponible de la cuenta bancaria (+).";
+                    ayuda.className = "text-[11px] text-emerald-400 mt-1";
+                }
+                if (inputMonto) inputMonto.className = "w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-white font-mono font-bold text-emerald-400 focus:outline-none focus:border-emerald-500";
+            } else {
+                if (btnDep) btnDep.className = "p-2.5 rounded-xl bg-bgDark text-slate-300 hover:text-white font-semibold flex items-center justify-center gap-2 border border-borderDark transition";
+                if (btnCarg) btnCarg.className = "p-2.5 rounded-xl bg-rose-500 text-slate-950 font-bold flex items-center justify-center gap-2 transition shadow-md shadow-rose-500/20";
+                if (lblMonto) lblMonto.textContent = "Monto a Retirar / Cobrar ($) *";
+                if (ayuda) {
+                    ayuda.textContent = "El cargo o retiro restará fondos del saldo de la cuenta bancaria (-).";
+                    ayuda.className = "text-[11px] text-rose-400 mt-1";
+                }
+                if (inputMonto) inputMonto.className = "w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-white font-mono font-bold text-rose-400 focus:outline-none focus:border-rose-500";
+            }
+        };
+
+        window.guardarAbonoBancario = function(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            const prodId = document.getElementById('abonoBnkProdId')?.value;
+            const prod = (appData.bancos || []).find(b => b.id === prodId);
+            if (!prod) {
+                window.showNotification("Seleccione un producto bancario válido", "error");
+                return;
+            }
+
+            if (!prod.abonos) prod.abonos = [];
+
+            const comprobante = document.getElementById('abonoBnkComprobante')?.value.trim() || `ABO-${Date.now().toString().slice(-4)}`;
+            const metodo = document.getElementById('abonoBnkMetodo')?.value || 'TRANSFERENCIA BANCARIA';
+            const notas = document.getElementById('abonoBnkNotas')?.value.trim() || '';
+
+            const tipo = prod.tipo || 'decreciente';
+            let saldoAnterior = parseFloat(prod.saldoActual) || 0;
+            let nuevoSaldo = saldoAnterior;
+            let abonoObj = null;
+
+            if (tipo === 'decreciente') {
+                const montoTotal = parseFloat(document.getElementById('abonoDecMontoTotal')?.value) || 0;
+                let capital = parseFloat(document.getElementById('abonoDecCapital')?.value) || 0;
+                const interes = parseFloat(document.getElementById('abonoDecInteres')?.value) || 0;
+                const seguros = parseFloat(document.getElementById('abonoDecSeguros')?.value) || 0;
+                const mora = parseFloat(document.getElementById('abonoDecMora')?.value) || 0;
+                const fecha = document.getElementById('abonoDecFecha')?.value || new Date().toISOString().slice(0, 10);
+
+                if (montoTotal <= 0 && capital <= 0) {
+                    window.showNotification("Ingrese el monto del pago a realizar", "error");
+                    return;
+                }
+
+                if (capital === 0 && montoTotal > 0) {
+                    capital = Math.max(0, montoTotal - interes - seguros - mora);
+                }
+
+                nuevoSaldo = Math.max(0, saldoAnterior - capital);
+                prod.saldoActual = nuevoSaldo;
+
+                abonoObj = {
+                    id: 'ABO_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                    fecha: fecha,
+                    monto: montoTotal > 0 ? montoTotal : capital,
+                    capital: capital,
+                    interes: interes,
+                    seguros: seguros,
+                    mora: mora,
+                    referencia: comprobante,
+                    metodo: metodo,
+                    notas: notas,
+                    tipoOperacion: 'ABONO_PRESTAMO',
+                    saldoPosterior: nuevoSaldo
+                };
+
+            } else if (tipo === 'rotativo') {
+                const montoTotal = parseFloat(document.getElementById('abonoRotMonto')?.value) || 0;
+                let capital = parseFloat(document.getElementById('abonoRotCapital')?.value) || 0;
+                const interes = parseFloat(document.getElementById('abonoRotInteres')?.value) || 0;
+                const fecha = document.getElementById('abonoRotFecha')?.value || new Date().toISOString().slice(0, 10);
+
+                if (montoTotal <= 0 && capital <= 0) {
+                    window.showNotification("Ingrese el monto a abonar a la línea rotativa", "error");
+                    return;
+                }
+
+                if (capital === 0 && montoTotal > 0) {
+                    capital = Math.max(0, montoTotal - interes);
+                }
+
+                nuevoSaldo = Math.max(0, saldoAnterior - capital);
+                prod.saldoActual = nuevoSaldo;
+
+                abonoObj = {
+                    id: 'ABO_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                    fecha: fecha,
+                    monto: montoTotal > 0 ? montoTotal : capital,
+                    capital: capital,
+                    interes: interes,
+                    seguros: 0,
+                    referencia: comprobante,
+                    metodo: metodo,
+                    notas: notas,
+                    tipoOperacion: 'ABONO_ROTATIVO',
+                    saldoPosterior: nuevoSaldo
+                };
+
+            } else if (tipo === 'tarjeta') {
+                const monto = parseFloat(document.getElementById('abonoTarjMonto')?.value) || 0;
+                const fecha = document.getElementById('abonoTarjFecha')?.value || new Date().toISOString().slice(0, 10);
+
+                if (monto <= 0) {
+                    window.showNotification("Ingrese el monto a pagar a la tarjeta", "error");
+                    return;
+                }
+
+                nuevoSaldo = Math.max(0, saldoAnterior - monto);
+                prod.saldoActual = nuevoSaldo;
+
+                abonoObj = {
+                    id: 'ABO_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                    fecha: fecha,
+                    monto: monto,
+                    capital: monto,
+                    interes: 0,
+                    seguros: 0,
+                    referencia: comprobante,
+                    metodo: metodo,
+                    notas: notas,
+                    tipoOperacion: 'PAGO_TARJETA',
+                    saldoPosterior: nuevoSaldo
+                };
+
+            } else if (tipo === 'cuenta') {
+                const tipoMov = document.getElementById('abonoCtaTipoMov')?.value || 'deposito';
+                const monto = parseFloat(document.getElementById('abonoCtaMonto')?.value) || 0;
+                const fecha = document.getElementById('abonoCtaFecha')?.value || new Date().toISOString().slice(0, 10);
+                const concepto = document.getElementById('abonoCtaConcepto')?.value.trim() || (tipoMov === 'deposito' ? 'Depósito en cuenta' : 'Cargo / Retiro de fondos');
+
+                if (monto <= 0) {
+                    window.showNotification("Ingrese el monto del movimiento en cuenta", "error");
+                    return;
+                }
+
+                if (tipoMov === 'deposito') {
+                    nuevoSaldo = saldoAnterior + monto;
+                } else {
+                    nuevoSaldo = Math.max(0, saldoAnterior - monto);
+                }
+                prod.saldoActual = nuevoSaldo;
+
+                abonoObj = {
+                    id: 'ABO_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                    fecha: fecha,
+                    monto: monto,
+                    capital: (tipoMov === 'deposito' ? monto : -monto),
+                    interes: 0,
+                    seguros: 0,
+                    concepto: concepto,
+                    tipoMov: tipoMov,
+                    referencia: comprobante,
+                    metodo: metodo,
+                    notas: notas,
+                    tipoOperacion: (tipoMov === 'deposito' ? 'DEPOSITO_CUENTA' : 'CARGO_CUENTA'),
+                    saldoPosterior: nuevoSaldo
+                };
+            }
+
+            prod.abonos.unshift(abonoObj);
+            prod.actualizadoEl = new Date().toISOString();
+
+            try {
+                localStorage.setItem('cache_bancos', JSON.stringify(appData.bancos));
+            } catch(err) {
+                console.warn("Error guardando cache_bancos:", err);
+            }
+
+            window.cerrarModalAbonoBancario();
+            window.renderBancos();
+
+            if (window.bancoActualDetalle && window.bancoActualDetalle.id === prod.id) {
+                window.verHojaBancoDetalle(prod.id);
+            }
+
+            if (window.renderCalendarioPagos) window.renderCalendarioPagos();
+            if (window.sincronizarConGoogleSheetsSilencioso) {
+                window.sincronizarConGoogleSheetsSilencioso();
+            }
+
+            let msj = `Abono aplicado exitosamente a ${prod.banco}. Nuevo saldo: ${formatMoney(nuevoSaldo)}`;
+            if (tipo === 'cuenta') {
+                const tMov = abonoObj.tipoMov === 'deposito' ? 'Depósito' : 'Cargo';
+                msj = `${tMov} registrado en ${prod.banco}. Saldo disponible: ${formatMoney(nuevoSaldo)}`;
+            }
+            window.showNotification(msj, "success");
+        };
+
+        window.eliminarAbonoBancario = function(prodId, abonoIdx) {
+            const prod = (appData.bancos || []).find(b => b.id === prodId);
+            if (!prod || !prod.abonos || !prod.abonos[abonoIdx]) return;
+
+            const ab = prod.abonos[abonoIdx];
+            if (!confirm(`¿Está seguro de eliminar este registro de ${formatMoney(ab.monto)}? El saldo se recalculará automáticamente.`)) {
+                return;
+            }
+
+            // Revertir el saldo según el tipo
+            const tipo = prod.tipo || 'decreciente';
+            let saldo = parseFloat(prod.saldoActual) || 0;
+
+            if (tipo === 'cuenta') {
+                if (ab.tipoMov === 'deposito') {
+                    saldo = Math.max(0, saldo - (parseFloat(ab.monto) || 0));
+                } else {
+                    saldo = saldo + (parseFloat(ab.monto) || 0);
+                }
+            } else {
+                const cap = parseFloat(ab.capital) || parseFloat(ab.monto) || 0;
+                saldo = saldo + cap;
+            }
+
+            prod.saldoActual = saldo;
+            prod.abonos.splice(abonoIdx, 1);
+            prod.actualizadoEl = new Date().toISOString();
+
+            try {
+                localStorage.setItem('cache_bancos', JSON.stringify(appData.bancos));
+            } catch(err) {}
+
+            window.renderBancos();
+            if (window.bancoActualDetalle && window.bancoActualDetalle.id === prod.id) {
+                window.verHojaBancoDetalle(prod.id);
+            }
+            if (window.sincronizarConGoogleSheetsSilencioso) {
+                window.sincronizarConGoogleSheetsSilencioso();
+            }
+
+            window.showNotification("Registro de pago/abono eliminado y saldo revertido", "info");
+        };
+
         window.renderPagosBancarios = function(prod) {
             const tbody = document.getElementById('tbody-pagos-banco');
             if (!tbody) return;
@@ -7426,20 +8252,55 @@
 
             const abonos = prod.abonos || [];
             if (abonos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-500 italic">No hay pagos o abonos bancarios registrados aún.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500 italic">No hay pagos o abonos bancarios registrados aún en este producto.</td></tr>`;
                 return;
             }
 
-            abonos.forEach(ab => {
+            abonos.forEach((ab, idx) => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-800/60 font-mono text-xs transition";
+
+                let badgeOperacion = '';
+                let montoClase = 'font-bold text-emerald-400';
+                let montoSigno = '';
+
+                if (prod.tipo === 'cuenta') {
+                    if (ab.tipoMov === 'cargo') {
+                        badgeOperacion = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">CARGO (-)</span>`;
+                        montoClase = 'font-bold text-rose-400';
+                        montoSigno = '- ';
+                    } else {
+                        badgeOperacion = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">DEPÓSITO (+)</span>`;
+                        montoClase = 'font-bold text-emerald-400';
+                        montoSigno = '+ ';
+                    }
+                } else if (prod.tipo === 'tarjeta') {
+                    badgeOperacion = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/15 text-purple-400 border border-purple-500/30">PAGO TARJETA</span>`;
+                } else if (prod.tipo === 'rotativo') {
+                    badgeOperacion = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">ABONO LÍNEA</span>`;
+                } else {
+                    badgeOperacion = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">CUOTA CRÉDITO</span>`;
+                }
+
+                const detalleConcepto = ab.concepto || (ab.capital > 0 ? `Capital: ${formatMoney(ab.capital)}` : (prod.tipo === 'cuenta' ? 'Movimiento' : 'Abono'));
+
                 tr.innerHTML = `
-                    <td class="p-2.5 text-slate-300 font-sans">${ab.fecha || '-'}</td>
-                    <td class="p-2.5 font-bold text-emerald-400">${formatMoney(ab.monto)}</td>
-                    <td class="p-2.5 text-slate-300">${formatMoney(ab.capital || 0)}</td>
-                    <td class="p-2.5 text-slate-300">${formatMoney(ab.interes || 0)}</td>
-                    <td class="p-2.5 text-slate-300">${formatMoney(ab.seguros || 0)}</td>
-                    <td class="p-2.5 text-slate-400 font-sans">${ab.referencia || 'Transferencia / Cheque'}</td>
+                    <td class="p-2.5 text-slate-300 font-sans whitespace-nowrap">${ab.fecha || '-'}</td>
+                    <td class="p-2.5 ${montoClase} whitespace-nowrap">${montoSigno}${formatMoney(ab.monto)}</td>
+                    <td class="p-2.5 text-slate-200">
+                        <div class="flex items-center gap-1.5">
+                            ${badgeOperacion}
+                            <span class="text-xs font-sans text-slate-300">${detalleConcepto}</span>
+                        </div>
+                    </td>
+                    <td class="p-2.5 text-rose-300 font-mono">${(parseFloat(ab.interes) || 0) > 0 ? formatMoney(ab.interes) : '-'}</td>
+                    <td class="p-2.5 text-amber-300 font-mono">${(parseFloat(ab.seguros) || 0) > 0 ? formatMoney(ab.seguros) : '-'}</td>
+                    <td class="p-2.5 text-slate-400 font-sans text-[11px] truncate max-w-[120px]" title="${ab.referencia || ''}">${ab.referencia || 'Transferencia'}</td>
+                    <td class="p-2.5 text-center">
+                        <button type="button" onclick="window.eliminarAbonoBancario('${prod.id}', ${idx})" title="Eliminar abono y revertir saldo" class="p-1 rounded bg-bgDark hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 text-xs transition">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -7447,39 +8308,7 @@
 
         window.abrirModalRegistrarPagoBancario = function() {
             if (!window.bancoActualDetalle) return;
-            const montoPrompt = prompt(`Ingrese el monto del pago para ${window.bancoActualDetalle.banco} (Ref: ${window.bancoActualDetalle.referencia}):`, window.bancoActualDetalle.cuotaMensualPactada || '');
-            if (!montoPrompt) return;
-            const monto = parseFloat(montoPrompt);
-            if (isNaN(monto) || monto <= 0) {
-                showNotification("Monto no válido", "error");
-                return;
-            }
-
-            const refPago = prompt("Número de comprobante o referencia de pago:", "TRANSF-" + Date.now().toString().slice(-4)) || "";
-
-            if (!window.bancoActualDetalle.abonos) window.bancoActualDetalle.abonos = [];
-            
-            window.bancoActualDetalle.saldoActual = Math.max(0, (parseFloat(window.bancoActualDetalle.saldoActual) || 0) - monto);
-
-            window.bancoActualDetalle.abonos.unshift({
-                fecha: new Date().toISOString().slice(0, 10),
-                monto: monto,
-                capital: monto,
-                interes: 0,
-                seguros: 0,
-                referencia: refPago
-            });
-
-            try {
-                localStorage.setItem('cache_bancos', JSON.stringify(appData.bancos));
-            } catch(e) {}
-
-            showNotification("Pago bancario registrado exitosamente", "success");
-            window.verHojaBancoDetalle(window.bancoActualDetalle.id);
-            window.renderBancos();
-            if (window.sincronizarConGoogleSheetsSilencioso) {
-                window.sincronizarConGoogleSheetsSilencioso();
-            }
+            window.abrirModalAbonoBancarioDirecto(window.bancoActualDetalle.id);
         };
 
         window.descargarExcelBancos = function() {
@@ -7529,6 +8358,13 @@
         window.abrirModalCargarJsonBancario = function() {
             const txtArea = document.getElementById('textoJsonBancario');
             if (txtArea) txtArea.value = '';
+            const msgBox = document.getElementById('jsonBancarioMsgBox');
+            if (msgBox) {
+                msgBox.className = 'hidden';
+                msgBox.innerHTML = '';
+            }
+            const fileInput = document.getElementById('inputJsonBancarioFile');
+            if (fileInput) fileInput.value = '';
             const modal = document.getElementById('modalCargarJsonBancario');
             if (modal) modal.classList.remove('hidden');
         };
@@ -7539,17 +8375,38 @@
         };
 
         window.procesarArchivoJsonBancario = function(e) {
-            const file = e.target.files[0];
+            const file = e.target.files && e.target.files[0];
             if (!file) return;
+
+            const msgBox = document.getElementById('jsonBancarioMsgBox');
+            const txtEl = document.getElementById('textoJsonBancario');
+
             const reader = new FileReader();
             reader.onload = function(evt) {
                 try {
-                    const data = JSON.parse(evt.target.result);
-                    window.procesarEntradaJsonBancario(data);
+                    const text = evt.target.result;
+                    if (txtEl) txtEl.value = text;
+
+                    // Validar sintaxis JSON
+                    const data = JSON.parse(text);
+
+                    // Contar cuántos registros potenciales contiene
+                    let cantDetectada = 1;
+                    if (Array.isArray(data)) cantDetectada = data.length;
+                    else if (Array.isArray(data.bancos)) cantDetectada = data.bancos.length;
+                    else if (Array.isArray(data.cuentas)) cantDetectada = data.cuentas.length;
+                    else if (Array.isArray(data.tarjetas)) cantDetectada = data.tarjetas.length;
+                    else if (Array.isArray(data.prestamos)) cantDetectada = data.prestamos.length;
+
+                    if (msgBox) {
+                        msgBox.className = "p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2";
+                        msgBox.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 text-base"></i> <div>Archivo <strong>${file.name}</strong> (${(file.size/1024).toFixed(1)} KB) cargado en el visor. Presione el botón verde abajo para guardarlo en las cuentas de banco.</div>`;
+                    }
                 } catch(err) {
-                    showNotification("El archivo seleccionado no tiene un formato JSON válido: " + err.message, "error");
-                } finally {
-                    e.target.value = '';
+                    if (msgBox) {
+                        msgBox.className = "p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2";
+                        msgBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400 text-base"></i> <div>Error de formato JSON en el archivo: ${err.message}</div>`;
+                    }
                 }
             };
             reader.readAsText(file);
@@ -7557,51 +8414,81 @@
 
         window.procesarTextoJsonBancario = function() {
             const txtEl = document.getElementById('textoJsonBancario');
+            const msgBox = document.getElementById('jsonBancarioMsgBox');
             const raw = txtEl?.value.trim();
+
             if (!raw) {
-                showNotification("Pegue el contenido JSON bancario a procesar", "error");
+                if (msgBox) {
+                    msgBox.className = "p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2";
+                    msgBox.innerHTML = `<i class="fa-solid fa-circle-exclamation text-amber-400 text-base"></i> <div>Por favor seleccione un archivo .json o pegue el contenido JSON bancario en el recuadro.</div>`;
+                } else {
+                    window.showNotification("Seleccione un archivo o pegue el JSON bancario", "warning");
+                }
                 return;
             }
+
             try {
                 const data = JSON.parse(raw);
                 window.procesarEntradaJsonBancario(data);
-                if (txtEl) txtEl.value = '';
             } catch(err) {
-                showNotification("Error de sintaxis en JSON: " + err.message, "error");
+                if (msgBox) {
+                    msgBox.className = "p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2";
+                    msgBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400 text-base"></i> <div>Error de sintaxis en el JSON: ${err.message}</div>`;
+                } else {
+                    window.showNotification("Error de sintaxis en JSON: " + err.message, "error");
+                }
             }
         };
 
         window.procesarEntradaJsonBancario = function(data) {
             if (!data) return;
+            const msgBox = document.getElementById('jsonBancarioMsgBox');
 
-            // Desempaquetar si viene anidado en data, response, estadoCuenta, etc.
-            let root = data;
-            if (root.data && typeof root.data === 'object' && !Array.isArray(root.data)) root = root.data;
-            if (root.response && typeof root.response === 'object' && !Array.isArray(root.response)) root = root.response;
-            if (root.estadoCuenta && typeof root.estadoCuenta === 'object' && !Array.isArray(root.estadoCuenta)) root = root.estadoCuenta;
-
-            // Detectar lista de productos o usar el objeto único
+            // 1. Detectar si es un DTE oficial de Hacienda (El Salvador)
             let items = [];
-            if (Array.isArray(data)) {
-                items = data;
-            } else if (Array.isArray(root.bancos)) {
-                items = root.bancos;
-            } else if (Array.isArray(root.productos)) {
-                items = root.productos;
-            } else if (Array.isArray(root.cuentas)) {
-                items = root.cuentas;
-            } else if (Array.isArray(root.tarjetas)) {
-                items = root.tarjetas;
-            } else if (Array.isArray(root.prestamos)) {
-                items = root.prestamos;
-            } else if (Array.isArray(root.creditos)) {
-                items = root.creditos;
-            } else if (Array.isArray(root.items)) {
-                items = root.items;
-            } else if (Array.isArray(root.list)) {
-                items = root.list;
+            if (data.identificacion && (data.emisor || data.receptor)) {
+                let emisorNombre = data.emisor?.nombre || data.emisor?.nombreComercial || 'BANCO';
+                let titularNombre = data.receptor?.nombre || 'FERRETERIA FERROGAR, S.A. DE C.V.';
+                let referencia = data.identificacion?.codigoGeneracion || data.identificacion?.numeroControl || `DTE-${Date.now()}`;
+                let total = parseFloat(data.resumen?.totalPagar || data.resumen?.montoTotalOperacion || data.resumen?.totalGravada || 0);
+                let fecha = data.identificacion?.fecEmi || new Date().toISOString().slice(0, 10);
+
+                const itemsDesc = (data.cuerpoDocumento || []).map(it => (it.descripcion || '')).join(' ').toLowerCase();
+                let tipo = 'tarjeta';
+                if (itemsDesc.includes('cuenta') || itemsDesc.includes('cheque') || itemsDesc.includes('manejo de cuenta')) {
+                    tipo = 'cuenta';
+                } else if (itemsDesc.includes('prestam') || itemsDesc.includes('cuota') || itemsDesc.includes('capital')) {
+                    tipo = 'decreciente';
+                } else if (itemsDesc.includes('rotat') || itemsDesc.includes('linea')) {
+                    tipo = 'rotativo';
+                }
+
+                items = [{
+                    banco: emisorNombre,
+                    tipo: tipo,
+                    referencia: referencia,
+                    titular: titularNombre,
+                    montoAprobado: total,
+                    saldoActual: total,
+                    fechaInicio: fecha,
+                    notas: `Importado de DTE MH ${data.identificacion?.numeroControl || ''}`
+                }];
             } else {
-                items = [root];
+                let root = data;
+                if (root.data && typeof root.data === 'object' && !Array.isArray(root.data)) root = root.data;
+                if (root.response && typeof root.response === 'object' && !Array.isArray(root.response)) root = root.response;
+                if (root.estadoCuenta && typeof root.estadoCuenta === 'object' && !Array.isArray(root.estadoCuenta)) root = root.estadoCuenta;
+
+                if (Array.isArray(data)) items = data;
+                else if (Array.isArray(root.bancos)) items = root.bancos;
+                else if (Array.isArray(root.productos)) items = root.productos;
+                else if (Array.isArray(root.cuentas)) items = root.cuentas;
+                else if (Array.isArray(root.tarjetas)) items = root.tarjetas;
+                else if (Array.isArray(root.prestamos)) items = root.prestamos;
+                else if (Array.isArray(root.creditos)) items = root.creditos;
+                else if (Array.isArray(root.items)) items = root.items;
+                else if (Array.isArray(root.list)) items = root.list;
+                else items = [root];
             }
 
             if (!appData.bancos) appData.bancos = [];
@@ -7611,10 +8498,11 @@
                 if (!it || typeof it !== 'object') return;
 
                 // 1. Banco
-                const banco = String(it.banco || it.bancoNombre || it.nombreBanco || it.bank || it.institucion || it.entidad || it.emisor || 'BANCO AGRÍCOLA').toUpperCase();
+                let bancoVal = it.banco || it.bancoNombre || it.nombreBanco || it.bank || it.institucion || it.entidad || (typeof it.emisor === 'object' ? it.emisor?.nombre : it.emisor) || 'BANCO AGRÍCOLA';
+                const banco = String(bancoVal).trim().toUpperCase();
 
                 // 2. Referencia / Cuenta / Crédito / Tarjeta
-                let referencia = it.referencia || it.ref || it.numeroCuenta || it.noCuenta || it.cuenta || it.numero_cuenta || it.num_cuenta || it.numeroTarjeta || it.tarjeta || it.numero_tarjeta || it.card_number || it.contrato || it.noContrato || it.numeroContrato || it.credito || it.idCredito || it.id;
+                let referencia = it.referencia || it.ref || it.numeroCuenta || it.noCuenta || it.cuenta || it.numero_cuenta || it.num_cuenta || it.numeroTarjeta || it.tarjeta || it.numero_tarjeta || it.card_number || it.cardNumber || it.contrato || it.noContrato || it.numeroContrato || it.credito || it.idCredito || it.id;
                 if (!referencia || String(referencia).trim() === "") {
                     referencia = `REF-${banco.slice(0, 3)}-${Date.now().toString().slice(-4)}${idx}`;
                 }
@@ -7638,31 +8526,40 @@
                 }
 
                 // 4. Titular y Montos
-                const titular = it.titular || it.nombreTitular || it.cliente || it.nombreCliente || it.nombre || 'FERRETERIA FERROGAR, S.A. DE C.V.';
-                let montoAprobado = parseFloat(it.montoAprobado || it.monto_aprobado || it.montoInicial || it.monto_inicial || it.limiteCredito || it.limite_credito || it.limite || it.monto || it.principal || it.creditoAprobado || 0);
-                let saldoActual = parseFloat(it.saldoActual || it.saldo_actual || it.saldoCapital || it.saldo_capital || it.saldo || it.balance || it.saldoContable || it.saldoDisponible || it.deudaTotal || 0);
+                const titularVal = it.titular || it.nombreTitular || it.cliente || it.nombreCliente || (typeof it.receptor === 'object' ? it.receptor?.nombre : it.receptor) || 'FERRETERIA FERROGAR, S.A. DE C.V.';
+                const titular = String(titularVal).trim();
+
+                const parseMonto = (v) => {
+                    if (v === null || v === undefined) return 0;
+                    if (typeof v === 'number') return v;
+                    const cleaned = String(v).replace(/[^0-9.-]/g, '');
+                    return parseFloat(cleaned) || 0;
+                };
+
+                let montoAprobado = parseMonto(it.montoAprobado || it.monto_aprobado || it.montoInicial || it.monto_inicial || it.limiteCredito || it.limite_credito || it.limite || it.monto || it.principal || it.creditoAprobado || it.totalPagar || 0);
+                let saldoActual = parseMonto(it.saldoActual || it.saldo_actual || it.saldoCapital || it.saldo_capital || it.saldo || it.balance || it.currentBalance || it.saldoContable || it.saldoDisponible || it.deudaTotal || 0);
 
                 if (montoAprobado === 0 && saldoActual > 0) montoAprobado = saldoActual;
                 if (saldoActual === 0 && montoAprobado > 0) saldoActual = montoAprobado;
 
                 // 5. Parámetros Financieros (Requerimiento imagen y leyes SSF El Salvador)
-                const cuotaMensualPactada = parseFloat(it.cuotaMensualPactada || it.cuota_mensual || it.cuotaPactada || it.cuota_pactada || it.cuota || it.pagoMinimo || it.pago_minimo || it.valorCuota || 0);
-                const tasaNominal = parseFloat(it.tasaNominal || it.tasa_nominal || it.tasaInteres || it.tasa_interes || it.tasa || it.interesNominal || 0);
-                const tasaEfectiva = parseFloat(it.tasaEfectiva || it.tasa_efectiva || it.tasaEfectivaAnual || it.tea || 0);
-                const tasaMoratoria = parseFloat(it.tasaMoratoria || it.tasa_moratoria || it.moratorio || 0);
+                const cuotaMensualPactada = parseMonto(it.cuotaMensualPactada || it.cuota_mensual || it.cuotaPactada || it.cuota_pactada || it.cuota || it.pagoMinimo || it.pago_minimo || it.valorCuota || 0);
+                const tasaNominal = parseMonto(it.tasaNominal || it.tasa_nominal || it.tasaInteres || it.tasa_interes || it.tasa || it.interesNominal || 0);
+                const tasaEfectiva = parseMonto(it.tasaEfectiva || it.tasa_efectiva || it.tasaEfectivaAnual || it.tea || 0);
+                const tasaMoratoria = parseMonto(it.tasaMoratoria || it.tasa_moratoria || it.moratorio || 0);
                 const baseCalculo = String(it.baseCalculo || it.base_calculo || it.baseDias || it.base_dias || '360').trim();
-                const seguroDanos = parseFloat(it.seguroDanos || it.seguro_danos || it.seguroDanios || it.seguro_danios || 0);
-                const seguroDeuda = parseFloat(it.seguroDeuda || it.seguro_deuda || it.seguroVida || it.seguro_vida || it.desgravamen || 0);
+                const seguroDanos = parseMonto(it.seguroDanos || it.seguro_danos || it.seguroDanios || it.seguro_danios || 0);
+                const seguroDeuda = parseMonto(it.seguroDeuda || it.seguro_deuda || it.seguroVida || it.seguro_vida || it.desgravamen || 0);
                 const diaPago = parseInt(it.diaPago || it.dia_pago || it.fechaPago || 15, 10);
                 const diaCorte = parseInt(it.diaCorte || it.dia_corte || it.fechaCorte || 0, 10);
                 const diaLimitePago = parseInt(it.diaLimitePago || it.dia_limite_pago || it.diaLimite || 0, 10);
-                const pagoMinimo = parseFloat(it.pagoMinimo || it.pago_minimo || 0);
-                const pagoContado = parseFloat(it.pagoContado || it.pago_contado || 0);
-                const saldoRetenido = parseFloat(it.saldoRetenido || it.saldo_retenido || 0);
-                const limiteSobregiro = parseFloat(it.limiteSobregiro || it.limite_sobregiro || 0);
-                const tasaSobregiro = parseFloat(it.tasaSobregiro || it.tasa_sobregiro || 0);
+                const pagoMinimo = parseMonto(it.pagoMinimo || it.pago_minimo || 0);
+                const pagoContado = parseMonto(it.pagoContado || it.pago_contado || 0);
+                const saldoRetenido = parseMonto(it.saldoRetenido || it.saldo_retenido || 0);
+                const limiteSobregiro = parseMonto(it.limiteSobregiro || it.limite_sobregiro || 0);
+                const tasaSobregiro = parseMonto(it.tasaSobregiro || it.tasa_sobregiro || 0);
                 const plazoMeses = parseInt(it.plazoMeses || it.plazo_meses || it.plazo || 0, 10);
-                const fechaInicio = it.fechaInicio || it.fecha_inicio || it.fechaDesembolso || it.fecha_desembolso || '';
+                const fechaInicio = it.fechaInicio || it.fecha_inicio || it.fechaDesembolso || it.fecha_desembolso || it.fecEmi || '';
                 const fechaVencimiento = it.fechaVencimiento || it.fecha_vencimiento || it.fechaFin || it.fecha_fin || '';
                 const notas = it.notas || it.nota || it.observaciones || it.descripcion || '';
 
@@ -7674,10 +8571,10 @@
                         if (ab && typeof ab === 'object') {
                             abonos.push({
                                 fecha: ab.fecha || ab.fechaPago || ab.date || new Date().toISOString().slice(0, 10),
-                                monto: parseFloat(ab.monto || ab.valor || ab.amount || 0),
-                                capital: parseFloat(ab.capital || ab.abonoCapital || 0),
-                                interes: parseFloat(ab.interes || ab.intereses || 0),
-                                seguros: parseFloat(ab.seguros || 0),
+                                monto: parseMonto(ab.monto || ab.valor || ab.amount || 0),
+                                capital: parseMonto(ab.capital || ab.abonoCapital || 0),
+                                interes: parseMonto(ab.interes || ab.intereses || 0),
+                                seguros: parseMonto(ab.seguros || 0),
                                 referencia: ab.referencia || ab.comprobante || ab.ref || 'Abono Registrado'
                             });
                         }
@@ -7729,14 +8626,24 @@
                 procesados++;
             });
 
+            if (procesados === 0) {
+                if (msgBox) {
+                    msgBox.className = "p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2";
+                    msgBox.innerHTML = `<i class="fa-solid fa-circle-exclamation text-amber-400 text-base"></i> <div>No se reconocieron registros bancarios en el JSON proporcionado. Asegúrese de que contenga datos de banco, referencia o saldo.</div>`;
+                }
+                return;
+            }
+
             try {
                 localStorage.setItem('cache_bancos', JSON.stringify(appData.bancos));
-            } catch(err) {}
+            } catch(err) {
+                console.warn("Error guardando cache_bancos:", err);
+            }
 
             window.filtroBancosActual = 'TODOS';
             window.cerrarModalCargarJsonBancario();
-            showNotification(`Se cargaron y actualizaron exitosamente ${procesados} registros bancarios`, "success");
             window.renderBancos();
+            window.showNotification(`Se cargaron y actualizaron exitosamente ${procesados} registros bancarios`, "success");
             if (window.renderCalendarioPagos) window.renderCalendarioPagos();
             if (window.sincronizarConGoogleSheetsSilencioso) {
                 window.sincronizarConGoogleSheetsSilencioso();
