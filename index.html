@@ -77,7 +77,7 @@
         #modalLogin.hidden { display: none !important; }
     </style>
     <script>
-        // DefiniciÃ³n anticipada de autenticaciÃ³n para respuesta instantÃ¡nea (0ms)
+        // Definición anticipada de autenticación para respuesta instantánea (0ms)
         window.procesarLogin = function(e) {
             if (e) {
                 e.preventDefault();
@@ -103,10 +103,10 @@
 
             if (!esAdmin && !esViewer) {
                 if (errBox && errTxt) {
-                    errTxt.innerHTML = '<strong>Credenciales incorrectas:</strong> Verifique su contraseÃ±a (Fg2026 para Admin, 2026 para Consultas).';
+                    errTxt.innerHTML = '<strong>Credenciales incorrectas:</strong> Verifique su contraseña (Fg2026 para Admin, 2026 para Consultas).';
                     errBox.classList.remove('hidden');
                 } else {
-                    alert('Credenciales incorrectas. Verifique contraseÃ±a.');
+                    alert('Credenciales incorrectas. Verifique contraseña.');
                 }
                 const passInp = document.getElementById('loginPass');
                 if (passInp) { passInp.focus(); passInp.select(); }
@@ -169,7 +169,7 @@
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Contraseña</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-key"></i></span>
-                        <input type="password" id="loginPass" required placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full bg-bgDark border border-borderDark rounded-lg pl-10 pr-10 py-2 text-xs text-white focus:outline-none focus:border-accentCyan font-mono">
+                        <input type="password" id="loginPass" required placeholder="••••••••" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full bg-bgDark border border-borderDark rounded-lg pl-10 pr-10 py-2 text-xs text-white focus:outline-none focus:border-accentCyan font-mono">
                         <button type="button" onclick="window.toggleLoginPassVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white" title="Mostrar/Ocultar contraseña">
                             <i id="iconTogglePass" class="fa-solid fa-eye text-xs"></i>
                         </button>
@@ -729,8 +729,8 @@
                             <div class="flex gap-2">
                                 <input type="text" id="inputFiltroCCF" oninput="window.filtrarSelectCCF()" placeholder="Escriba para buscar CCF..." class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-accentYellow font-mono">
                                 <select id="abonoOrdenFacturas" onchange="window.filtrarSelectCCF()" class="bg-bgDark border border-borderDark rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-accentYellow shrink-0 font-medium" title="Ordenar facturas para abono">
-                                    <option value="vieja" selected>MÃ¡s viejas primero</option>
-                                    <option value="reciente">MÃ¡s recientes primero</option>
+                                    <option value="vieja" selected>Más viejas primero</option>
+                                    <option value="reciente">Más recientes primero</option>
                                 </select>
                             </div>
                             <select id="abonoCCF" onchange="window.cargarDatosDetalleAbono()" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentYellow"></select>
@@ -920,8 +920,8 @@
                         <div>
                             <label class="block text-[10px] text-slate-400 mb-1">Orden:</label>
                             <select id="filtroOrdenPagadas" onchange="window.renderPagadasMes()" class="bg-bgDark border border-borderDark rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accentGreen font-medium">
-                                <option value="vieja" selected>MÃ¡s viejas primero</option>
-                                <option value="reciente">MÃ¡s recientes primero</option>
+                                <option value="vieja" selected>Más viejas primero</option>
+                                <option value="reciente">Más recientes primero</option>
                             </select>
                         </div>
                         <div class="flex items-center gap-2 mt-2 sm:mt-0">
@@ -950,7 +950,7 @@
                     <table class="w-full text-left text-xs text-slate-300">
                         <thead class="bg-bgDark text-slate-400 font-semibold uppercase border-b border-borderDark text-[11px]">
                             <tr>
-                                <th class="p-3">NÂº CCF / DTE</th>
+                                <th class="p-3">Nº CCF / DTE</th>
                                 <th class="p-3">Proveedor</th>
                                 <th class="p-3">Monto Factura</th>
                                 <th class="p-3">Saldo Actual</th>
@@ -965,15 +965,15 @@
         </div>
 
 
-                <!-- PESTAÃ‘A 5.5: BUSCAR FACTURAS -->
+                <!-- PESTAÑA 5.5: BUSCAR FACTURAS -->
         <div id="sec-buscar" class="hidden space-y-6">
             <div class="bg-cardDark border border-borderDark rounded-xl p-6 shadow-xl space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-borderDark">
                     <div>
                         <h3 class="text-base font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-magnifying-glass text-accentCyan"></i> BÃšSQUEDA AVANZADA DE FACTURAS Y CCF / DTE
+                            <i class="fa-solid fa-magnifying-glass text-accentCyan"></i> BÚSQUEDA AVANZADA DE FACTURAS Y CCF / DTE
                         </h3>
-                        <p class="text-xs text-slate-400">Escoge un proveedor o escribe el nÃºmero de CCF / CÃ³digo de GeneraciÃ³n para ver el historial completo</p>
+                        <p class="text-xs text-slate-400">Escoge un proveedor o escribe el número de CCF / Código de Generación para ver el historial completo</p>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3">
@@ -984,7 +984,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] text-slate-300 font-semibold mb-1">NÃºmero de CCF / DTE:</label>
+                            <label class="block text-[10px] text-slate-300 font-semibold mb-1">Número de CCF / DTE:</label>
                             <input type="text" id="inputBuscarCCF" oninput="window.ejecutarBusquedaFactura()" placeholder="Ej: 10DS000F... o CCF" class="bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan min-w-[180px] font-mono">
                         </div>
                         <div>
@@ -995,7 +995,7 @@
                                 <option value="CONSTRUGAR AGUILA">CONSTRUGAR AGUILA</option>
                                 <option value="CONSTRUGAR AUTOPISTA">CONSTRUGAR AUTOPISTA</option>
                                 <option value="FG COMALAPA">FG COMALAPA</option>
-                                <option value="FG VIÃ‘EDO">FG VIÃ‘EDO</option>
+                                <option value="FG VIÑEDO">FG VIÑEDO</option>
                                 <option value="FG HIERROGAR">FG HIERROGAR</option>
                             </select>
                         </div>
@@ -1012,10 +1012,10 @@
                         <thead class="bg-cardDark/80 text-[11px] uppercase tracking-wider text-slate-400 border-b border-borderDark">
                             <tr>
                                 <th class="p-3">Proveedor</th>
-                                <th class="p-3">CCF / CÃ³digo DTE</th>
+                                <th class="p-3">CCF / Código DTE</th>
                                 <th class="p-3">Sucursal</th>
-                                <th class="p-3">Fecha EmisiÃ³n</th>
-                                <th class="p-3">AntigÃ¼edad</th>
+                                <th class="p-3">Fecha Emisión</th>
+                                <th class="p-3">Antigüedad</th>
                                 <th class="p-3">Monto Original</th>
                                 <th class="p-3">Abonos Realizados</th>
                                 <th class="p-3">Saldo Actual</th>
@@ -1030,10 +1030,10 @@
         </div>
 
 
-        <!-- PESTAÃ‘A 6: CONSULTA SALDOS PENDIENTES -->
+        <!-- PESTAÑA 6: CONSULTA SALDOS PENDIENTES -->
         <div id="sec-consultas" class="space-y-6">
             <div class="bg-cardDark border border-borderDark rounded-xl p-6 shadow-xl">
-                <!-- TÃ­tulo dinÃ¡mico que aparecerÃ¡ Ãºnicamente al imprimir / descargar el PDF -->
+                <!-- Título dinámico que aparecerá únicamente al imprimir / descargar el PDF -->
                 <div id="pdf-proveedor-titulo"></div>
 
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-borderDark">
@@ -1057,7 +1057,7 @@
                                 <option value="CONSTRUGAR AGUILA">CONSTRUGAR AGUILA</option>
                                 <option value="CONSTRUGAR AUTOPISTA">CONSTRUGAR AUTOPISTA</option>
                                 <option value="FG COMALAPA">FG COMALAPA</option>
-                                <option value="FG VIÃ‘EDO">FG VIÃ‘EDO</option>
+                                <option value="FG VIÑEDO">FG VIÑEDO</option>
                                 <option value="FG HIERROGAR">FG HIERROGAR</option>
                             </select>
                         </div>
@@ -1067,7 +1067,7 @@
                                 <option value="TODOS">Todas las facturas</option>
                                 <option value="PENDIENTES_TODAS">Faltan por pagar (Pendientes, Abonadas y Vencidas)</option>
                                 <option value="ABONADAS">Abonadas (Con pagos parciales)</option>
-                                <option value="VENCIDAS">Vencidas (> 30 dÃ­as sin pagar)</option>
+                                <option value="VENCIDAS">Vencidas (> 30 días sin pagar)</option>
                                 <option value="PENDIENTES_SOLAS">Pendientes (Sin abono y vigentes)</option>
                                 <option value="CANCELADAS">Canceladas (Pagadas totalmente)</option>
                             </select>
@@ -1075,8 +1075,8 @@
                         <div>
                             <label class="block text-[10px] text-slate-400 mb-1">Ordenar por Fecha:</label>
                             <select id="consultaOrdenFecha" onchange="window.renderConsultaSaldos()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
-                                <option value="reciente">MÃ¡s reciente a mÃ¡s antigua</option>
-                                <option value="antigua">MÃ¡s antigua a mÃ¡s reciente</option>
+                                <option value="reciente">Más reciente a más antigua</option>
+                                <option value="antigua">Más antigua a más reciente</option>
                             </select>
                         </div>
                         <div class="flex items-end gap-2">
@@ -1101,11 +1101,11 @@
                         <span id="consultaTotalVencidasCant" class="text-[11px] text-rose-400 font-semibold mt-0.5 inline-block">0 facturas vencidas</span>
                     </div>
                     <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4">
-                        <span class="text-xs text-slate-400">Ãšltima ActualizaciÃ³n / Abono:</span>
+                        <span class="text-xs text-slate-400">Última Actualización / Abono:</span>
                         <div id="consultaUltimaActualizacion" class="text-base font-bold text-accentCyan mt-1">-</div>
                     </div>
                     <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4">
-                        <span class="text-xs text-slate-400">Ãšltimo DÃ­a de Ingreso (Captura):</span>
+                        <span class="text-xs text-slate-400">Último Día de Ingreso (Captura):</span>
                         <div id="consultaUltimoRegistro" class="text-base font-bold text-accentGreen mt-1">-</div>
                     </div>
                     <div class="bg-bgDark/80 border border-borderDark rounded-xl p-4 flex flex-col justify-center items-start">
@@ -1118,13 +1118,13 @@
                     <table class="w-full text-left text-xs text-slate-300">
                         <thead class="bg-bgDark text-slate-400 font-semibold uppercase border-b border-borderDark text-[11px]">
                             <tr>
-                                <th class="p-3">NÂº CCF / DTE</th>
-                                <th class="p-3">Fecha EmisiÃ³n</th>
+                                <th class="p-3">Nº CCF / DTE</th>
+                                <th class="p-3">Fecha Emisión</th>
                                 <th class="p-3">Sucursal</th>
                                 <th class="p-3 text-right">Monto Factura</th>
                                 <th class="p-3 text-right">Total Abonado</th>
                                 <th class="p-3 text-right">Saldo Actual</th>
-                                <th class="p-3 text-center">AntigÃ¼edad</th>
+                                <th class="p-3 text-center">Antigüedad</th>
                                 <th class="p-3 text-center">Estado</th>
                                 <th class="p-3">Nota</th>
                             </tr>
@@ -1173,8 +1173,8 @@
                         <div>
                             <label class="block text-[10px] text-slate-300 font-semibold mb-1">Ordenar por Fecha:</label>
                             <select id="sucursalReporteOrden" onchange="window.renderReportePorSucursal()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen font-medium">
-                                <option value="vieja" selected>MÃ¡s antiguas a mÃ¡s recientes</option>
-                                <option value="reciente">MÃ¡s recientes a mÃ¡s antiguas</option>
+                                <option value="vieja" selected>Más antiguas a más recientes</option>
+                                <option value="reciente">Más recientes a más antiguas</option>
                             </select>
                         </div>
                         <div class="flex items-end gap-2 mt-4 sm:mt-0">
@@ -3049,7 +3049,7 @@
     </div>
 
         <!-- ======================================================== -->
-    <!-- MODAL DETALLE DE ABONOS RÃPIDO (CONSULTA INTERACTIVA)     -->
+    <!-- MODAL DETALLE DE ABONOS RÁPIDO (CONSULTA INTERACTIVA)     -->
     <!-- ======================================================== -->
     <div id="modalDetalleAbonosFactura" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
         <div class="bg-cardDark border border-borderDark rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
@@ -3088,7 +3088,7 @@
                         <span id="mdaValAbonado" class="text-base font-extrabold font-mono text-emerald-400 block mt-0.5">$0.00</span>
                     </div>
                     <div class="bg-bgDark/80 border border-borderDark rounded-xl p-3">
-                        <span class="text-[10px] text-accentCyan uppercase font-semibold block">Notas de CrÃ©dito</span>
+                        <span class="text-[10px] text-accentCyan uppercase font-semibold block">Notas de Crédito</span>
                         <span id="mdaValNC" class="text-base font-extrabold font-mono text-accentCyan block mt-0.5">$0.00</span>
                     </div>
                     <div class="bg-bgDark/80 border border-borderDark rounded-xl p-3">
@@ -3100,11 +3100,11 @@
                 <!-- Estado Actual -->
                 <div class="flex items-center justify-between p-3 rounded-xl bg-bgDark/60 border border-borderDark">
                     <div class="flex items-center gap-2 text-xs">
-                        <span class="text-slate-400">Estado de la ObligaciÃ³n:</span>
+                        <span class="text-slate-400">Estado de la Obligación:</span>
                         <span id="mdaBadgeEstado" class="px-2.5 py-0.5 rounded-full text-xs font-bold">-</span>
                     </div>
                     <div class="text-xs text-slate-400">
-                        Fecha EmisiÃ³n: <span id="mdaFacFecha" class="font-semibold text-slate-200">-</span>
+                        Fecha Emisión: <span id="mdaFacFecha" class="font-semibold text-slate-200">-</span>
                     </div>
                 </div>
 
@@ -3124,7 +3124,7 @@
                                     <th class="p-2.5 text-center">#</th>
                                     <th class="p-2.5">Fecha</th>
                                     <th class="p-2.5 text-right">Monto Abonado</th>
-                                    <th class="p-2.5">MÃ©todo</th>
+                                    <th class="p-2.5">Método</th>
                                     <th class="p-2.5">Banco</th>
                                 </tr>
                             </thead>
@@ -3133,16 +3133,16 @@
                     </div>
                 </div>
 
-                <!-- Bloque Informativo de Notas de CrÃ©dito si existen -->
+                <!-- Bloque Informativo de Notas de Crédito si existen -->
                 <div id="mdaBloqueNC" class="hidden p-3.5 rounded-xl bg-accentCyan/10 border border-accentCyan/30 space-y-1.5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-accentCyan flex items-center gap-1.5">
-                            <i class="fa-solid fa-file-invoice text-sm"></i> Nota de CrÃ©dito Aplicada
+                            <i class="fa-solid fa-file-invoice text-sm"></i> Nota de Crédito Aplicada
                         </span>
                         <span id="mdaMontoNCTxt" class="font-mono font-bold text-accentCyan text-xs">$0.00</span>
                     </div>
                     <p class="text-[11px] text-slate-300">
-                        Esta factura cuenta con saldo a favor aplicado por Nota de CrÃ©dito emitida por el proveedor (rebaja, devoluciÃ³n o ajuste tributario DTE-05).
+                        Esta factura cuenta con saldo a favor aplicado por Nota de Crédito emitida por el proveedor (rebaja, devolución o ajuste tributario DTE-05).
                     </p>
                 </div>
             </div>
@@ -3165,7 +3165,7 @@
     </div>
 
     <!-- ======================================================== -->
-    <!-- MODAL APLICAR NOTA DE CRÃ‰DITO DTE (TIPO 05)               -->
+    <!-- MODAL APLICAR NOTA DE CRÉDITO DTE (TIPO 05)               -->
     <!-- ======================================================== -->
     <div id="modalAplicarNotaCreditoDTE" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
         <div class="bg-cardDark border border-borderDark rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-fade-in flex flex-col max-h-[92vh]">
@@ -3177,10 +3177,10 @@
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h3 class="font-bold text-white text-base">APLICAR NOTA DE CRÃ‰DITO ELECTRÃ“NICA</h3>
+                            <h3 class="font-bold text-white text-base">APLICAR NOTA DE CRÉDITO ELECTRÓNICA</h3>
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-accentCyan/20 text-accentCyan border border-accentCyan/30">DTE-05</span>
                         </div>
-                        <p class="text-xs text-slate-400">Normativa DTE El Salvador (Ministerio de Hacienda) &bull; Descuento / DevoluciÃ³n a Proveedor</p>
+                        <p class="text-xs text-slate-400">Normativa DTE El Salvador (Ministerio de Hacienda) &bull; Descuento / Devolución a Proveedor</p>
                     </div>
                 </div>
                 <button type="button" onclick="window.cerrarModalAplicarNotaCredito()" class="w-8 h-8 rounded-lg bg-bgDark hover:bg-borderDark text-slate-400 hover:text-white flex items-center justify-center transition">
@@ -3190,7 +3190,7 @@
 
             <!-- Body Modal -->
             <div class="p-5 overflow-y-auto space-y-4">
-                <!-- Tarjeta Resumen de la Nota de CrÃ©dito DTE -->
+                <!-- Tarjeta Resumen de la Nota de Crédito DTE -->
                 <div class="p-4 rounded-xl bg-bgDark/80 border border-emerald-500/30 space-y-3">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-borderDark pb-2.5">
                         <div>
@@ -3198,18 +3198,18 @@
                             <span id="ncModalProv" class="text-sm font-bold text-white">-</span>
                         </div>
                         <div class="text-left sm:text-right">
-                            <span class="text-[10px] text-slate-400 uppercase font-semibold block">Monto Total Nota de CrÃ©dito</span>
+                            <span class="text-[10px] text-slate-400 uppercase font-semibold block">Monto Total Nota de Crédito</span>
                             <span id="ncModalMonto" class="text-xl font-extrabold font-mono text-emerald-400">$0.00</span>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
                         <div>
-                            <span class="text-slate-400 text-[10px] block">NÂº Control DTE:</span>
+                            <span class="text-slate-400 text-[10px] block">Nº Control DTE:</span>
                             <span id="ncModalNumControl" class="font-mono font-semibold text-cyan-300">-</span>
                         </div>
                         <div>
-                            <span class="text-slate-400 text-[10px] block">Fecha EmisiÃ³n NC:</span>
+                            <span class="text-slate-400 text-[10px] block">Fecha Emisión NC:</span>
                             <span id="ncModalFecha" class="font-semibold text-white">-</span>
                         </div>
                         <div>
@@ -3219,11 +3219,11 @@
                     </div>
 
                     <div class="text-[11px] text-slate-400">
-                        CÃ³digo GeneraciÃ³n UUID: <span id="ncModalCodGen" class="font-mono text-slate-300 text-[10px] break-all">-</span>
+                        Código Generación UUID: <span id="ncModalCodGen" class="font-mono text-slate-300 text-[10px] break-all">-</span>
                     </div>
                 </div>
 
-                <!-- Selector de Factura a la que se aplicarÃ¡ la NC -->
+                <!-- Selector de Factura a la que se aplicará la NC -->
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold text-slate-200">
                         <i class="fa-solid fa-link text-accentCyan"></i> Seleccione la Factura / CCF del proveedor para aplicar el descuento:
@@ -3231,14 +3231,14 @@
                     <select id="ncModalSelectFactura" onchange="window.alCambiarFacturaTargetNC()" class="w-full bg-bgDark border border-borderDark rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-accentCyan">
                     </select>
                     <p class="text-[11px] text-slate-400">
-                        El sistema vinculÃ³ automÃ¡ticamente la factura coincidente con el documento relacionado del DTE. Puede cambiarla si desea aplicarla a otra factura del mismo proveedor.
+                        El sistema vinculó automáticamente la factura coincidente con el documento relacionado del DTE. Puede cambiarla si desea aplicarla a otra factura del mismo proveedor.
                     </p>
                 </div>
 
-                <!-- SimulaciÃ³n del Impacto Contable y Financiero -->
+                <!-- Simulación del Impacto Contable y Financiero -->
                 <div class="p-4 rounded-xl bg-bgDark/90 border border-borderDark space-y-3">
                     <div class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <i class="fa-solid fa-calculator text-emerald-400"></i> SimulaciÃ³n del Impacto en el Saldo
+                        <i class="fa-solid fa-calculator text-emerald-400"></i> Simulación del Impacto en el Saldo
                     </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
@@ -3251,7 +3251,7 @@
                             <span id="ncSimAbonosPrev" class="text-xs font-bold font-mono text-cyan-300 block mt-0.5">$0.00</span>
                         </div>
                         <div class="p-2.5 rounded-lg bg-cardDark border border-emerald-500/30">
-                            <span class="text-[10px] text-emerald-400 block font-semibold">Esta Nota de CrÃ©dito</span>
+                            <span class="text-[10px] text-emerald-400 block font-semibold">Esta Nota de Crédito</span>
                             <span id="ncSimMontoNC" class="text-xs font-extrabold font-mono text-emerald-400 block mt-0.5">-$0.00</span>
                         </div>
                         <div class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
@@ -3266,15 +3266,15 @@
                     </div>
                 </div>
 
-                <!-- Detalle de Ãtems / DevoluciÃ³n DTE -->
+                <!-- Detalle de Ítems / Devolución DTE -->
                 <div class="space-y-1.5">
-                    <span class="text-xs font-bold text-slate-300 block">Productos / Ãtems Acreditados en el DTE:</span>
+                    <span class="text-xs font-bold text-slate-300 block">Productos / Ítems Acreditados en el DTE:</span>
                     <div class="max-h-36 overflow-y-auto rounded-lg border border-borderDark">
                         <table class="w-full text-left text-xs text-slate-300">
                             <thead class="bg-bgDark text-slate-400 uppercase font-semibold text-[10px]">
                                 <tr>
                                     <th class="p-2">Cant</th>
-                                    <th class="p-2">DescripciÃ³n</th>
+                                    <th class="p-2">Descripción</th>
                                     <th class="p-2 text-right">Precio</th>
                                     <th class="p-2 text-right">Total Gravado</th>
                                 </tr>
@@ -3291,7 +3291,7 @@
                     Cancelar
                 </button>
                 <button type="button" onclick="window.confirmarAplicacionNotaCredito()" class="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/25 transition cursor-pointer">
-                    <i class="fa-solid fa-check-circle"></i> Aplicar Nota de CrÃ©dito y Descontar Saldo
+                    <i class="fa-solid fa-check-circle"></i> Aplicar Nota de Crédito y Descontar Saldo
                 </button>
             </div>
         </div>
@@ -3639,25 +3639,25 @@
             const pLower = p.toLowerCase();
             const uLower = u.toLowerCase();
 
-            // ValidaciÃ³n estricta y segura de credenciales autorizadas oficiales:
-            // 1. Administrador: ContraseÃ±a oficial Fg2026 (o fg2026 / FG2026)
-            // Se acepta con usuario Ferrogar, Admin, o si dejÃ³ el usuario en blanco, o si escribiÃ³ la contraseÃ±a en el campo de usuario
+            // Validación estricta y segura de credenciales autorizadas oficiales:
+            // 1. Administrador: Contraseña oficial Fg2026 (o fg2026 / FG2026)
+            // Se acepta con usuario Ferrogar, Admin, o si dejó el usuario en blanco, o si escribió la contraseña en el campo de usuario
             const passEsAdmin = (p === 'Fg2026' || pLower === 'fg2026');
             const passEnUsuarioAdmin = (uLower === 'fg2026');
             const esAdmin = passEsAdmin || passEnUsuarioAdmin;
 
-            // 2. Solo Lectura: ContraseÃ±a oficial 2026
-            // Se acepta con usuario Consultas, Consulta, Viewer, o si dejÃ³ el usuario en blanco
+            // 2. Solo Lectura: Contraseña oficial 2026
+            // Se acepta con usuario Consultas, Consulta, Viewer, o si dejó el usuario en blanco
             const passEsViewer = (p === '2026');
             const passEnUsuarioViewer = (u === '2026');
             const esViewer = !esAdmin && (passEsViewer || passEnUsuarioViewer);
 
             if (!esAdmin && !esViewer) {
                 if (errBox && errTxt) {
-                    errTxt.innerHTML = `<strong>Credenciales incorrectas:</strong> Verifique su contraseÃ±a (Fg2026 para Admin, 2026 para Consultas).`;
+                    errTxt.innerHTML = `<strong>Credenciales incorrectas:</strong> Verifique su contraseña (Fg2026 para Admin, 2026 para Consultas).`;
                     errBox.classList.remove('hidden');
                 } else {
-                    alert('Credenciales incorrectas. Verifique usuario y contraseÃ±a.');
+                    alert('Credenciales incorrectas. Verifique usuario y contraseña.');
                 }
                 const passInp = document.getElementById('loginPass');
                 if (passInp) {
@@ -4560,7 +4560,7 @@
             div.className = "abono-fila-dinamica bg-bgDark/40 p-4 rounded-xl border border-borderDark relative space-y-3";
             div.innerHTML = `
                 <div class="flex items-center justify-between">
-                    <span class="abono-num-badge text-xs font-bold text-accentGreen uppercase"><i class="fa-solid fa-money-bill-transfer"></i> Abono NÂ° ${index + 1}</span>
+                    <span class="abono-num-badge text-xs font-bold text-accentGreen uppercase"><i class="fa-solid fa-money-bill-transfer"></i> Abono N° ${index + 1}</span>
                     <button type="button" onclick="window.eliminarFilaAbono(this)" class="text-accentRed hover:text-red-400 text-xs px-2.5 py-1 rounded bg-accentRed/10 hover:bg-accentRed/20 transition flex items-center gap-1">
                         <i class="fa-solid fa-trash-can"></i> Eliminar Abono
                     </button>
@@ -4624,7 +4624,7 @@
                 const filas = document.querySelectorAll('#contenedor-abonos-dinamicos > .abono-fila-dinamica');
                 filas.forEach((fDiv, idx) => {
                     const spanNum = fDiv.querySelector('.abono-num-badge');
-                    if (spanNum) spanNum.innerHTML = `<i class="fa-solid fa-money-bill-transfer"></i> Abono NÂ° ${idx + 1}`;
+                    if (spanNum) spanNum.innerHTML = `<i class="fa-solid fa-money-bill-transfer"></i> Abono N° ${idx + 1}`;
                 });
             }
         };
@@ -4946,7 +4946,7 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            // Actualizar el tÃ­tulo dinÃ¡mico para PDF
+            // Actualizar el título dinámico para PDF
             const pdfTituloElem = document.getElementById('pdf-proveedor-titulo');
             if (pdfTituloElem) {
                 pdfTituloElem.innerText = `PROVEEDOR: ${prov || 'TODOS'} ${filtroSucursal !== 'TODAS' ? '- SUCURSAL: ' + filtroSucursal : ''}`;
@@ -5025,7 +5025,7 @@
                     });
                 }
 
-                // GeneraciÃ³n de Insignia de Estado Interactiva y Accesible
+                // Generación de Insignia de Estado Interactiva y Accesible
                 let badgeHtml = '';
                 if (estado === 'CANCELADA') {
                     badgeHtml = `<button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 inline-flex items-center gap-1 cursor-pointer hover:bg-emerald-500/25 transition shadow-sm" title="Factura Totalmente Cancelada - Toca para ver abonos y pagos"><i class="fa-solid fa-circle-check text-[10px]"></i> CANCELADA</button>`;
@@ -5041,12 +5041,12 @@
                     badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-500/15 border border-slate-500/40 text-slate-300 inline-flex items-center gap-1">PENDIENTE</span>`;
                 }
 
-                // GeneraciÃ³n de Celda de Total Abonado Interactiva
+                // Generación de Celda de Total Abonado Interactiva
                 let abonoHtml = '';
                 if (totalAbonado > 0) {
                     const cantAb = (f.abonos ? f.abonos.length : 0) + (parseFloat(f.nc) > 0 ? 1 : 0);
                     abonoHtml = `
-                        <button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 font-mono font-bold text-xs inline-flex items-center gap-1.5 transition group cursor-pointer shadow-sm" title="Toca para ver el desglose de los ${cantAb} abonos / notas de crÃ©dito">
+                        <button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 font-mono font-bold text-xs inline-flex items-center gap-1.5 transition group cursor-pointer shadow-sm" title="Toca para ver el desglose de los ${cantAb} abonos / notas de crédito">
                             <i class="fa-solid fa-receipt text-[10px] text-emerald-400 group-hover:scale-110 transition-transform"></i>
                             ${formatMoney(totalAbonado)}
                             <i class="fa-solid fa-eye text-[9px] text-emerald-400/70 group-hover:text-emerald-300 transition-colors ml-0.5"></i>
@@ -5069,7 +5069,7 @@
                     <td class="p-3 text-right font-mono">${formatMoney(f.monto)}</td>
                     <td class="p-3 text-right font-mono">${abonoHtml}</td>
                     <td class="p-3 text-right font-bold font-mono text-white">${formatMoney(saldo)}</td>
-                    <td class="p-3 text-center">${diasAntiguedad} dÃ­as</td>
+                    <td class="p-3 text-center">${diasAntiguedad} días</td>
                     <td class="p-3 text-center">${badgeHtml}</td>
                     <td class="p-3 text-slate-300 italic text-xs max-w-xs truncate" title="${f.nota || ''}">${f.nota || '-'}</td>
                 `;
@@ -5099,11 +5099,11 @@
                         badgeEstado.innerText = "CON MORA / VENCIDO";
                     } else {
                         badgeEstado.className = "px-3 py-1 rounded border text-xs font-semibold bg-amber-500/10 text-accentYellow border-accentYellow/30";
-                        badgeEstado.innerText = "PENDIENTE AL DÃA";
+                        badgeEstado.innerText = "PENDIENTE AL DÍA";
                     }
                 } else {
                     badgeEstado.className = "px-3 py-1 rounded border text-xs font-semibold bg-emerald-500/10 text-accentGreen border-accentGreen/30";
-                    badgeEstado.innerText = "AL DÃA / CANCELADO";
+                    badgeEstado.innerText = "AL DÍA / CANCELADO";
                 }
             }
 
@@ -5111,7 +5111,7 @@
                 tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-500">No hay facturas registradas para este proveedor con los filtros seleccionados.</td></tr>`;
             }
 
-            // TambiÃ©n actualizamos el reporte por sucursal
+            // También actualizamos el reporte por sucursal
             if (window.renderReportePorSucursal) {
                 window.renderReportePorSucursal();
             }
@@ -5539,20 +5539,20 @@
         window.guardarAbono = async function(e) {
             e.preventDefault();
             if (appData.currentUserRole === 'viewer') {
-                alert('AcciÃ³n denegada: Usuario en modo solo lectura.');
+                alert('Acción denegada: Usuario en modo solo lectura.');
                 return;
             }
             const prov = (document.getElementById('abonoProveedor').value || '').trim().toUpperCase();
             const ccf = (document.getElementById('abonoCCF').value || '').trim().toUpperCase();
             
             if (!prov || !ccf) {
-                alert('Por favor seleccione un proveedor y una factura vÃ¡lida antes de guardar el abono.');
+                alert('Por favor seleccione un proveedor y una factura válida antes de guardar el abono.');
                 return;
             }
 
             const f = appData.facturas.find(x => String(x.proveedor).trim().toUpperCase() === prov && String(x.ccf).trim().toUpperCase() === ccf);
             if (!f) {
-                alert(`No se encontrÃ³ la factura seleccionada (${ccf}) para el proveedor (${prov}). Por favor verifique que la factura exista.`);
+                alert(`No se encontró la factura seleccionada (${ccf}) para el proveedor (${prov}). Por favor verifique que la factura exista.`);
                 return;
             }
 
@@ -5607,7 +5607,7 @@
             try {
                 resultado = await sincronizarConGoogleSheetsSilencioso(f.proveedor);
             } catch (syncErr) {
-                console.error('Error en sincronizaciÃ³n silenciosa:', syncErr);
+                console.error('Error en sincronización silenciosa:', syncErr);
                 resultado = { success: false, error: syncErr.message };
             }
 
@@ -5626,9 +5626,9 @@
             const abonosFormateado = formatMoney(datosCalc.totalAbonado);
 
             if (resultado && resultado.success) {
-                alert(`Â¡Abono registrado con Ã©xito!\n\nâ€¢ Factura / CCF: ${f.ccf}\nâ€¢ Proveedor: ${f.proveedor}\nâ€¢ Total Abonado: ${abonosFormateado}\nâ€¢ Saldo Restante: ${saldoFormateado}\nâ€¢ Estado: ${datosCalc.estado}\n\nLos cambios se guardaron localmente y se sincronizaron en Google Sheets.`);
+                alert(`¡Abono registrado con éxito!\n\n• Factura / CCF: ${f.ccf}\n• Proveedor: ${f.proveedor}\n• Total Abonado: ${abonosFormateado}\n• Saldo Restante: ${saldoFormateado}\n• Estado: ${datosCalc.estado}\n\nLos cambios se guardaron localmente y se sincronizaron en Google Sheets.`);
             } else {
-                alert(`Â¡Abono guardado en su navegador con Ã©xito!\n\nâ€¢ Factura / CCF: ${f.ccf}\nâ€¢ Proveedor: ${f.proveedor}\nâ€¢ Total Abonado: ${abonosFormateado}\nâ€¢ Saldo Restante: ${saldoFormateado}\nâ€¢ Estado: ${datosCalc.estado}\n\nAviso de Nube: No se pudo conectar de inmediato con Google Sheets (${resultado && resultado.error ? resultado.error : 'sin conexiÃ³n'}). Los datos estÃ¡n protegidos en su navegador; presione "Sincronizar" en la barra superior cuando recupere conexiÃ³n.`);
+                alert(`¡Abono guardado en su navegador con éxito!\n\n• Factura / CCF: ${f.ccf}\n• Proveedor: ${f.proveedor}\n• Total Abonado: ${abonosFormateado}\n• Saldo Restante: ${saldoFormateado}\n• Estado: ${datosCalc.estado}\n\nAviso de Nube: No se pudo conectar de inmediato con Google Sheets (${resultado && resultado.error ? resultado.error : 'sin conexión'}). Los datos están protegidos en su navegador; presione "Sincronizar" en la barra superior cuando recupere conexión.`);
             }
         };
 
@@ -5705,7 +5705,7 @@
                 correlativoCcf = extraerSoloNumeros(ultimaParte) || extraerSoloNumeros(numControl);
             }
 
-            // Documentos Relacionados (Obligatorio en Notas de CrÃ©dito DTE Tipo 05 segÃºn normativa MH El Salvador)
+            // Documentos Relacionados (Obligatorio en Notas de Crédito DTE Tipo 05 según normativa MH El Salvador)
             const docRelList = [];
             const rawDocRel = dte.documentoRelacionado || (ident && ident.documentoRelacionado);
             if (Array.isArray(rawDocRel)) {
@@ -5783,10 +5783,10 @@
             const estadoMH = respMH.estado || 'PROCESADO';
             const fhProcesamiento = respMH.fhProcesamiento || `${fecEmi} ${horEmi}`;
 
-// Sucursal sugerida del apÃ©ndice
+// Sucursal sugerida del apéndice
             const sucursalSugerida = mapearSucursalDesdeDte(dte);
 
-            // ApÃ©ndice detallado (para mostrar en la vista)
+            // Apéndice detallado (para mostrar en la vista)
             let sucClienteApendice = '';
             if (dte.apendice && Array.isArray(dte.apendice)) {
                 const apSuc = dte.apendice.find(a => (a.campo || '').toLowerCase().includes('suc') || (a.etiqueta || '').toLowerCase().includes('suc'));
@@ -6279,7 +6279,7 @@
 
             window.cerrarModalCargarJson();
 
-            // CASO ESPECIAL: NOTA DE CRÃ‰DITO ELECTRÃ“NICA (DTE Tipo 05 segÃºn Ministerio de Hacienda)
+            // CASO ESPECIAL: NOTA DE CRÉDITO ELECTRÓNICA (DTE Tipo 05 según Ministerio de Hacienda)
             if (datosDte.esNotaCredito) {
                 window.mostrarModalAplicarNotaCredito(datosDte);
                 return;
@@ -6641,7 +6641,7 @@
 
         // Ver expediente completo de la factura con desglose de productos DTE
         // ==========================================
-        // CONTROL DE PESTAÃ‘AS Y HOJA DETALLE FACTURA
+        // CONTROL DE PESTAÑAS Y HOJA DETALLE FACTURA
         // ==========================================
         window.cambiarTabHojaFactura = function(tabName) {
             const tabs = ['items', 'abonos', 'fiscal'];
@@ -6675,7 +6675,7 @@
             }
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(txt).then(() => {
-                    alert(`Â¡${label} copiado al portapapeles!\n\n${txt}`);
+                    alert(`¡${label} copiado al portapapeles!\n\n${txt}`);
                 }).catch(() => {
                     copiarFallback(txt, label);
                 });
@@ -6689,7 +6689,7 @@
                 temp.select();
                 document.execCommand('copy');
                 document.body.removeChild(temp);
-                alert(`Â¡${lbl} copiado al portapapeles!\n\n${text}`);
+                alert(`¡${lbl} copiado al portapapeles!\n\n${text}`);
             }
         };
 
@@ -6697,7 +6697,7 @@
             if (!prov || !ccf) return;
             const f = appData.facturas.find(x => String(x.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase() && String(x.ccf).trim().toUpperCase() === String(ccf).trim().toUpperCase());
             if (!f) {
-                alert(`No se encontrÃ³ la factura ${ccf} del proveedor ${prov}.`);
+                alert(`No se encontró la factura ${ccf} del proveedor ${prov}.`);
                 return;
             }
 
@@ -6726,7 +6726,7 @@
 
             document.getElementById('hojaFacSucursal').innerText = f.sucursal || '-';
             document.getElementById('hojaFacFechaEmision').innerText = formatearSoloFecha(f.fecha);
-            document.getElementById('hojaFacDiasAntiguedad').innerText = `${diasAntiguedad} dÃ­as transcurridos`;
+            document.getElementById('hojaFacDiasAntiguedad').innerText = `${diasAntiguedad} días transcurridos`;
 
             let colorBadge = estado === 'CANCELADA' ? 'bg-accentGreen/10 text-accentGreen border-accentGreen/30' : (estado === 'VENCIDA' ? 'bg-accentRed/10 text-accentRed border-accentRed/30' : 'bg-accentYellow/10 text-accentYellow border-accentYellow/30');
             const badge = document.getElementById('hojaFacBadgeEstado');
@@ -6742,10 +6742,10 @@
 
             document.getElementById('hojaFacDteCodigo').innerText = f.codigoGeneracion || 'No aplica / No registrado';
             document.getElementById('hojaFacDteSello').innerText = f.sello || 'No aplica / No registrado';
-            document.getElementById('hojaFacDteTipo').innerText = f.tipoDte ? `${f.tipoDte} - Comprobante de CrÃ©dito Fiscal` : '03 - Comprobante de CrÃ©dito Fiscal';
+            document.getElementById('hojaFacDteTipo').innerText = f.tipoDte ? `${f.tipoDte} - Comprobante de Crédito Fiscal` : '03 - Comprobante de Crédito Fiscal';
 
             // ========================================================
-            // RENDERIZADO DEL DETALLE ELECTRÃ“NICO (PRODUCTOS DTE)
+            // RENDERIZADO DEL DETALLE ELECTRÓNICO (PRODUCTOS DTE)
             // ========================================================
             const bannerSinDte = document.getElementById('hojaFacBannerSinDte');
             const contenidoConDte = document.getElementById('hojaFacContenidoConDte');
@@ -6801,7 +6801,7 @@
                 });
 
                 if (items.length === 0) {
-                    tbodyItems.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-500 italic">No se especificaron Ã­tems individuales en el cuerpo del DTE.</td></tr>`;
+                    tbodyItems.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-500 italic">No se especificaron ítems individuales en el cuerpo del DTE.</td></tr>`;
                 }
 
                 // Resumen Financiero y Tributario
@@ -6862,16 +6862,16 @@
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No hay abonos registrados para esta factura.</td></tr>`;
             }
 
-            // Actualizar contadores en pestaÃ±as
+            // Actualizar contadores en pestañas
             const tabBadgeItems = document.getElementById('hojaFacTabBadgeItems');
             if (tabBadgeItems) tabBadgeItems.innerText = numItems;
             const tabBadgeAbonos = document.getElementById('hojaFacTabBadgeAbonos');
             if (tabBadgeAbonos) tabBadgeAbonos.innerText = abonos.length;
 
-            // Abrir por defecto la pestaÃ±a de Productos DTE
+            // Abrir por defecto la pestaña de Productos DTE
             window.cambiarTabHojaFactura('items');
 
-            // BotÃ³n Ir a abonar
+            // Botón Ir a abonar
             const btnIrAbonar = document.getElementById('hojaFacBtnIrAbonar');
             btnIrAbonar.onclick = () => {
                 window.cerrarHojaFactura();
@@ -9338,7 +9338,7 @@
         };
     
         // ========================================================
-        // MODAL DETALLE DE ABONOS RÃPIDO (CONSULTA INTERACTIVA)
+        // MODAL DETALLE DE ABONOS RÁPIDO (CONSULTA INTERACTIVA)
         // ========================================================
         window.verAbonosFacturaRapido = function(prov, ccf) {
             if (!prov || !ccf) return;
@@ -9348,7 +9348,7 @@
             );
 
             if (!f) {
-                alert(`No se encontrÃ³ la factura ${ccf} del proveedor ${prov}.`);
+                alert(`No se encontró la factura ${ccf} del proveedor ${prov}.`);
                 return;
             }
 
@@ -9397,10 +9397,10 @@
             });
 
             if (abonos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 italic">No hay abonos monetarios registrados directamente aÃºn.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 italic">No hay abonos monetarios registrados directamente aún.</td></tr>`;
             }
 
-            // Bloque Nota de CrÃ©dito
+            // Bloque Nota de Crédito
             const bloqueNC = document.getElementById('mdaBloqueNC');
             const ncMonto = parseFloat(f.nc) || 0;
             if (ncMonto > 0) {
@@ -9410,7 +9410,7 @@
                 bloqueNC.classList.add('hidden');
             }
 
-            // Botones de acciÃ³n
+            // Botones de acción
             document.getElementById('mdaBtnVerExpediente').onclick = () => {
                 window.cerrarModalDetalleAbonosRapido();
                 window.verHojaFactura(f.proveedor, f.ccf);
@@ -9430,7 +9430,7 @@
         };
 
         // ========================================================
-        // MODAL Y LÃ“GICA DE APLICACIÃ“N DE NOTA DE CRÃ‰DITO DTE-05
+        // MODAL Y LÓGICA DE APLICACIÓN DE NOTA DE CRÉDITO DTE-05
         // ========================================================
         window.notaCreditoActualDTE = null;
 
@@ -9460,7 +9460,7 @@
                 tbodyItems.appendChild(tr);
             });
             if (items.length === 0) {
-                tbodyItems.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500 italic">No se desglosaron Ã­tems individuales en la Nota de CrÃ©dito.</td></tr>`;
+                tbodyItems.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500 italic">No se desglosaron ítems individuales en la Nota de Crédito.</td></tr>`;
             }
 
             // Buscar facturas candidatas del proveedor
@@ -9481,9 +9481,9 @@
                 const { saldo, estado } = calcularDatosFactura(f);
                 const opt = document.createElement('option');
                 opt.value = `${f.proveedor}:::${f.ccf}`;
-                opt.textContent = `CCF: ${f.ccf} | EmisiÃ³n: ${formatearSoloFecha(f.fecha)} | Monto: ${formatMoney(f.monto)} | Saldo Actual: ${formatMoney(saldo)} (${estado})`;
+                opt.textContent = `CCF: ${f.ccf} | Emisión: ${formatearSoloFecha(f.fecha)} | Monto: ${formatMoney(f.monto)} | Saldo Actual: ${formatMoney(saldo)} (${estado})`;
 
-                // DetecciÃ³n de coincidencia con documento relacionado del MH
+                // Detección de coincidencia con documento relacionado del MH
                 const fCodGen = String(f.codigoGeneracion || '').trim().toUpperCase();
                 const fCcf = String(f.ccf || '').trim().toUpperCase();
                 const fCorrelativo = extraerSoloNumeros(fCcf);
@@ -9567,12 +9567,12 @@
             const datosDte = window.notaCreditoActualDTE;
 
             if (!datosDte) {
-                alert("No hay datos de Nota de CrÃ©dito para aplicar.");
+                alert("No hay datos de Nota de Crédito para aplicar.");
                 return;
             }
 
             if (!val) {
-                alert("Seleccione una factura vÃ¡lida para aplicar esta Nota de CrÃ©dito.");
+                alert("Seleccione una factura válida para aplicar esta Nota de Crédito.");
                 return;
             }
 
@@ -9602,7 +9602,7 @@
                 tipoDte: '05'
             });
 
-            // Registrar en la nota de la factura para auditorÃ­a y trazabilidad
+            // Registrar en la nota de la factura para auditoría y trazabilidad
             const notaAuditoria = `[NC ${datosDte.numeroControl || 'DTE-05'} el ${datosDte.fecha}: -${formatMoney(montoNC)}]`;
             f.nota = f.nota && f.nota.trim() ? `${f.nota.trim()} | ${notaAuditoria}` : notaAuditoria;
 
@@ -9627,9 +9627,9 @@
             if (window.renderConsultaSaldos) window.renderConsultaSaldos();
 
             if (window.showNotification) {
-                window.showNotification(`Nota de CrÃ©dito por ${formatMoney(montoNC)} aplicada con Ã©xito a ${f.ccf}. Nuevo saldo: ${formatMoney(saldo)}`, 'success');
+                window.showNotification(`Nota de Crédito por ${formatMoney(montoNC)} aplicada con éxito a ${f.ccf}. Nuevo saldo: ${formatMoney(saldo)}`, 'success');
             } else {
-                alert(`Â¡Nota de CrÃ©dito aplicada exitosamente a la factura ${f.ccf}!\n\nNuevo Saldo Pendiente: ${formatMoney(saldo)}\nEstado: ${estado}`);
+                alert(`¡Nota de Crédito aplicada exitosamente a la factura ${f.ccf}!\n\nNuevo Saldo Pendiente: ${formatMoney(saldo)}\nEstado: ${estado}`);
             }
 
             window.verHojaFactura(f.proveedor, f.ccf);
