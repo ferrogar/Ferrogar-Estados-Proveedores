@@ -4466,16 +4466,23 @@
             window.poblarSelectorCCF(filtro);
         };
 
-        window.poblarSelectorCCF = function(filtroTexto = '') {
+        window.poblarSelectorCCF = function(filtroTexto = '', selectPrevio = null) {
             const prov = document.getElementById('abonoProveedor').value;
             const selectCCF = document.getElementById('abonoCCF');
             if (!selectCCF) return;
+            const ccfAnterior = selectPrevio !== null ? selectPrevio : selectCCF.value;
             selectCCF.innerHTML = '';
 
             const facs = appData.facturas.filter(f => String(f.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase());
             
             const textoFiltroUpper = filtroTexto.toUpperCase();
             let facsFiltradas = facs.filter(f => String(f.ccf).toUpperCase().includes(textoFiltroUpper));
+
+            // Filtrar exclusivamente facturas con saldo pendiente por pagar (excluir saldo $0.00)
+            facsFiltradas = facsFiltradas.filter(f => {
+                const { saldo } = calcularDatosFactura(f);
+                return (saldo || 0) > 0.005;
+            });
 
             const ordenSelect = document.getElementById('abonoOrdenFacturas');
             const orden = ordenSelect ? ordenSelect.value : 'vieja';
@@ -4488,19 +4495,27 @@
             if (facsFiltradas.length === 0) {
                 const opt = document.createElement('option');
                 opt.value = "";
-                opt.innerText = "No se encontraron facturas coincidentes";
+                opt.innerText = textoFiltroUpper ? "No se encontraron facturas pendientes coincidentes" : "No hay facturas pendientes con saldo por pagar";
                 selectCCF.appendChild(opt);
                 window.cargarDatosDetalleAbono();
                 return;
             }
 
+            let ccfStillExists = false;
             facsFiltradas.forEach(f => {
                 const { saldo } = calcularDatosFactura(f);
                 const opt = document.createElement('option');
                 opt.value = f.ccf;
                 opt.innerText = `${f.ccf} - Original: ${formatMoney(f.monto)} | Saldo: ${formatMoney(saldo)}`;
                 selectCCF.appendChild(opt);
+                if (ccfAnterior && String(f.ccf).trim().toUpperCase() === String(ccfAnterior).trim().toUpperCase()) {
+                    ccfStillExists = true;
+                }
             });
+
+            if (ccfStillExists && ccfAnterior) {
+                selectCCF.value = ccfAnterior;
+            }
 
             window.cargarDatosDetalleAbono();
         };
@@ -5620,7 +5635,12 @@
             window.renderConsultaSaldos();
             if (window.renderReportePorSucursal) window.renderReportePorSucursal();
             if (window.renderCalendario) window.renderCalendario();
-            window.cargarDatosDetalleAbono();
+            if (window.poblarSelectorCCF) {
+                const filtroInput = document.getElementById('inputFiltroCCF');
+                window.poblarSelectorCCF(filtroInput ? filtroInput.value.trim() : '', f.ccf);
+            } else {
+                window.cargarDatosDetalleAbono();
+            }
 
             const saldoFormateado = formatMoney(datosCalc.saldo);
             const abonosFormateado = formatMoney(datosCalc.totalAbonado);
