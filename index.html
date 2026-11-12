@@ -63,8 +63,33 @@
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            header, nav, button, select, input, textarea, #modalLogin, #modalConfig, #modalVisorComprobante, .no-print {
+            header, nav, select, input, textarea, #modalLogin, #modalConfig, #modalVisorComprobante, .no-print, .no-print * {
                 display: none !important;
+            }
+            button:not(table button) {
+                display: none !important;
+            }
+            table button {
+                display: inline-block !important;
+                background: transparent !important;
+                border: none !important;
+                color: #0f172a !important;
+                padding: 0 !important;
+                font-family: inherit !important;
+                font-size: inherit !important;
+                font-weight: bold !important;
+                text-align: inherit !important;
+                text-decoration: none !important;
+                box-shadow: none !important;
+                cursor: default !important;
+            }
+            .dte-uuid-print {
+                color: #334155 !important;
+                font-size: 8.5px !important;
+                font-family: monospace !important;
+                display: block !important;
+                margin-top: 2px !important;
+                font-weight: 600 !important;
             }
             .pantalla-solo {
                 display: none !important;
@@ -1066,10 +1091,48 @@
                                 <option value="FG HIERROGAR">FG HIERROGAR</option>
                             </select>
                         </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-300 font-semibold mb-1">Ordenar por Fecha:</label>
+                            <select id="buscarOrdenFecha" onchange="window.ejecutarBusquedaFactura()" class="bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentCyan">
+                                <option value="reciente">Más reciente a más antigua</option>
+                                <option value="antigua">Más antigua a más reciente</option>
+                            </select>
+                        </div>
                         <div class="flex items-end gap-2 mt-4 sm:mt-0">
-                            <button type="button" onclick="window.limpiarFiltrosBusqueda()" class="px-3 py-2 rounded-lg bg-borderDark hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1.5 transition">
+                            <button type="button" onclick="window.limpiarFiltrosBusqueda()" class="px-3 py-2 rounded-lg bg-borderDark hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer">
                                 <i class="fa-solid fa-rotate-left"></i> Limpiar
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen de Resultados de Búsqueda -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="p-3.5 rounded-xl bg-bgDark/80 border border-borderDark flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase font-semibold block">Facturas Encontradas</span>
+                            <div id="buscarContadorResultados" class="text-xl font-bold text-white mt-0.5">0 facturas</div>
+                        </div>
+                        <div class="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-accentCyan">
+                            <i class="fa-solid fa-file-invoice"></i>
+                        </div>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-bgDark/80 border border-borderDark flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase font-semibold block">Monto Total Facturado</span>
+                            <div id="buscarMontoTotalResultados" class="text-xl font-bold font-mono text-cyan-400 mt-0.5">$0.00</div>
+                        </div>
+                        <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                            <i class="fa-solid fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-bgDark/80 border border-borderDark flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase font-semibold block">Saldo Pendiente de Búsqueda</span>
+                            <div id="buscarSaldoTotalResultados" class="text-xl font-bold font-mono text-rose-400 mt-0.5">$0.00</div>
+                        </div>
+                        <div class="w-9 h-9 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                            <i class="fa-solid fa-scale-unbalanced"></i>
                         </div>
                     </div>
                 </div>
@@ -2874,7 +2937,7 @@
                                     <th class="p-3">Monto Abonado</th>
                                     <th class="p-3">Forma de Pago</th>
                                     <th class="p-3">Banco</th>
-                                    <th class="p-3 text-center">Comprobante</th>
+                                    <th class="p-3 text-center">Comprobante de Pago</th>
                                 </tr>
                             </thead>
                             <tbody id="hojaFacTbodyAbonos" class="divide-y divide-borderDark/60 bg-cardDark"></tbody>
@@ -3200,7 +3263,7 @@
                                     <th class="p-2.5 text-right">Monto Abonado</th>
                                     <th class="p-2.5">Método</th>
                                     <th class="p-2.5">Banco</th>
-                                    <th class="p-2.5 text-center">Comprobante</th>
+                                    <th class="p-2.5 text-center">Comprobante de Pago</th>
                                 </tr>
                             </thead>
                             <tbody id="mdaTbodyAbonos" class="divide-y divide-borderDark/60 bg-cardDark"></tbody>
@@ -3410,7 +3473,7 @@
     <!-- ======================================================== -->
     <!-- MODAL VISOR DE COMPROBANTE DE PAGO EN GRANDE             -->
     <!-- ======================================================== -->
-    <div id="modalVisorComprobante" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-[10000] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div id="modalVisorComprobante" onclick="if(event.target === this) window.cerrarVisorComprobante()" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-[10000] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
         <div class="bg-cardDark border border-borderDark rounded-2xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl flex flex-col max-h-[95vh] space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-borderDark shrink-0">
                 <div class="flex items-center gap-3">
@@ -4613,23 +4676,38 @@
             window.poblarSelectorCCF(filtro);
         };
 
-        window.poblarSelectorCCF = function(filtroTexto = '', selectPrevio = null) {
-            const prov = document.getElementById('abonoProveedor').value;
+        window.poblarSelectorCCF = function(filtroTexto = '', selectPrevio = null, targetCCF = null) {
+            const prov = document.getElementById('abonoProveedor') ? document.getElementById('abonoProveedor').value : '';
             const selectCCF = document.getElementById('abonoCCF');
             if (!selectCCF) return;
-            const ccfAnterior = selectPrevio !== null ? selectPrevio : selectCCF.value;
+            const ccfAnterior = targetCCF || (selectPrevio !== null ? selectPrevio : selectCCF.value);
             selectCCF.innerHTML = '';
 
             const facs = appData.facturas.filter(f => String(f.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase());
             
-            const textoFiltroUpper = filtroTexto.toUpperCase();
+            const textoFiltroUpper = (filtroTexto || '').toUpperCase();
             let facsFiltradas = facs.filter(f => String(f.ccf).toUpperCase().includes(textoFiltroUpper));
 
-            // Filtrar exclusivamente facturas con saldo pendiente por pagar (excluir saldo $0.00)
+            // Si se especificó una factura objetivo (para editar abonos o seleccionarla directamente),
+            // incluirla SIEMPRE en la lista aunque tenga saldo $0.00 o esté cancelada.
+            // Para el resto de facturas generales, filtrar solo las que tengan saldo pendiente > 0.
             facsFiltradas = facsFiltradas.filter(f => {
+                if (ccfAnterior && String(f.ccf).trim().toUpperCase() === String(ccfAnterior).trim().toUpperCase()) {
+                    return true;
+                }
                 const { saldo } = calcularDatosFactura(f);
                 return (saldo || 0) > 0.005;
             });
+
+            // Si la factura objetivo existe en el proveedor pero fue excluida por el filtro de texto, agregarla
+            if (ccfAnterior) {
+                const ccfAntUpper = String(ccfAnterior).trim().toUpperCase();
+                const yaEsta = facsFiltradas.some(f => String(f.ccf).trim().toUpperCase() === ccfAntUpper);
+                if (!yaEsta) {
+                    const fExacta = facs.find(f => String(f.ccf).trim().toUpperCase() === ccfAntUpper);
+                    if (fExacta) facsFiltradas.unshift(fExacta);
+                }
+            }
 
             const ordenSelect = document.getElementById('abonoOrdenFacturas');
             const orden = ordenSelect ? ordenSelect.value : 'vieja';
@@ -4653,11 +4731,13 @@
                 const { saldo } = calcularDatosFactura(f);
                 const opt = document.createElement('option');
                 opt.value = f.ccf;
-                opt.innerText = `${f.ccf} - Original: ${formatMoney(f.monto)} | Saldo: ${formatMoney(saldo)}`;
-                selectCCF.appendChild(opt);
+                const estadoTxt = saldo <= 0.005 ? ' [PAGADA / CANCELADA]' : ` | Saldo: ${formatMoney(saldo)}`;
+                opt.innerText = `${f.ccf} - Original: ${formatMoney(f.monto)}${estadoTxt}`;
                 if (ccfAnterior && String(f.ccf).trim().toUpperCase() === String(ccfAnterior).trim().toUpperCase()) {
+                    opt.selected = true;
                     ccfStillExists = true;
                 }
+                selectCCF.appendChild(opt);
             });
 
             if (ccfStillExists && ccfAnterior) {
@@ -4668,8 +4748,10 @@
         };
 
         window.cargarDatosDetalleAbono = function() {
-            const prov = document.getElementById('abonoProveedor').value;
-            const ccf = document.getElementById('abonoCCF').value;
+            const provSelect = document.getElementById('abonoProveedor');
+            const prov = provSelect ? provSelect.value : '';
+            const ccfSelect = document.getElementById('abonoCCF');
+            const ccf = ccfSelect ? ccfSelect.value : '';
             
             const f = appData.facturas.find(x => 
                 String(x.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase() && 
@@ -4677,7 +4759,7 @@
             );
 
             const contenedor = document.getElementById('contenedor-abonos-dinamicos');
-            contenedor.innerHTML = '';
+            if (contenedor) contenedor.innerHTML = '';
 
             if (!f) {
                 document.getElementById('abonoMontoOriginal').innerText = "$0.00";
@@ -4701,7 +4783,7 @@
             if (fecElem) fecElem.innerText = formatearSoloFecha(f.fecha) || '-';
             
             let colorBadge = estado === 'CANCELADA' ? 'text-accentGreen' : (estado === 'VENCIDA' ? 'text-accentRed' : 'text-accentYellow');
-            document.getElementById('abonoEstadoBadge').innerHTML = `<span class="${colorBadge}">${estado}</span>`;
+            document.getElementById('abonoEstadoBadge').innerHTML = `<span class="${colorBadge} font-bold">${estado}</span>`;
 
             document.getElementById('abonoNC').value = f.nc || '';
             if (document.getElementById('abonoNota')) document.getElementById('abonoNota').value = f.nota || '';
@@ -4716,15 +4798,52 @@
             });
         };
 
+        // ========================================================
+        // GESTIÓN Y COMPRESIÓN DE COMPROBANTES DE PAGO (IMÁGENES)
+        // ========================================================
+        window.comprimirImagenAbono = function(file, callback) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    let width = img.width;
+                    let height = img.height;
+                    const maxDim = 1200;
+                    if (width > maxDim || height > maxDim) {
+                        if (width > height) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        } else {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                    if (callback) callback(dataUrl);
+                };
+                img.onerror = function() {
+                    alert('No se pudo procesar la imagen seleccionada como comprobante.');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
         window.renderizarFilaAbono = function(ab = {}, index = 0) {
             const contenedor = document.getElementById('contenedor-abonos-dinamicos');
             const div = document.createElement('div');
             div.className = "abono-fila-dinamica bg-bgDark/40 p-4 rounded-xl border border-borderDark relative space-y-3";
-            const tieneFoto = ab.comprobante && String(ab.comprobante).startsWith('data:image');
+            const tieneFoto = Boolean(ab.comprobante && String(ab.comprobante).trim().length > 5);
             div.innerHTML = `
                 <div class="flex items-center justify-between">
                     <span class="abono-num-badge text-xs font-bold text-accentGreen uppercase"><i class="fa-solid fa-money-bill-transfer"></i> Abono N° ${index + 1}</span>
-                    <button type="button" onclick="window.eliminarFilaAbono(this)" class="text-accentRed hover:text-red-400 text-xs px-2.5 py-1 rounded bg-accentRed/10 hover:bg-accentRed/20 transition flex items-center gap-1">
+                    <button type="button" onclick="window.eliminarFilaAbono(this)" class="text-accentRed hover:text-red-400 text-xs px-2.5 py-1 rounded bg-accentRed/10 hover:bg-accentRed/20 transition flex items-center gap-1 cursor-pointer">
                         <i class="fa-solid fa-trash-can"></i> Eliminar Abono
                     </button>
                 </div>
@@ -4763,23 +4882,28 @@
                         <input type="date" name="abonoFecha" value="${formatearSoloFecha(ab.fecha || '')}" class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accentGreen">
                     </div>
                 </div>
-                <div class="pt-2 border-t border-borderDark/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                    <div class="flex items-center gap-3">
-                        <label class="px-3 py-1.5 rounded-lg bg-bgDark border border-borderDark hover:border-accentCyan/50 text-slate-300 hover:text-white cursor-pointer transition flex items-center gap-2">
-                            <i class="fa-solid fa-camera text-accentCyan"></i>
-                            <span class="btn-subir-foto-txt">${tieneFoto ? 'Cambiar Foto Voucher' : 'Subir Comprobante (Voucher)'}</span>
+                <div class="pt-3 border-t border-borderDark/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <label class="px-3.5 py-2 rounded-lg bg-cardDark hover:bg-bgDark text-slate-200 hover:text-white border border-borderDark hover:border-emerald-500/50 text-xs font-semibold inline-flex items-center gap-2 cursor-pointer transition shadow-sm">
+                            <i class="fa-solid fa-camera text-emerald-400 text-sm"></i>
+                            <span class="btn-subir-foto-txt">${tieneFoto ? 'Cambiar Comprobante' : 'Subir Comprobante (Voucher / Foto)'}</span>
                             <input type="file" accept="image/*" class="hidden" onchange="window.procesarFotoComprobante(this, ${index})">
                         </label>
                         <input type="hidden" name="abonoComprobante" value="${ab.comprobante || ''}">
-                        <div class="comprobante-preview-box flex items-center gap-2">
+                        <div class="comprobante-preview-box flex items-center gap-2.5">
                             ${tieneFoto ? `
-                                <img src="${ab.comprobante}" class="w-9 h-9 object-cover rounded border border-emerald-500/50 cursor-pointer hover:opacity-80 transition" onclick="window.verComprobanteEnGrande(this.src, 'Comprobante de Abono N° ${index + 1}')" title="Toca para ampliar el comprobante">
-                                <button type="button" onclick="window.eliminarFotoComprobante(this)" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1 rounded bg-rose-500/10 transition" title="Quitar comprobante"><i class="fa-solid fa-times"></i></button>
-                            ` : `<span class="text-slate-500 text-[11px] italic">Sin foto de comprobante</span>`}
+                                <img src="${ab.comprobante}" class="w-11 h-11 object-cover rounded-lg border-2 border-emerald-500/60 shadow-md cursor-pointer hover:scale-105 transition" onclick="window.previsualizarComprobanteDeFila(this)" title="Clic para ampliar comprobante">
+                                <button type="button" onclick="window.previsualizarComprobanteDeFila(this)" class="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-sm cursor-pointer">
+                                    <i class="fa-solid fa-expand"></i> Previsualizar Comprobante
+                                </button>
+                                <button type="button" onclick="window.eliminarFotoComprobante(this)" class="px-2 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-semibold inline-flex items-center gap-1 transition cursor-pointer" title="Quitar comprobante">
+                                    <i class="fa-solid fa-trash-can"></i> Quitar
+                                </button>
+                            ` : `<span class="text-slate-500 text-xs italic flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-slate-600"></i> Sin foto de comprobante adjunta</span>`}
                         </div>
                     </div>
                     <div class="comprobante-link-box">
-                        ${tieneFoto ? `<button type="button" onclick="window.verComprobanteEnGrande('${ab.comprobante}', 'Comprobante de Abono N° ${index + 1}')" class="text-accentCyan hover:underline text-xs flex items-center gap-1"><i class="fa-solid fa-eye"></i> Ampliar Comprobante</button>` : ''}
+                        ${tieneFoto ? `<span class="text-[11px] text-emerald-400 font-medium flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Comprobante adjunto listo</span>` : ''}
                     </div>
                 </div>
             `;
@@ -4814,51 +4938,53 @@
         window.procesarFotoComprobante = function(input, index) {
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    let width = img.width;
-                    let height = img.height;
-                    const maxDim = 1200;
-                    if (width > maxDim || height > maxDim) {
-                        if (width > height) {
-                            height = Math.round((height * maxDim) / width);
-                            width = maxDim;
-                        } else {
-                            width = Math.round((width * maxDim) / height);
-                            height = maxDim;
-                        }
+            window.comprimirImagenAbono(file, function(dataUrl) {
+                const fila = input.closest('.abono-fila-dinamica');
+                if (fila) {
+                    const hiddenInput = fila.querySelector('input[name="abonoComprobante"]');
+                    if (hiddenInput) hiddenInput.value = dataUrl;
+                    const previewBox = fila.querySelector('.comprobante-preview-box');
+                    if (previewBox) {
+                        previewBox.innerHTML = `
+                            <img src="${dataUrl}" class="w-11 h-11 object-cover rounded-lg border-2 border-emerald-500/60 shadow-md cursor-pointer hover:scale-105 transition" onclick="window.previsualizarComprobanteDeFila(this)" title="Clic para ampliar comprobante">
+                            <button type="button" onclick="window.previsualizarComprobanteDeFila(this)" class="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-sm cursor-pointer">
+                                <i class="fa-solid fa-expand"></i> Previsualizar Comprobante
+                            </button>
+                            <button type="button" onclick="window.eliminarFotoComprobante(this)" class="px-2 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-semibold inline-flex items-center gap-1 transition cursor-pointer" title="Quitar comprobante">
+                                <i class="fa-solid fa-trash-can"></i> Quitar
+                            </button>
+                        `;
                     }
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                    const txtSpan = fila.querySelector('.btn-subir-foto-txt');
+                    if (txtSpan) txtSpan.innerText = 'Cambiar Comprobante';
+                    const linkBox = fila.querySelector('.comprobante-link-box');
+                    if (linkBox) {
+                        linkBox.innerHTML = `<span class="text-[11px] text-emerald-400 font-medium flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Foto lista para previsualizar y guardar</span>`;
+                    }
+                    if (window.showNotification) {
+                        window.showNotification('Comprobante cargado. Puede previsualizarlo o aplicar el pago.', 'success');
+                    }
+                }
+            });
+        };
 
-                    const fila = input.closest('.abono-fila-dinamica');
-                    if (fila) {
-                        const hiddenInput = fila.querySelector('input[name="abonoComprobante"]');
-                        if (hiddenInput) hiddenInput.value = dataUrl;
-                        const previewBox = fila.querySelector('.comprobante-preview-box');
-                        if (previewBox) {
-                            previewBox.innerHTML = `
-                                <img src="${dataUrl}" class="w-9 h-9 object-cover rounded border border-emerald-500/50 cursor-pointer hover:opacity-80 transition" onclick="window.verComprobanteEnGrande(this.src, 'Comprobante de Abono')" title="Toca para ampliar el comprobante">
-                                <button type="button" onclick="window.eliminarFotoComprobante(this)" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1 rounded bg-rose-500/10 transition" title="Quitar comprobante"><i class="fa-solid fa-times"></i></button>
-                            `;
-                        }
-                        const txtSpan = fila.querySelector('.btn-subir-foto-txt');
-                        if (txtSpan) txtSpan.innerText = 'Cambiar Foto Voucher';
-                        const linkBox = fila.querySelector('.comprobante-link-box');
-                        if (linkBox) {
-                            linkBox.innerHTML = `<button type="button" onclick="window.verComprobanteEnGrande('${dataUrl}', 'Comprobante de Abono')" class="text-accentCyan hover:underline text-xs flex items-center gap-1"><i class="fa-solid fa-eye"></i> Ampliar Comprobante</button>`;
-                        }
-                    }
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+        window.previsualizarComprobanteDeFila = function(btn) {
+            const fila = btn.closest('.abono-fila-dinamica');
+            if (!fila) return;
+            const hiddenInput = fila.querySelector('input[name="abonoComprobante"]');
+            const imgElem = fila.querySelector('img');
+            const src = (hiddenInput && hiddenInput.value) || (imgElem && imgElem.src);
+            if (!src) {
+                alert('No hay ninguna imagen cargada en este abono para previsualizar.');
+                return;
+            }
+            const ccfSelect = document.getElementById('abonoCCF');
+            const ccf = ccfSelect ? ccfSelect.value : '';
+            const provSelect = document.getElementById('abonoProveedor');
+            const prov = provSelect ? provSelect.value : '';
+            const badge = fila.querySelector('.abono-num-badge');
+            const numTxt = badge ? badge.innerText.trim() : 'Abono';
+            window.verComprobanteEnGrande(src, `Previsualización ${numTxt} - CCF: ${ccf || 'Sin CCF'} (${prov || 'Sin Proveedor'})`);
         };
 
         window.eliminarFotoComprobante = function(btn) {
@@ -4868,12 +4994,14 @@
                 if (hiddenInput) hiddenInput.value = '';
                 const previewBox = fila.querySelector('.comprobante-preview-box');
                 if (previewBox) {
-                    previewBox.innerHTML = `<span class="text-slate-500 text-[11px] italic">Sin foto de comprobante</span>`;
+                    previewBox.innerHTML = `<span class="text-slate-500 text-xs italic flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-slate-600"></i> Sin foto de comprobante adjunta</span>`;
                 }
                 const txtSpan = fila.querySelector('.btn-subir-foto-txt');
-                if (txtSpan) txtSpan.innerText = 'Subir Comprobante (Voucher)';
+                if (txtSpan) txtSpan.innerText = 'Subir Comprobante (Voucher / Foto)';
                 const linkBox = fila.querySelector('.comprobante-link-box');
                 if (linkBox) linkBox.innerHTML = '';
+                const fileInput = fila.querySelector('input[type="file"]');
+                if (fileInput) fileInput.value = '';
             }
         };
 
@@ -4899,6 +5027,165 @@
             if (modal) modal.classList.add('hidden');
             const img = document.getElementById('imgVisorComprobante');
             if (img) img.src = '';
+        };
+
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('modalVisorComprobante');
+                if (modal && !modal.classList.contains('hidden')) {
+                    window.cerrarVisorComprobante();
+                }
+            }
+        });
+
+        // ========================================================
+        // GESTIÓN DE COMPROBANTES EN EL EXPEDIENTE DE FACTURA
+        // ========================================================
+        window.verComprobanteHojaFactura = function(idx) {
+            const f = facturaActivaHoja;
+            if (!f || !f.abonos || !f.abonos[idx]) return;
+            const ab = f.abonos[idx];
+            if (!ab.comprobante) {
+                alert('Este abono no cuenta con un comprobante de pago adjunto.');
+                return;
+            }
+            window.verComprobanteEnGrande(ab.comprobante, `Comprobante de Pago #${idx + 1} - CCF ${f.ccf} (${f.proveedor})`);
+        };
+
+        window.adjuntarComprobanteAbonoHoja = function(idx, input) {
+            if (!input.files || !input.files[0]) return;
+            if (appData.currentUserRole === 'viewer') {
+                alert('Acción denegada: Usuario en modo solo lectura.');
+                input.value = '';
+                return;
+            }
+            const f = facturaActivaHoja;
+            if (!f || !f.abonos || !f.abonos[idx]) {
+                alert('No se pudo identificar el abono para adjuntar el comprobante.');
+                return;
+            }
+            const file = input.files[0];
+            window.comprimirImagenAbono(file, function(dataUrl) {
+                f.abonos[idx].comprobante = dataUrl;
+                const fEnApp = appData.facturas.find(x => 
+                    String(x.proveedor).trim().toUpperCase() === String(f.proveedor).trim().toUpperCase() && 
+                    String(x.ccf).trim().toUpperCase() === String(f.ccf).trim().toUpperCase()
+                );
+                if (fEnApp && fEnApp.abonos && fEnApp.abonos[idx]) {
+                    fEnApp.abonos[idx].comprobante = dataUrl;
+                }
+                try {
+                    localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas));
+                } catch(err) {
+                    console.warn('Error guardando cache local:', err);
+                }
+                if (window.sincronizarConGoogleSheetsSilencioso) {
+                    window.sincronizarConGoogleSheetsSilencioso(f.proveedor);
+                }
+                if (window.showNotification) {
+                    window.showNotification(`Comprobante adjuntado con éxito al Abono #${idx + 1}.`, 'success');
+                }
+                window.verHojaFactura(f.proveedor, f.ccf, false, 'abonos');
+            });
+        };
+
+        window.quitarComprobanteAbonoHoja = function(idx) {
+            if (appData.currentUserRole === 'viewer') {
+                alert('Acción denegada: Usuario en modo solo lectura.');
+                return;
+            }
+            if (!confirm(`¿Está seguro de eliminar la foto del comprobante del Abono #${idx + 1}?`)) return;
+            const f = facturaActivaHoja;
+            if (!f || !f.abonos || !f.abonos[idx]) return;
+            f.abonos[idx].comprobante = '';
+            const fEnApp = appData.facturas.find(x => 
+                String(x.proveedor).trim().toUpperCase() === String(f.proveedor).trim().toUpperCase() && 
+                String(x.ccf).trim().toUpperCase() === String(f.ccf).trim().toUpperCase()
+            );
+            if (fEnApp && fEnApp.abonos && fEnApp.abonos[idx]) {
+                fEnApp.abonos[idx].comprobante = '';
+            }
+            try {
+                localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas));
+            } catch(e) {}
+            if (window.sincronizarConGoogleSheetsSilencioso) {
+                window.sincronizarConGoogleSheetsSilencioso(f.proveedor);
+            }
+            if (window.showNotification) {
+                window.showNotification(`Comprobante del Abono #${idx + 1} eliminado.`, 'info');
+            }
+            window.verHojaFactura(f.proveedor, f.ccf, false, 'abonos');
+        };
+
+        // ========================================================
+        // GESTIÓN DE COMPROBANTES EN MODAL RÁPIDO DE ABONOS
+        // ========================================================
+        window.verComprobanteAbonoRapido = function(idx) {
+            const f = window.facturaDetalleAbonosActual;
+            if (!f || !f.abonos || !f.abonos[idx]) return;
+            const ab = f.abonos[idx];
+            if (!ab.comprobante) {
+                alert('Este abono no cuenta con un comprobante de pago adjunto.');
+                return;
+            }
+            window.verComprobanteEnGrande(ab.comprobante, `Comprobante de Pago #${idx + 1} - CCF ${f.ccf} (${f.proveedor})`);
+        };
+
+        window.adjuntarComprobanteAbonoRapido = function(idx, input) {
+            if (!input.files || !input.files[0]) return;
+            if (appData.currentUserRole === 'viewer') {
+                alert('Acción denegada: Usuario en modo solo lectura.');
+                input.value = '';
+                return;
+            }
+            const f = window.facturaDetalleAbonosActual;
+            if (!f || !f.abonos || !f.abonos[idx]) return;
+            const file = input.files[0];
+            window.comprimirImagenAbono(file, function(dataUrl) {
+                f.abonos[idx].comprobante = dataUrl;
+                const fEnApp = appData.facturas.find(x => 
+                    String(x.proveedor).trim().toUpperCase() === String(f.proveedor).trim().toUpperCase() && 
+                    String(x.ccf).trim().toUpperCase() === String(f.ccf).trim().toUpperCase()
+                );
+                if (fEnApp && fEnApp.abonos && fEnApp.abonos[idx]) {
+                    fEnApp.abonos[idx].comprobante = dataUrl;
+                }
+                try {
+                    localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas));
+                } catch(e) {}
+                if (window.sincronizarConGoogleSheetsSilencioso) {
+                    window.sincronizarConGoogleSheetsSilencioso(f.proveedor);
+                }
+                if (window.showNotification) {
+                    window.showNotification(`Comprobante adjuntado con éxito al Abono #${idx + 1}.`, 'success');
+                }
+                window.verAbonosFacturaRapido(f.proveedor, f.ccf);
+            });
+        };
+
+        window.quitarComprobanteAbonoRapido = function(idx) {
+            if (appData.currentUserRole === 'viewer') {
+                alert('Acción denegada: Usuario en modo solo lectura.');
+                return;
+            }
+            if (!confirm(`¿Está seguro de eliminar el comprobante del Abono #${idx + 1}?`)) return;
+            const f = window.facturaDetalleAbonosActual;
+            if (!f || !f.abonos || !f.abonos[idx]) return;
+            f.abonos[idx].comprobante = '';
+            const fEnApp = appData.facturas.find(x => 
+                String(x.proveedor).trim().toUpperCase() === String(f.proveedor).trim().toUpperCase() && 
+                String(x.ccf).trim().toUpperCase() === String(f.ccf).trim().toUpperCase()
+            );
+            if (fEnApp && fEnApp.abonos && fEnApp.abonos[idx]) {
+                fEnApp.abonos[idx].comprobante = '';
+            }
+            try {
+                localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas));
+            } catch(e) {}
+            if (window.sincronizarConGoogleSheetsSilencioso) {
+                window.sincronizarConGoogleSheetsSilencioso(f.proveedor);
+            }
+            window.verAbonosFacturaRapido(f.proveedor, f.ccf);
         };
 
         window.abrirEditorAbonosFactura = function(prov, ccf) {
@@ -5137,6 +5424,10 @@
             URL.revokeObjectURL(url);
         };
 
+        window.limpiarFiltrosBusqueda = function() {
+            window.limpiarBusquedaFacturas();
+        };
+
         window.limpiarBusquedaFacturas = function() {
             const selProv = document.getElementById('buscarFiltroProveedor');
             if (selProv) selProv.value = 'TODOS';
@@ -5144,6 +5435,8 @@
             if (inputCCF) inputCCF.value = '';
             const selSuc = document.getElementById('buscarFiltroSucursal');
             if (selSuc) selSuc.value = 'TODAS';
+            const selOrden = document.getElementById('buscarOrdenFecha');
+            if (selOrden) selOrden.value = 'reciente';
             window.ejecutarBusquedaFactura();
         };
 
@@ -5158,7 +5451,7 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            let resultados = appData.facturas || [];
+            let resultados = (appData.facturas || []).slice();
 
             // 1. Filtrar por proveedor seleccionado
             if (provVal && provVal !== 'TODOS') {
@@ -5185,6 +5478,15 @@
                     return String(sName).toUpperCase() === sucVal.toUpperCase();
                 });
             }
+
+            // Ordenar por fecha seleccionada
+            const ordenSelect = document.getElementById('buscarOrdenFecha');
+            const orden = ordenSelect ? ordenSelect.value : 'reciente';
+            resultados.sort((a, b) => {
+                const da = new Date(formatearSoloFecha(a.fecha) || 0).getTime() || 0;
+                const db = new Date(formatearSoloFecha(b.fecha) || 0).getTime() || 0;
+                return orden === 'reciente' ? db - da : da - db;
+            });
 
             // Actualizar contadores y totalizadores
             let totalMonto = 0;
@@ -5216,33 +5518,71 @@
             }
 
             resultados.forEach(f => {
-                const { saldo, estado, abonoTotal } = calcularDatosFactura(f);
+                const { saldo, diasAntiguedad, estado, abonoTotal, totalAbonado } = calcularDatosFactura(f);
                 let colorEstado = estado === 'CANCELADA' ? 'text-accentGreen' : (estado === 'VENCIDA' ? 'text-accentRed' : 'text-accentYellow');
+
+                let badgeHtml = '';
+                if (estado === 'CANCELADA') {
+                    badgeHtml = `<button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 inline-flex items-center gap-1 cursor-pointer hover:bg-emerald-500/25 transition shadow-sm" title="Factura Totalmente Cancelada - Toca para ver abonos"><i class="fa-solid fa-circle-check text-[10px]"></i> CANCELADA</button>`;
+                } else if (estado === 'ABONADA') {
+                    badgeHtml = `<button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 inline-flex items-center gap-1.5 cursor-pointer hover:bg-cyan-500/25 transition shadow-sm" title="Factura con Abonos Parciales - Toca para ver abonos"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> ABONADA</button>`;
+                } else if (estado === 'ABONADA (VENCIDA)') {
+                    badgeHtml = `<button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/15 border border-purple-500/40 text-purple-300 inline-flex items-center gap-1 cursor-pointer hover:bg-purple-500/25 transition shadow-sm" title="Factura Abonada pero con saldo vencido (>30d)"><i class="fa-solid fa-clock-rotate-left text-[10px]"></i> ABONADA (VENCIDA)</button>`;
+                } else if (estado === 'VENCIDA') {
+                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/15 border border-rose-500/40 text-rose-400 inline-flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i> VENCIDA</span>`;
+                } else if (estado === 'POR VENCER') {
+                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 inline-flex items-center gap-1"><i class="fa-regular fa-clock text-[10px]"></i> POR VENCER</span>`;
+                } else {
+                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-500/15 border border-slate-500/40 text-slate-300 inline-flex items-center gap-1">PENDIENTE</span>`;
+                }
+
+                let abonoHtml = '';
+                if (totalAbonado > 0) {
+                    abonoHtml = `
+                        <button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 font-mono font-bold text-xs inline-flex items-center gap-1.5 transition group cursor-pointer shadow-sm" title="Toca para ver el desglose de abonos">
+                            <i class="fa-solid fa-receipt text-[10px] text-emerald-400 group-hover:scale-110 transition-transform"></i>
+                            ${formatMoney(totalAbonado)}
+                        </button>
+                    `;
+                } else {
+                    abonoHtml = `<span class="text-slate-500 font-mono text-xs">$0.00</span>`;
+                }
+
+                const dteSubline = f.codigoGeneracion ? `<div class="text-[10px] text-slate-400 font-mono tracking-tight" title="Código de Generación DTE / UUID">DTE: ${f.codigoGeneracion}</div>` : '';
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-bgDark/40 transition";
                 tr.innerHTML = `
                     <td class="p-3">
-                        <button type="button" onclick="window.verHojaFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="font-mono font-bold text-accentCyan hover:underline text-left">
-                            ${f.ccf}
-                        </button>
-                    </td>
-                    <td class="p-3">
-                        <button type="button" onclick="window.verHojaProveedor('${f.proveedor.replace(/'/g, "\\'")}')" class="text-slate-200 hover:text-white hover:underline text-left font-medium">
+                        <button type="button" onclick="window.verHojaProveedor('${f.proveedor.replace(/'/g, "\\'")}')" class="text-slate-200 hover:text-white hover:underline text-left font-bold block" title="Ver Hoja del Proveedor">
                             ${f.proveedor}
                         </button>
                     </td>
-                    <td class="p-3">${formatearSoloFecha(f.fecha)}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 rounded bg-bgDark border border-borderDark text-[11px] text-slate-300">${f.sucursal}</span></td>
-                    <td class="p-3 font-mono font-bold text-white">${formatMoney(f.monto)}</td>
-                    <td class="p-3 text-accentGreen font-mono">${formatMoney(abonoTotal)}</td>
-                    <td class="p-3 font-bold text-white font-mono">${formatMoney(saldo)}</td>
-                    <td class="p-3 font-bold ${colorEstado}">${estado}</td>
-                    <td class="p-3 text-slate-300 italic text-xs max-w-xs truncate" title="${f.nota || ''}">${f.nota || '-'}</td>
-                    <td class="p-3 text-center">
-                        <button type="button" onclick="window.verHojaFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded bg-accentCyan/10 hover:bg-accentCyan/20 text-accentCyan text-xs font-semibold border border-accentCyan/30 transition" title="Ver Expediente de Factura">
-                            <i class="fa-solid fa-eye"></i> Ver
+                    <td class="p-3">
+                        <button type="button" onclick="window.verHojaFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="font-mono font-bold text-accentCyan hover:underline text-left block" title="Ver Expediente de Factura">
+                            ${f.ccf}
                         </button>
+                        ${dteSubline}
+                    </td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded bg-bgDark border border-borderDark text-[11px] text-slate-300 font-medium">${f.sucursal}</span></td>
+                    <td class="p-3">${formatearSoloFecha(f.fecha)}</td>
+                    <td class="p-3 text-center font-mono text-slate-300">${diasAntiguedad} días</td>
+                    <td class="p-3 text-right font-mono font-bold text-white">${formatMoney(f.monto)}</td>
+                    <td class="p-3 text-right font-mono">${abonoHtml}</td>
+                    <td class="p-3 text-right font-mono font-black text-white">${formatMoney(saldo)}</td>
+                    <td class="p-3 text-center">${badgeHtml}</td>
+                    <td class="p-3 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2 py-1 rounded bg-accentCyan/15 hover:bg-accentCyan/25 text-accentCyan text-xs font-semibold border border-accentCyan/30 transition cursor-pointer" title="Ver historial de abonos y comprobantes">
+                                <i class="fa-solid fa-receipt"></i> Abonos
+                            </button>
+                            <button type="button" onclick="window.abrirEditorAbonosFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2 py-1 rounded bg-accentYellow/15 hover:bg-accentYellow/25 text-accentYellow text-xs font-semibold border border-accentYellow/30 transition cursor-pointer" title="Editar o agregar abonos directamente">
+                                <i class="fa-solid fa-pen-to-square"></i> Editar
+                            </button>
+                            <button type="button" onclick="window.verHojaFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2 py-1 rounded bg-bgDark hover:bg-borderDark text-slate-300 text-xs font-semibold border border-borderDark transition cursor-pointer" title="Ver expediente completo">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -5376,12 +5716,14 @@
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-bgDark/40 transition";
-                const dteSubline = f.codigoGeneracion ? `<div class="text-[10px] text-slate-400 font-mono tracking-tight" title="Código de Generación DTE / UUID">DTE: ${f.codigoGeneracion}</div>` : '';
+                const dteSubline = f.codigoGeneracion ? `<div class="text-[10px] text-slate-400 font-mono tracking-tight dte-uuid-print" title="Código de Generación DTE / UUID">DTE: ${f.codigoGeneracion}</div>` : '';
                 tr.innerHTML = `
                     <td class="p-3">
-                        <button type="button" onclick="window.verHojaFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="font-mono font-bold text-accentCyan hover:underline text-left block" title="Ver Expediente de Factura">
-                            ${f.ccf}
-                        </button>
+                        <div class="font-mono font-bold text-slate-900">
+                            <button type="button" onclick="window.verHojaFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="font-mono font-bold text-accentCyan hover:underline text-left block" title="Ver Expediente de Factura">
+                                ${f.ccf}
+                            </button>
+                        </div>
                         ${dteSubline}
                     </td>
                     <td class="p-3">${formatearSoloFecha(f.fecha)}</td>
@@ -5508,17 +5850,21 @@
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-bgDark/40 transition";
-                const dteSubline = f.codigoGeneracion ? `<div class="text-[10px] text-slate-400 font-mono tracking-tight" title="Código de Generación DTE / UUID">DTE: ${f.codigoGeneracion}</div>` : '';
+                const dteSubline = f.codigoGeneracion ? `<div class="text-[10px] text-slate-400 font-mono tracking-tight dte-uuid-print" title="Código de Generación DTE / UUID">DTE: ${f.codigoGeneracion}</div>` : '';
                 tr.innerHTML = `
                     <td class="p-3">
-                        <button type="button" onclick="window.verHojaProveedor('${f.proveedor.replace(/'/g, "\\'")}')" class="font-semibold text-slate-200 hover:text-white hover:underline text-left">
-                            ${f.proveedor}
-                        </button>
+                        <div class="font-bold text-slate-900">
+                            <button type="button" onclick="window.verHojaProveedor('${f.proveedor.replace(/'/g, "\\'")}')" class="font-semibold text-slate-200 hover:text-white hover:underline text-left block">
+                                ${f.proveedor}
+                            </button>
+                        </div>
                     </td>
                     <td class="p-3">
-                        <button type="button" onclick="window.verHojaFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="font-mono font-bold text-accentCyan hover:underline text-left block">
-                            ${f.ccf}
-                        </button>
+                        <div class="font-mono font-bold text-slate-900">
+                            <button type="button" onclick="window.verHojaFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="font-mono font-bold text-accentCyan hover:underline text-left block">
+                                ${f.ccf}
+                            </button>
+                        </div>
                         ${dteSubline}
                     </td>
                     <td class="p-3">${f.sucursal}</td>
@@ -6087,7 +6433,7 @@
             if (window.renderCalendario) window.renderCalendario();
             if (window.poblarSelectorCCF) {
                 const filtroInput = document.getElementById('inputFiltroCCF');
-                window.poblarSelectorCCF(filtroInput ? filtroInput.value.trim() : '', f.ccf);
+                window.poblarSelectorCCF(filtroInput ? filtroInput.value.trim() : '', f.ccf, f.ccf);
             } else {
                 window.cargarDatosDetalleAbono();
             }
@@ -7163,7 +7509,11 @@
             }
         };
 
-        window.verHojaFactura = function(prov, ccf, esNuevaCreacion = false) {
+        window.verHojaFactura = function(prov, ccf, esNuevaCreacion = false, tabInicial = 'items') {
+            if (typeof esNuevaCreacion === 'string') {
+                tabInicial = esNuevaCreacion;
+                esNuevaCreacion = false;
+            }
             if (!prov || !ccf) return;
             const f = appData.facturas.find(x => String(x.proveedor).trim().toUpperCase() === String(prov).trim().toUpperCase() && String(x.ccf).trim().toUpperCase() === String(ccf).trim().toUpperCase());
             if (!f) {
@@ -7316,12 +7666,38 @@
             document.getElementById('hojaFacContadorAbonos').innerText = `${abonos.length} abono${abonos.length === 1 ? '' : 's'} registrado${abonos.length === 1 ? '' : 's'}`;
 
             abonos.forEach((ab, idx) => {
-                let compBtn = `<span class="text-slate-500 text-xs italic">Sin foto</span>`;
-                if (ab.comprobante) {
-                    compBtn = `<button type="button" onclick="window.verComprobanteEnGrande('${ab.comprobante}', 'Comprobante de Pago #${idx + 1} - CCF ${f.ccf}')" class="px-2 py-1 rounded bg-accentCyan/15 hover:bg-accentCyan/30 text-accentCyan text-xs font-semibold inline-flex items-center gap-1.5 border border-accentCyan/30 transition shadow-sm cursor-pointer"><i class="fa-solid fa-image"></i> Ver Foto</button>`;
+                const tieneFoto = Boolean(ab.comprobante && String(ab.comprobante).trim().length > 5);
+                let compBtn = '';
+                if (tieneFoto) {
+                    compBtn = `
+                        <div class="flex items-center justify-center gap-2">
+                            <img src="${ab.comprobante}" alt="Voucher" class="w-9 h-9 object-cover rounded-lg border border-emerald-500/50 shadow-sm cursor-pointer hover:scale-105 transition" onclick="window.verComprobanteHojaFactura(${idx})" title="Clic para ampliar comprobante">
+                            <button type="button" onclick="window.verComprobanteHojaFactura(${idx})" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer shadow-sm">
+                                <i class="fa-solid fa-receipt"></i> Ver Comprobante
+                            </button>
+                            <label class="px-2 py-1.5 rounded-lg bg-bgDark hover:bg-cardDark text-slate-300 hover:text-white border border-borderDark text-[11px] font-medium inline-flex items-center gap-1 cursor-pointer transition" title="Cambiar foto de este comprobante">
+                                <i class="fa-solid fa-camera-rotate text-accentCyan"></i> Cambiar
+                                <input type="file" accept="image/*" class="hidden" onchange="window.adjuntarComprobanteAbonoHoja(${idx}, this)">
+                            </label>
+                            <button type="button" onclick="window.quitarComprobanteAbonoHoja(${idx})" class="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition cursor-pointer" title="Eliminar foto del comprobante">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    compBtn = `
+                        <div class="flex items-center justify-center gap-2">
+                            <label class="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 hover:text-emerald-300 border border-emerald-500/40 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer transition shadow-sm" title="Subir foto del comprobante de pago para este abono">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>Subir Comprobante</span>
+                                <input type="file" accept="image/*" class="hidden" onchange="window.adjuntarComprobanteAbonoHoja(${idx}, this)">
+                            </label>
+                            <span class="text-slate-500 text-[11px] italic">Sin foto</span>
+                        </div>
+                    `;
                 }
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-bgDark/40";
+                tr.className = "hover:bg-bgDark/40 transition";
                 tr.innerHTML = `
                     <td class="p-3 font-mono font-bold text-slate-400">#${idx + 1}</td>
                     <td class="p-3 font-semibold text-white">${formatearSoloFecha(ab.fecha)}</td>
@@ -7343,8 +7719,8 @@
             const tabBadgeAbonos = document.getElementById('hojaFacTabBadgeAbonos');
             if (tabBadgeAbonos) tabBadgeAbonos.innerText = abonos.length;
 
-            // Abrir por defecto la pestaña de Productos DTE
-            window.cambiarTabHojaFactura('items');
+            // Abrir por defecto la pestaña solicitada
+            window.cambiarTabHojaFactura(tabInicial || 'items');
 
             // Botón Ir a abonar
             const btnIrAbonar = document.getElementById('hojaFacBtnIrAbonar');
@@ -7375,13 +7751,18 @@
                     }
                 }
                 if (!provFound) {
-                    provSelect.value = prov;
+                    const opt = document.createElement('option');
+                    opt.value = prov;
+                    opt.textContent = prov;
+                    opt.selected = true;
+                    provSelect.appendChild(opt);
                 }
 
                 const filtroInput = document.getElementById('inputFiltroCCF');
                 if (filtroInput) filtroInput.value = '';
 
-                window.cargarFacturasParaAbono();
+                // Poblar selector pasando ccf explícitamente para garantizar inclusión y selección
+                window.poblarSelectorCCF('', ccf, ccf);
 
                 const ccfSelect = document.getElementById('abonoCCF');
                 if (ccfSelect) {
@@ -7395,10 +7776,15 @@
                         }
                     }
                     if (!ccfFound) {
-                        ccfSelect.value = ccf;
+                        const opt = document.createElement('option');
+                        opt.value = ccf;
+                        opt.textContent = ccf;
+                        opt.selected = true;
+                        ccfSelect.appendChild(opt);
                     }
-                    window.cargarDatosDetalleAbono();
+                    ccfSelect.value = ccf;
                 }
+                window.cargarDatosDetalleAbono();
             }
         };
 
@@ -9860,9 +10246,34 @@
 
             window.facturaDetalleAbonosActual = f;
             abonos.forEach((ab, idx) => {
-                let compBtn = `<span class="text-slate-500 text-xs italic">Sin foto</span>`;
-                if (ab.comprobante) {
-                    compBtn = `<button type="button" onclick="window.verComprobanteEnGrande('${ab.comprobante}', 'Comprobante de Pago #${idx + 1} - CCF ${f.ccf}')" class="px-2 py-1 rounded bg-accentCyan/15 hover:bg-accentCyan/30 text-accentCyan text-xs font-semibold inline-flex items-center gap-1.5 border border-accentCyan/30 transition shadow-sm cursor-pointer"><i class="fa-solid fa-image"></i> Ver Foto</button>`;
+                const tieneFoto = Boolean(ab.comprobante && String(ab.comprobante).trim().length > 5);
+                let compBtn = '';
+                if (tieneFoto) {
+                    compBtn = `
+                        <div class="flex items-center justify-center gap-1.5">
+                            <img src="${ab.comprobante}" alt="Voucher" class="w-8 h-8 object-cover rounded border border-emerald-500/50 cursor-pointer hover:scale-105 transition" onclick="window.verComprobanteAbonoRapido(${idx})" title="Clic para ampliar comprobante">
+                            <button type="button" onclick="window.verComprobanteAbonoRapido(${idx})" class="px-2 py-1 rounded bg-accentCyan/15 hover:bg-accentCyan/30 text-accentCyan text-xs font-semibold inline-flex items-center gap-1 border border-accentCyan/30 transition shadow-sm cursor-pointer">
+                                <i class="fa-solid fa-receipt"></i> Ver Foto
+                            </button>
+                            <label class="px-1.5 py-1 rounded bg-bgDark hover:bg-cardDark text-slate-300 hover:text-white border border-borderDark text-[10px] font-medium inline-flex items-center gap-1 cursor-pointer transition" title="Cambiar comprobante">
+                                <i class="fa-solid fa-camera-rotate text-accentCyan"></i>
+                                <input type="file" accept="image/*" class="hidden" onchange="window.adjuntarComprobanteAbonoRapido(${idx}, this)">
+                            </label>
+                            <button type="button" onclick="window.quitarComprobanteAbonoRapido(${idx})" class="p-1 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded transition cursor-pointer" title="Eliminar foto">
+                                <i class="fa-solid fa-trash-can text-[10px]"></i>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    compBtn = `
+                        <div class="flex items-center justify-center gap-1.5">
+                            <label class="px-2.5 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 hover:text-emerald-300 border border-emerald-500/40 text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer transition shadow-sm" title="Subir foto del comprobante">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Subir
+                                <input type="file" accept="image/*" class="hidden" onchange="window.adjuntarComprobanteAbonoRapido(${idx}, this)">
+                            </label>
+                            <span class="text-slate-500 text-[11px] italic">Sin foto</span>
+                        </div>
+                    `;
                 }
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-bgDark/40 transition";
@@ -9896,6 +10307,14 @@
                 window.cerrarModalDetalleAbonosRapido();
                 window.verHojaFactura(f.proveedor, f.ccf);
             };
+
+            const btnEditAbonos = document.getElementById('mdaBtnEditarAbonos');
+            if (btnEditAbonos) {
+                btnEditAbonos.onclick = () => {
+                    window.cerrarModalDetalleAbonosRapido();
+                    window.abrirEditorAbonosFactura(f.proveedor, f.ccf);
+                };
+            }
 
             document.getElementById('mdaBtnIrAbonar').onclick = () => {
                 window.cerrarModalDetalleAbonosRapido();
