@@ -91,6 +91,21 @@
                 margin-top: 2px !important;
                 font-weight: 600 !important;
             }
+            /* Ocultar todos los iconos FontAwesome en impresión para prevenir caracteres sustitutos de fuentes () */
+            i, .fa, .fa-solid, .fa-regular, .fa-brands, .fas, .far, .fab, [class*="fa-"], .animate-pulse {
+                display: none !important;
+            }
+            /* Insignias limpias y legibles en el PDF */
+            .badge-print, [class*="rounded-full"] {
+                border: 1px solid #94a3b8 !important;
+                background: #f8fafc !important;
+                color: #0f172a !important;
+                padding: 1px 6px !important;
+                font-weight: 700 !important;
+                font-size: 8px !important;
+                display: inline-block !important;
+                text-transform: uppercase !important;
+            }
             .pantalla-solo {
                 display: none !important;
             }
@@ -1042,7 +1057,7 @@
                     <table class="w-full text-left text-xs text-slate-300">
                         <thead class="bg-bgDark text-slate-400 font-semibold uppercase border-b border-borderDark text-[11px]">
                             <tr>
-                                <th class="p-3">Nº CCF / DTE</th>
+                                <th class="p-3">N° CCF / DTE</th>
                                 <th class="p-3">Proveedor</th>
                                 <th class="p-3">Monto Factura</th>
                                 <th class="p-3">Saldo Actual</th>
@@ -1244,20 +1259,20 @@
                     </div>
                 </div>
 
-                <div class="overflow-x-auto rounded-lg border border-borderDark">
-                    <table class="w-full text-left text-xs text-slate-300">
-                        <thead class="bg-bgDark text-slate-400 font-semibold uppercase border-b border-borderDark text-[11px]">
+                <div class="overflow-x-auto rounded-xl border border-borderDark shadow-inner">
+                    <table class="w-full text-left text-xs text-slate-300 min-w-[1000px]">
+                        <thead class="bg-bgDark text-slate-300 font-bold uppercase border-b border-borderDark text-[11px] tracking-wider">
                             <tr>
-                                <th class="p-3">Nº CCF / DTE</th>
-                                <th class="p-3">Fecha Emisión</th>
-                                <th class="p-3">Sucursal</th>
-                                <th class="p-3 text-right">Monto Factura</th>
-                                <th class="p-3 text-right">Total Abonado</th>
-                                <th class="p-3 text-right">Saldo Actual</th>
-                                <th class="p-3 text-center">Antigüedad</th>
-                                <th class="p-3 text-center">Estado</th>
-                                <th class="p-3">Nota</th>
-                                <th class="p-3 text-center no-print">Acciones</th>
+                                <th class="p-3 w-[150px]">N° CCF / DTE</th>
+                                <th class="p-3 w-[105px]">Fecha Emisión</th>
+                                <th class="p-3 w-[140px]">Sucursal</th>
+                                <th class="p-3 text-right w-[110px]">Monto Factura</th>
+                                <th class="p-3 text-right w-[120px]">Total Abonado</th>
+                                <th class="p-3 text-right w-[115px]">Saldo Pendiente</th>
+                                <th class="p-3 text-center w-[95px]">Antigüedad</th>
+                                <th class="p-3 text-center w-[120px]">Estado</th>
+                                <th class="p-3 min-w-[150px]">Observación / Nota</th>
+                                <th class="p-3 text-center w-[160px] no-print">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tbody-consulta-pendientes" class="divide-y divide-borderDark/60 bg-cardDark"></tbody>
@@ -3346,7 +3361,7 @@
 
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
                         <div>
-                            <span class="text-slate-400 text-[10px] block">Nº Control DTE:</span>
+                            <span class="text-slate-400 text-[10px] block">N° Control DTE:</span>
                             <span id="ncModalNumControl" class="font-mono font-semibold text-cyan-300">-</span>
                         </div>
                         <div>
@@ -5680,30 +5695,33 @@
                     });
                 }
 
-                // Generación de Insignia de Estado Interactiva y Accesible
+                const provEsc = (f.proveedor || '').replace(/'/g, "\\'");
+                const ccfEsc = (f.ccf || '').replace(/'/g, "\\'");
+
+                // Generación de Insignia de Estado Interactiva y Accesible (Optimizada para pantalla y PDF)
                 let badgeHtml = '';
                 if (estado === 'CANCELADA') {
-                    badgeHtml = `<button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 inline-flex items-center gap-1 cursor-pointer hover:bg-emerald-500/25 transition shadow-sm" title="Factura Totalmente Cancelada - Toca para ver abonos y pagos"><i class="fa-solid fa-circle-check text-[10px]"></i> CANCELADA</button>`;
+                    badgeHtml = `<button type="button" onclick="window.verAbonosFacturaRapido('${provEsc}', '${ccfEsc}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 inline-flex items-center gap-1 cursor-pointer hover:bg-emerald-500/25 transition shadow-sm badge-print" title="Factura Totalmente Cancelada - Toca para ver abonos y pagos"><i class="fa-solid fa-circle-check text-[10px]"></i> <span>CANCELADA</span></button>`;
                 } else if (estado === 'ABONADA') {
-                    badgeHtml = `<button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 inline-flex items-center gap-1.5 cursor-pointer hover:bg-cyan-500/25 transition shadow-sm" title="Factura con Abonos Parciales - Toca para ver el desglose"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> ABONADA</button>`;
+                    badgeHtml = `<button type="button" onclick="window.verAbonosFacturaRapido('${provEsc}', '${ccfEsc}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 inline-flex items-center gap-1.5 cursor-pointer hover:bg-cyan-500/25 transition shadow-sm badge-print" title="Factura con Abonos Parciales - Toca para ver el desglose"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse no-print"></span> <span>ABONADA</span></button>`;
                 } else if (estado === 'ABONADA (VENCIDA)') {
-                    badgeHtml = `<button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/15 border border-purple-500/40 text-purple-300 inline-flex items-center gap-1 cursor-pointer hover:bg-purple-500/25 transition shadow-sm" title="Factura Abonada pero con saldo vencido (>30d) - Toca para ver abonos"><i class="fa-solid fa-clock-rotate-left text-[10px]"></i> ABONADA (VENCIDA)</button>`;
+                    badgeHtml = `<button type="button" onclick="window.verAbonosFacturaRapido('${provEsc}', '${ccfEsc}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/15 border border-purple-500/40 text-purple-300 inline-flex items-center gap-1 cursor-pointer hover:bg-purple-500/25 transition shadow-sm badge-print" title="Factura Abonada pero con saldo vencido (>30d) - Toca para ver abonos"><i class="fa-solid fa-clock-rotate-left text-[10px]"></i> <span>ABONADA (VENCIDA)</span></button>`;
                 } else if (estado === 'VENCIDA') {
-                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/15 border border-rose-500/40 text-rose-400 inline-flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i> VENCIDA</span>`;
+                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/15 border border-rose-500/40 text-rose-400 inline-flex items-center gap-1 badge-print"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i> <span>VENCIDA</span></span>`;
                 } else if (estado === 'POR VENCER') {
-                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 inline-flex items-center gap-1"><i class="fa-regular fa-clock text-[10px]"></i> POR VENCER</span>`;
+                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 inline-flex items-center gap-1 badge-print"><i class="fa-regular fa-clock text-[10px]"></i> <span>POR VENCER</span></span>`;
                 } else {
-                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-500/15 border border-slate-500/40 text-slate-300 inline-flex items-center gap-1">PENDIENTE</span>`;
+                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-500/15 border border-slate-500/40 text-slate-300 inline-flex items-center gap-1 badge-print"><span>PENDIENTE</span></span>`;
                 }
 
-                // Generación de Celda de Total Abonado Interactiva
+                // Generación de Celda de Total Abonado Interactiva (Limpia para PDF sin caracteres extraños)
                 let abonoHtml = '';
                 if (totalAbonado > 0) {
                     const cantAb = (f.abonos ? f.abonos.length : 0) + (parseFloat(f.nc) > 0 ? 1 : 0);
                     abonoHtml = `
-                        <button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 font-mono font-bold text-xs inline-flex items-center gap-1.5 transition group cursor-pointer shadow-sm" title="Toca para ver el desglose de los ${cantAb} abonos / notas de crédito">
+                        <button type="button" onclick="window.verAbonosFacturaRapido('${provEsc}', '${ccfEsc}')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 font-mono font-bold text-xs inline-flex items-center gap-1.5 transition group cursor-pointer shadow-sm" title="Toca para ver el desglose de los ${cantAb} abonos / notas de crédito">
                             <i class="fa-solid fa-receipt text-[10px] text-emerald-400 group-hover:scale-110 transition-transform"></i>
-                            ${formatMoney(totalAbonado)}
+                            <span>${formatMoney(totalAbonado)}</span>
                             <i class="fa-solid fa-eye text-[9px] text-emerald-400/70 group-hover:text-emerald-300 transition-colors ml-0.5"></i>
                         </button>
                     `;
@@ -5716,33 +5734,33 @@
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-bgDark/40 transition";
-                const dteSubline = f.codigoGeneracion ? `<div class="text-[10px] text-slate-400 font-mono tracking-tight dte-uuid-print" title="Código de Generación DTE / UUID">DTE: ${f.codigoGeneracion}</div>` : '';
+                const dteSubline = f.codigoGeneracion ? `<div class="text-[10px] text-slate-400 font-mono tracking-tight dte-uuid-print mt-0.5" title="Código de Generación DTE / UUID">DTE: ${f.codigoGeneracion}</div>` : '';
                 tr.innerHTML = `
-                    <td class="p-3">
-                        <div class="font-mono font-bold text-slate-900">
-                            <button type="button" onclick="window.verHojaFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="font-mono font-bold text-accentCyan hover:underline text-left block" title="Ver Expediente de Factura">
+                    <td class="p-3 align-top whitespace-nowrap">
+                        <div class="font-mono font-bold">
+                            <button type="button" onclick="window.verHojaFactura('${provEsc}', '${ccfEsc}')" class="font-mono font-bold text-cyan-400 hover:text-cyan-300 hover:underline text-left block text-xs cursor-pointer" title="Ver Expediente de Factura">
                                 ${f.ccf}
                             </button>
                         </div>
                         ${dteSubline}
                     </td>
-                    <td class="p-3">${formatearSoloFecha(f.fecha)}</td>
-                    <td class="p-3">${f.sucursal}</td>
-                    <td class="p-3 text-right font-mono">${formatMoney(f.monto)}</td>
-                    <td class="p-3 text-right font-mono">${abonoHtml}</td>
-                    <td class="p-3 text-right font-bold font-mono text-white">${formatMoney(saldo)}</td>
-                    <td class="p-3 text-center">${diasAntiguedad} días</td>
-                    <td class="p-3 text-center">${badgeHtml}</td>
-                    <td class="p-3 text-slate-300 italic text-xs max-w-xs truncate" title="${f.nota || ''}">${f.nota || '-'}</td>
-                    <td class="p-3 text-center no-print whitespace-nowrap">
+                    <td class="p-3 align-top whitespace-nowrap text-slate-200 font-medium">${formatearSoloFecha(f.fecha)}</td>
+                    <td class="p-3 align-top whitespace-nowrap"><span class="px-2 py-0.5 rounded bg-bgDark border border-borderDark text-xs font-semibold text-slate-200">${f.sucursal}</span></td>
+                    <td class="p-3 align-top text-right font-mono font-semibold text-slate-100 text-xs">${formatMoney(f.monto)}</td>
+                    <td class="p-3 align-top text-right font-mono text-xs">${abonoHtml}</td>
+                    <td class="p-3 align-top text-right font-bold font-mono text-xs ${saldo > 0 ? 'text-amber-400' : 'text-emerald-400'}">${formatMoney(saldo)}</td>
+                    <td class="p-3 align-top text-center font-mono text-xs ${diasAntiguedad > 30 && saldo > 0 ? 'text-rose-400 font-bold' : 'text-slate-300'}">${diasAntiguedad} días</td>
+                    <td class="p-3 align-top text-center whitespace-nowrap">${badgeHtml}</td>
+                    <td class="p-3 align-top text-xs text-slate-300 min-w-[140px] break-words" title="${f.nota || ''}">${f.nota && f.nota.trim() ? `<span class="italic text-slate-300">${f.nota}</span>` : '<span class="text-slate-500 italic">-</span>'}</td>
+                    <td class="p-3 align-top text-center no-print whitespace-nowrap">
                         <div class="flex items-center justify-center gap-1.5">
-                            <button type="button" onclick="window.verAbonosFacturaRapido('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2 py-1 rounded bg-accentCyan/15 hover:bg-accentCyan/25 text-accentCyan border border-accentCyan/30 text-xs font-semibold inline-flex items-center gap-1 transition cursor-pointer" title="Ver abonos y comprobantes de pago">
+                            <button type="button" onclick="window.verAbonosFacturaRapido('${provEsc}', '${ccfEsc}')" class="px-2.5 py-1 rounded-lg bg-accentCyan/15 hover:bg-accentCyan/25 text-accentCyan border border-accentCyan/30 text-xs font-semibold inline-flex items-center gap-1 transition cursor-pointer" title="Ver abonos y comprobantes de pago">
                                 <i class="fa-solid fa-receipt"></i> Abonos
                             </button>
-                            <button type="button" onclick="window.abrirEditorAbonosFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2 py-1 rounded bg-accentYellow/15 hover:bg-accentYellow/25 text-accentYellow border border-accentYellow/30 text-xs font-semibold inline-flex items-center gap-1 transition cursor-pointer" title="Editar abonos directamente">
+                            <button type="button" onclick="window.abrirEditorAbonosFactura('${provEsc}', '${ccfEsc}')" class="px-2.5 py-1 rounded-lg bg-accentYellow/15 hover:bg-accentYellow/25 text-accentYellow border border-accentYellow/30 text-xs font-semibold inline-flex items-center gap-1 transition cursor-pointer" title="Editar abonos directamente">
                                 <i class="fa-solid fa-pen-to-square"></i> Editar
                             </button>
-                            <button type="button" onclick="window.verHojaFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="px-2 py-1 rounded bg-bgDark hover:bg-borderDark text-slate-300 border border-borderDark text-xs font-semibold inline-flex items-center gap-1 transition cursor-pointer" title="Ver expediente completo">
+                            <button type="button" onclick="window.verHojaFactura('${provEsc}', '${ccfEsc}')" class="px-2.5 py-1 rounded-lg bg-bgDark hover:bg-borderDark text-slate-300 hover:text-white border border-borderDark text-xs font-semibold inline-flex items-center gap-1 transition cursor-pointer" title="Ver expediente completo">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
                         </div>
@@ -5753,9 +5771,9 @@
 
             if (facturasMostradas > 0) {
                 const trTotal = document.createElement('tr');
-                trTotal.className = "print-total-row bg-bgDark/80 font-bold border-t-2 border-slate-600 text-xs";
+                trTotal.className = "print-total-row bg-bgDark/90 font-bold border-t-2 border-slate-600 text-xs text-white";
                 trTotal.innerHTML = `
-                    <td class="p-3 text-white uppercase font-black" colspan="3">TOTALES (${facturasMostradas} FACTURAS)</td>
+                    <td class="p-3 text-white uppercase font-black tracking-wider" colspan="3">TOTALES (${facturasMostradas} FACTURAS)</td>
                     <td class="p-3 text-right font-mono text-white font-black">${formatMoney(totalMontoFacturas)}</td>
                     <td class="p-3 text-right font-mono text-emerald-400 font-black">${formatMoney(totalAbonadoFacturas)}</td>
                     <td class="p-3 text-right font-mono text-rose-400 font-black">${formatMoney(totalDeudaProv)}</td>
@@ -5797,7 +5815,7 @@
             }
 
             if (facturasMostradas === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-500">No hay facturas registradas para este proveedor con los filtros seleccionados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400 italic bg-bgDark/20"><i class="fa-solid fa-circle-info text-slate-500 mr-2 text-sm"></i> No hay facturas registradas para este proveedor con los filtros seleccionados.</td></tr>`;
             }
 
             // También actualizamos el reporte por sucursal
@@ -5848,32 +5866,35 @@
 
                 let colorEstado = estado === 'CANCELADA' ? 'text-accentGreen' : (estado === 'VENCIDA' ? 'text-accentRed' : 'text-accentYellow');
 
+                const provEsc = (f.proveedor || '').replace(/'/g, "\\'");
+                const ccfEsc = (f.ccf || '').replace(/'/g, "\\'");
+
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-bgDark/40 transition";
-                const dteSubline = f.codigoGeneracion ? `<div class="text-[10px] text-slate-400 font-mono tracking-tight dte-uuid-print" title="Código de Generación DTE / UUID">DTE: ${f.codigoGeneracion}</div>` : '';
+                const dteSubline = f.codigoGeneracion ? `<div class="text-[10px] text-slate-400 font-mono tracking-tight dte-uuid-print mt-0.5" title="Código de Generación DTE / UUID">DTE: ${f.codigoGeneracion}</div>` : '';
                 tr.innerHTML = `
-                    <td class="p-3">
-                        <div class="font-bold text-slate-900">
-                            <button type="button" onclick="window.verHojaProveedor('${f.proveedor.replace(/'/g, "\\'")}')" class="font-semibold text-slate-200 hover:text-white hover:underline text-left block">
+                    <td class="p-3 align-top">
+                        <div class="font-bold">
+                            <button type="button" onclick="window.verHojaProveedor('${provEsc}')" class="font-semibold text-slate-200 hover:text-white hover:underline text-left block text-xs cursor-pointer">
                                 ${f.proveedor}
                             </button>
                         </div>
                     </td>
-                    <td class="p-3">
-                        <div class="font-mono font-bold text-slate-900">
-                            <button type="button" onclick="window.verHojaFactura('${f.proveedor.replace(/'/g, "\\'")}', '${f.ccf.replace(/'/g, "\\'")}')" class="font-mono font-bold text-accentCyan hover:underline text-left block">
+                    <td class="p-3 align-top whitespace-nowrap">
+                        <div class="font-mono font-bold">
+                            <button type="button" onclick="window.verHojaFactura('${provEsc}', '${ccfEsc}')" class="font-mono font-bold text-cyan-400 hover:text-cyan-300 hover:underline text-left block text-xs cursor-pointer">
                                 ${f.ccf}
                             </button>
                         </div>
                         ${dteSubline}
                     </td>
-                    <td class="p-3">${f.sucursal}</td>
-                    <td class="p-3">${formatearSoloFecha(f.fecha)}</td>
-                    <td class="p-3">${formatMoney(f.monto)}</td>
-                    <td class="p-3 text-accentGreen">${formatMoney(abonoTotal)}</td>
-                    <td class="p-3 font-bold text-white">${formatMoney(saldo)}</td>
-                    <td class="p-3">${diasAntiguedad} días</td>
-                    <td class="p-3 font-semibold ${colorEstado}">${estado}</td>
+                    <td class="p-3 align-top whitespace-nowrap"><span class="px-2 py-0.5 rounded bg-bgDark border border-borderDark text-xs font-semibold text-slate-200">${f.sucursal}</span></td>
+                    <td class="p-3 align-top whitespace-nowrap text-slate-200 font-medium">${formatearSoloFecha(f.fecha)}</td>
+                    <td class="p-3 align-top text-right font-mono font-semibold text-slate-100 text-xs">${formatMoney(f.monto)}</td>
+                    <td class="p-3 align-top text-right font-mono text-emerald-400 font-semibold text-xs">${formatMoney(abonoTotal)}</td>
+                    <td class="p-3 align-top text-right font-mono font-bold text-xs ${saldo > 0 ? 'text-amber-400' : 'text-emerald-400'}">${formatMoney(saldo)}</td>
+                    <td class="p-3 align-top text-center font-mono text-xs ${diasAntiguedad > 30 && saldo > 0 ? 'text-rose-400 font-bold' : 'text-slate-300'}">${diasAntiguedad} días</td>
+                    <td class="p-3 align-top text-center whitespace-nowrap font-semibold ${colorEstado} badge-print">${estado}</td>
                 `;
                 tbody.appendChild(tr);
             });
