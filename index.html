@@ -3503,6 +3503,9 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
+                    <a id="btnAbrirEnDriveFotoComprobante" href="#" target="_blank" rel="noopener noreferrer" class="hidden px-3 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 text-xs font-semibold flex items-center gap-1.5 border border-blue-500/30 transition shadow-sm" title="Abrir archivo original en Google Drive">
+                        <i class="fa-brands fa-google-drive text-amber-400"></i> Abrir en Drive
+                    </a>
                     <a id="btnDescargarFotoComprobante" download="comprobante_abono.jpg" href="#" class="px-3 py-1.5 rounded-lg bg-bgDark hover:bg-borderDark text-accentCyan text-xs font-semibold flex items-center gap-1.5 border border-borderDark transition">
                         <i class="fa-solid fa-download"></i> Descargar
                     </a>
@@ -3657,9 +3660,11 @@
                 if (cachedFac) {
                     appData.facturas = JSON.parse(cachedFac);
                     normalizarSucursalesFacturas();
+                    if (window.reasociarComprobantesFacturas) window.reasociarComprobantesFacturas(appData.facturas);
                 }
                 if (cachedBancos) appData.bancos = JSON.parse(cachedBancos);
                 if (cachedPagos) appData.programacionPagos = JSON.parse(cachedPagos);
+                if (window.initComprobantesDB) window.initComprobantesDB();
             } catch(e) {
                 console.warn("Aviso: No se pudo leer la caché local:", e);
             }
@@ -3728,6 +3733,7 @@
                         try { localStorage.setItem('cache_proveedores', JSON.stringify(appData.proveedores)); } catch(e){}
                     }
                     if (Array.isArray(data.facturas)) {
+                        if (window.reasociarComprobantesFacturas) window.reasociarComprobantesFacturas(data.facturas);
                         appData.facturas = data.facturas;
                         const migCount = normalizarSucursalesFacturas();
                         try { localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas)); } catch(e){}
@@ -3794,6 +3800,7 @@
                         data.facturas.forEach(f => {
                             if (f.sucursal === 'FG AGUILA') f.sucursal = 'CONSTRUGAR AGUILA';
                         });
+                        if (window.reasociarComprobantesFacturas) window.reasociarComprobantesFacturas(data.facturas);
                         if (JSON.stringify(data.facturas) !== JSON.stringify(appData.facturas)) {
                             appData.facturas = data.facturas;
                             normalizarSucursalesFacturas();
@@ -4814,17 +4821,255 @@
         };
 
         // ========================================================
+        // MOTOR DE PERSISTENCIA SEGURA DE COMPROBANTES (INDEXEDDB + MEMORIA)
+        // ========================================================
+        const COMP_DB_NAME = 'FerrogarComprobantesDB';
+        const COMP_DB_VERSION = 1;
+        const COMP_STORE_NAME = 'comprobantes';
+        window.comprobantesMap = window.comprobantesMap || new Map();
+
+        function normalizarClaveComp(t) {
+            return String(t || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '_');
+        }
+
+        function armarClaveCompIdx(prov, ccf, idx) {
+            return `comp_${normalizarClaveComp(prov)}___${normalizarClaveComp(ccf)}___idx_${idx}`;
+        }
+
+        function armarClaveCompSig(prov, ccf, fecha, monto) {
+            const fStr = formatearSoloFecha(fecha || '');
+            const mStr = Number(monto || 0).toFixed(2);
+            return `comp_${normalizarClaveComp(prov)}___${normalizarClaveComp(ccf)}___sig_${fStr}_${mStr}`;
+        }
+
+        function abrirComprobantesDB() {
+            return new Promise((resolve) => {
+                if (!window.indexedDB) {
+                    resolve(null);
+                    return;
+                }
+                try {
+                    const req = indexedDB.open(COMP_DB_NAME, COMP_DB_VERSION);
+                    req.onupgradeneeded = function(e) {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(COMP_STORE_NAME)) {
+                            db.createObjectStore(COMP_STORE_NAME, { keyPath: 'key' });
+                        }
+                    };
+                    req.onsuccess = function(e) {
+                        resolve(e.target.result);
+                    };
+                    req.onerror = function() {
+                        resolve(null);
+                    };
+                } catch(err) {
+                    resolve(null);
+                }
+            });
+        }
+
+        window.initComprobantesDB = async function() {
+            // 1. Rescatar comprobantes de appData.facturas en memoria o localStorage si existen
+            try {
+                if (Array.isArray(appData.facturas)) {
+                    appData.facturas.forEach(f => {
+                        if (f && Array.isArray(f.abonos)) {
+                            f.abonos.forEach((ab, idx) => {
+                                if (ab && ab.comprobante && String(ab.comprobante).length > 10) {
+                                    const kIdx = armarClaveCompIdx(f.proveedor, f.ccf, idx);
+                                    const valObj = { data: ab.comprobante, driveUrl: ab.driveUrl || '' };
+                                    window.comprobantesMap.set(kIdx, valObj);
+                                    if (ab.fecha || ab.monto) {
+                                        const kSig = armarClaveCompSig(f.proveedor, f.ccf, ab.fecha, ab.monto);
+                                        window.comprobantesMap.set(kSig, valObj);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            } catch(e) {}
+
+            // 2. Cargar todos los registros desde IndexedDB persistente
+            try {
+                const db = await abrirComprobantesDB();
+                if (!db) return;
+                const tx = db.transaction(COMP_STORE_NAME, 'readonly');
+                const store = tx.objectStore(COMP_STORE_NAME);
+                const req = store.getAll();
+                req.onsuccess = function() {
+                    const items = req.result || [];
+                    items.forEach(it => {
+                        if (it && it.key && it.data) {
+                            window.comprobantesMap.set(it.key, { data: it.data, driveUrl: it.driveUrl || '' });
+                        }
+                    });
+                    if (Array.isArray(appData.facturas)) {
+                        window.reasociarComprobantesFacturas(appData.facturas);
+                    }
+                };
+            } catch(e) {}
+        };
+
+        // Iniciar IndexedDB tempranamente
+        setTimeout(() => {
+            if (window.initComprobantesDB) window.initComprobantesDB();
+        }, 50);
+
+        window.reasociarComprobantesFacturas = function(facturas) {
+            if (!Array.isArray(facturas)) return;
+            facturas.forEach(f => {
+                if (!f || !Array.isArray(f.abonos)) return;
+                f.abonos.forEach((ab, idx) => {
+                    if (!ab.comprobante || String(ab.comprobante).length <= 5) {
+                        const comp = window.obtenerComprobanteAbono(f.proveedor, f.ccf, idx, ab);
+                        if (comp) ab.comprobante = comp;
+                    }
+                });
+            });
+        };
+
+        window.guardarComprobanteAbono = async function(prov, ccf, idx, ab, dataUrl, driveUrl = '') {
+            if (!prov || !ccf || !dataUrl) return;
+            const kIdx = armarClaveCompIdx(prov, ccf, idx);
+            const valObj = { data: dataUrl, driveUrl: driveUrl || (ab && ab.driveUrl) || '' };
+            window.comprobantesMap.set(kIdx, valObj);
+            let kSig = '';
+            if (ab && (ab.fecha || ab.monto)) {
+                kSig = armarClaveCompSig(prov, ccf, ab.fecha, ab.monto);
+                window.comprobantesMap.set(kSig, valObj);
+            }
+            if (ab) {
+                ab.comprobante = dataUrl;
+                if (driveUrl) ab.driveUrl = driveUrl;
+            }
+
+            try {
+                const db = await abrirComprobantesDB();
+                if (db) {
+                    const tx = db.transaction(COMP_STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(COMP_STORE_NAME);
+                    store.put({ key: kIdx, data: dataUrl, driveUrl: driveUrl || (ab && ab.driveUrl) || '', fecha: new Date().toISOString() });
+                    if (kSig) {
+                        store.put({ key: kSig, data: dataUrl, driveUrl: driveUrl || (ab && ab.driveUrl) || '', fecha: new Date().toISOString() });
+                    }
+                }
+            } catch(e) {}
+        };
+
+        window.obtenerComprobanteAbono = function(prov, ccf, idx, ab = null) {
+            if (ab && ab.comprobante && String(ab.comprobante).trim().length > 10) {
+                return ab.comprobante;
+            }
+            if (!prov || !ccf) return (ab && ab.comprobante) || '';
+            const kIdx = armarClaveCompIdx(prov, ccf, idx);
+            let c = window.comprobantesMap.get(kIdx);
+            if (!c && ab && (ab.fecha || ab.monto)) {
+                const kSig = armarClaveCompSig(prov, ccf, ab.fecha, ab.monto);
+                c = window.comprobantesMap.get(kSig);
+            }
+            let dataUrl = typeof c === 'object' && c !== null ? c.data : c;
+            let driveUrl = typeof c === 'object' && c !== null ? c.driveUrl : '';
+            if (dataUrl && ab) {
+                ab.comprobante = dataUrl;
+                if (driveUrl && !ab.driveUrl) ab.driveUrl = driveUrl;
+            }
+            return dataUrl || '';
+        };
+
+        window.eliminarComprobanteAbono = async function(prov, ccf, idx, ab = null) {
+            if (!prov || !ccf) return;
+            const kIdx = armarClaveCompIdx(prov, ccf, idx);
+            window.comprobantesMap.delete(kIdx);
+            let kSig = '';
+            if (ab && (ab.fecha || ab.monto)) {
+                kSig = armarClaveCompSig(prov, ccf, ab.fecha, ab.monto);
+                window.comprobantesMap.delete(kSig);
+            }
+            if (ab) {
+                ab.comprobante = '';
+                ab.driveUrl = '';
+            }
+
+            try {
+                const db = await abrirComprobantesDB();
+                if (db) {
+                    const tx = db.transaction(COMP_STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(COMP_STORE_NAME);
+                    store.delete(kIdx);
+                    if (kSig) store.delete(kSig);
+                }
+            } catch(e) {}
+
+            // Eliminar también en Google Drive via Apps Script
+            if (appData.googleScriptUrl) {
+                try {
+                    fetch(appData.googleScriptUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'eliminar_comprobante',
+                            proveedor: prov,
+                            ccf: ccf,
+                            abonoIndex: idx
+                        }),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    }).catch(() => {});
+                } catch(e) {}
+            }
+        };
+
+        // Subir comprobante a Google Drive mediante Google Apps Script
+        window.subirComprobanteAGoogleDrive = async function(prov, ccf, idx, ab, dataUrl) {
+            if (!appData.googleScriptUrl) return null;
+            try {
+                const payload = {
+                    action: 'subir_comprobante',
+                    proveedor: prov,
+                    ccf: ccf,
+                    abonoIndex: idx,
+                    fecha: (ab && ab.fecha) || '',
+                    monto: (ab && ab.monto) || 0,
+                    base64: dataUrl
+                };
+                const res = await fetch(appData.googleScriptUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                const data = await res.json();
+                if (data && data.status === 'success' && data.viewUrl) {
+                    if (ab) {
+                        ab.comprobante = data.viewUrl;
+                        ab.driveUrl = data.driveUrl;
+                    }
+                    if (window.guardarComprobanteAbono) {
+                        await window.guardarComprobanteAbono(prov, ccf, idx, ab, data.viewUrl, data.driveUrl);
+                    }
+                    try { localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas)); } catch(e) {}
+                    return data;
+                }
+            } catch (err) {
+                console.warn('Aviso al subir comprobante a Google Drive:', err);
+            }
+            return null;
+        };
+
+        // ========================================================
         // GESTIÓN Y COMPRESIÓN DE COMPROBANTES DE PAGO (IMÁGENES)
         // ========================================================
         window.comprimirImagenAbono = function(file, callback) {
             if (!file) return;
+            if (file.type && !file.type.startsWith('image/')) {
+                alert('El archivo seleccionado no es una imagen compatible. Por favor elija un archivo de imagen (JPG, PNG, WEBP o fotografía).');
+                return;
+            }
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
                     let width = img.width;
                     let height = img.height;
-                    const maxDim = 1200;
+                    const maxDim = 1024;
                     if (width > maxDim || height > maxDim) {
                         if (width > height) {
                             height = Math.round((height * maxDim) / width);
@@ -4839,7 +5084,7 @@
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.76);
                     if (callback) callback(dataUrl);
                 };
                 img.onerror = function() {
@@ -4847,11 +5092,22 @@
                 };
                 img.src = e.target.result;
             };
+            reader.onerror = function() {
+                alert('Ocurrió un error al leer el archivo de la imagen desde su dispositivo.');
+            };
             reader.readAsDataURL(file);
         };
 
         window.renderizarFilaAbono = function(ab = {}, index = 0) {
             const contenedor = document.getElementById('contenedor-abonos-dinamicos');
+            const provSelect = document.getElementById('abonoProveedor');
+            const ccfSelect = document.getElementById('abonoCCF');
+            const prov = provSelect ? provSelect.value : '';
+            const ccf = ccfSelect ? ccfSelect.value : '';
+            if (!ab.comprobante && prov && ccf && window.obtenerComprobanteAbono) {
+                ab.comprobante = window.obtenerComprobanteAbono(prov, ccf, index, ab);
+            }
+
             const div = document.createElement('div');
             div.className = "abono-fila-dinamica bg-bgDark/40 p-4 rounded-xl border border-borderDark relative space-y-3";
             const tieneFoto = Boolean(ab.comprobante && String(ab.comprobante).trim().length > 5);
@@ -4905,12 +5161,17 @@
                             <input type="file" accept="image/*" class="hidden" onchange="window.procesarFotoComprobante(this, ${index})">
                         </label>
                         <input type="hidden" name="abonoComprobante" value="${ab.comprobante || ''}">
-                        <div class="comprobante-preview-box flex items-center gap-2.5">
+                        <div class="comprobante-preview-box flex items-center gap-2.5 flex-wrap">
                             ${tieneFoto ? `
                                 <img src="${ab.comprobante}" class="w-11 h-11 object-cover rounded-lg border-2 border-emerald-500/60 shadow-md cursor-pointer hover:scale-105 transition" onclick="window.previsualizarComprobanteDeFila(this)" title="Clic para ampliar comprobante">
                                 <button type="button" onclick="window.previsualizarComprobanteDeFila(this)" class="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-sm cursor-pointer">
                                     <i class="fa-solid fa-expand"></i> Previsualizar Comprobante
                                 </button>
+                                ${ab.driveUrl ? `
+                                    <a href="${ab.driveUrl}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 border border-blue-500/30 text-xs font-semibold inline-flex items-center gap-1 transition shadow-sm" title="Abrir en Google Drive">
+                                        <i class="fa-brands fa-google-drive text-amber-400"></i> Drive
+                                    </a>
+                                ` : ''}
                                 <button type="button" onclick="window.eliminarFotoComprobante(this)" class="px-2 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-semibold inline-flex items-center gap-1 transition cursor-pointer" title="Quitar comprobante">
                                     <i class="fa-solid fa-trash-can"></i> Quitar
                                 </button>
@@ -4935,6 +5196,9 @@
                 const ccf = (document.getElementById('abonoCCF').value || '').trim();
                 const f = appData.facturas.find(x => String(x.proveedor).trim().toUpperCase() === prov.toUpperCase() && String(x.ccf).trim().toUpperCase() === ccf.toUpperCase());
                 if (f && f.abonos && f.abonos[param]) {
+                    if (window.eliminarComprobanteAbono) {
+                        window.eliminarComprobanteAbono(f.proveedor, f.ccf, param, f.abonos[param]);
+                    }
                     f.abonos.splice(param, 1);
                     try { localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas)); } catch(e) {}
                 }
@@ -4953,6 +5217,11 @@
         window.procesarFotoComprobante = function(input, index) {
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
+            const provSelect = document.getElementById('abonoProveedor');
+            const ccfSelect = document.getElementById('abonoCCF');
+            const prov = provSelect ? provSelect.value : '';
+            const ccf = ccfSelect ? ccfSelect.value : '';
+
             window.comprimirImagenAbono(file, function(dataUrl) {
                 const fila = input.closest('.abono-fila-dinamica');
                 if (fila) {
@@ -4976,8 +5245,11 @@
                     if (linkBox) {
                         linkBox.innerHTML = `<span class="text-[11px] text-emerald-400 font-medium flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Foto lista para previsualizar y guardar</span>`;
                     }
+                    if (prov && ccf && window.guardarComprobanteAbono) {
+                        window.guardarComprobanteAbono(prov, ccf, index, null, dataUrl);
+                    }
                     if (window.showNotification) {
-                        window.showNotification('Comprobante cargado. Puede previsualizarlo o aplicar el pago.', 'success');
+                        window.showNotification('Comprobante cargado con éxito. Puede previsualizarlo o guardar el abono.', 'success');
                     }
                 }
             });
@@ -4988,18 +5260,28 @@
             if (!fila) return;
             const hiddenInput = fila.querySelector('input[name="abonoComprobante"]');
             const imgElem = fila.querySelector('img');
-            const src = (hiddenInput && hiddenInput.value) || (imgElem && imgElem.src);
-            if (!src) {
-                alert('No hay ninguna imagen cargada en este abono para previsualizar.');
-                return;
-            }
+            let src = (hiddenInput && hiddenInput.value) || (imgElem && imgElem.src);
             const ccfSelect = document.getElementById('abonoCCF');
             const ccf = ccfSelect ? ccfSelect.value : '';
             const provSelect = document.getElementById('abonoProveedor');
             const prov = provSelect ? provSelect.value : '';
             const badge = fila.querySelector('.abono-num-badge');
             const numTxt = badge ? badge.innerText.trim() : 'Abono';
-            window.verComprobanteEnGrande(src, `Previsualización ${numTxt} - CCF: ${ccf || 'Sin CCF'} (${prov || 'Sin Proveedor'})`);
+
+            if (!src && prov && ccf && window.obtenerComprobanteAbono) {
+                const filas = Array.from(document.querySelectorAll('#contenedor-abonos-dinamicos > .abono-fila-dinamica'));
+                const idxFila = filas.indexOf(fila);
+                src = window.obtenerComprobanteAbono(prov, ccf, idxFila >= 0 ? idxFila : 0);
+            }
+
+            if (!src) {
+                alert('No hay ninguna imagen cargada en este abono para previsualizar.');
+                return;
+            }
+            let driveUrl = '';
+            const driveLink = fila.querySelector('a[href*="drive.google.com"]');
+            if (driveLink) driveUrl = driveLink.href;
+            window.verComprobanteEnGrande(src, `Previsualización ${numTxt} - CCF: ${ccf || 'Sin CCF'} (${prov || 'Sin Proveedor'})`, driveUrl);
         };
 
         window.eliminarFotoComprobante = function(btn) {
@@ -5017,15 +5299,29 @@
                 if (linkBox) linkBox.innerHTML = '';
                 const fileInput = fila.querySelector('input[type="file"]');
                 if (fileInput) fileInput.value = '';
+
+                const ccfSelect = document.getElementById('abonoCCF');
+                const ccf = ccfSelect ? ccfSelect.value : '';
+                const provSelect = document.getElementById('abonoProveedor');
+                const prov = provSelect ? provSelect.value : '';
+                const filas = Array.from(document.querySelectorAll('#contenedor-abonos-dinamicos > .abono-fila-dinamica'));
+                const idxFila = filas.indexOf(fila);
+                if (prov && ccf && idxFila >= 0 && window.eliminarComprobanteAbono) {
+                    window.eliminarComprobanteAbono(prov, ccf, idxFila);
+                }
             }
         };
 
-        window.verComprobanteEnGrande = function(src, titulo) {
-            if (!src) return;
+        window.verComprobanteEnGrande = function(src, titulo, driveUrl = '') {
+            if (!src) {
+                alert('No se pudo encontrar la imagen del comprobante para mostrar.');
+                return;
+            }
             const modal = document.getElementById('modalVisorComprobante');
             const img = document.getElementById('imgVisorComprobante');
             const subtitulo = document.getElementById('visorComprobanteSubtitulo');
             const btnDescargar = document.getElementById('btnDescargarFotoComprobante');
+            const btnDrive = document.getElementById('btnAbrirEnDriveFotoComprobante');
 
             if (img) img.src = src;
             if (subtitulo && titulo) subtitulo.innerText = titulo;
@@ -5034,14 +5330,40 @@
                 const safeName = (titulo || 'comprobante').replace(/[^a-zA-Z0-9_-]/g, '_');
                 btnDescargar.download = `${safeName}.jpg`;
             }
-            if (modal) modal.classList.remove('hidden');
+            if (btnDrive) {
+                let urlDrive = driveUrl;
+                if (!urlDrive && typeof src === 'string') {
+                    if (src.includes('googleusercontent.com/d/')) {
+                        const fid = src.split('/d/')[1].split('?')[0].split('/')[0];
+                        urlDrive = `https://drive.google.com/file/d/${fid}/view?usp=drivesdk`;
+                    } else if (src.includes('drive.google.com/uc?export=view&id=')) {
+                        const fid = src.split('id=')[1].split('&')[0];
+                        urlDrive = `https://drive.google.com/file/d/${fid}/view?usp=drivesdk`;
+                    }
+                }
+                if (urlDrive) {
+                    btnDrive.href = urlDrive;
+                    btnDrive.classList.remove('hidden');
+                } else {
+                    btnDrive.classList.add('hidden');
+                }
+            }
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
+            }
         };
 
         window.cerrarVisorComprobante = function() {
             const modal = document.getElementById('modalVisorComprobante');
-            if (modal) modal.classList.add('hidden');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }
             const img = document.getElementById('imgVisorComprobante');
             if (img) img.src = '';
+            const btnDrive = document.getElementById('btnAbrirEnDriveFotoComprobante');
+            if (btnDrive) btnDrive.classList.add('hidden');
         };
 
         window.addEventListener('keydown', function(e) {
@@ -5058,13 +5380,20 @@
         // ========================================================
         window.verComprobanteHojaFactura = function(idx) {
             const f = facturaActivaHoja;
-            if (!f || !f.abonos || !f.abonos[idx]) return;
+            if (!f || !f.abonos || !f.abonos[idx]) {
+                alert('No se identificó el abono seleccionado en el expediente.');
+                return;
+            }
             const ab = f.abonos[idx];
-            if (!ab.comprobante) {
+            let comp = ab.comprobante;
+            if (!comp && window.obtenerComprobanteAbono) {
+                comp = window.obtenerComprobanteAbono(f.proveedor, f.ccf, idx, ab);
+            }
+            if (!comp) {
                 alert('Este abono no cuenta con un comprobante de pago adjunto.');
                 return;
             }
-            window.verComprobanteEnGrande(ab.comprobante, `Comprobante de Pago #${idx + 1} - CCF ${f.ccf} (${f.proveedor})`);
+            window.verComprobanteEnGrande(comp, `Comprobante de Pago #${idx + 1} - CCF ${f.ccf} (${f.proveedor})`, ab.driveUrl);
         };
 
         window.adjuntarComprobanteAbonoHoja = function(idx, input) {
@@ -5080,7 +5409,10 @@
                 return;
             }
             const file = input.files[0];
-            window.comprimirImagenAbono(file, function(dataUrl) {
+            if (window.showNotification) {
+                window.showNotification('Comprimiendo y preparando comprobante...', 'info');
+            }
+            window.comprimirImagenAbono(file, async function(dataUrl) {
                 f.abonos[idx].comprobante = dataUrl;
                 const fEnApp = appData.facturas.find(x => 
                     String(x.proveedor).trim().toUpperCase() === String(f.proveedor).trim().toUpperCase() && 
@@ -5089,22 +5421,36 @@
                 if (fEnApp && fEnApp.abonos && fEnApp.abonos[idx]) {
                     fEnApp.abonos[idx].comprobante = dataUrl;
                 }
-                try {
-                    localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas));
-                } catch(err) {
-                    console.warn('Error guardando cache local:', err);
-                }
-                if (window.sincronizarConGoogleSheetsSilencioso) {
-                    window.sincronizarConGoogleSheetsSilencioso(f.proveedor);
-                }
-                if (window.showNotification) {
-                    window.showNotification(`Comprobante adjuntado con éxito al Abono #${idx + 1}.`, 'success');
+                
+                // Guardar persistentemente en IndexedDB y memoria
+                if (window.guardarComprobanteAbono) {
+                    await window.guardarComprobanteAbono(f.proveedor, f.ccf, idx, f.abonos[idx], dataUrl);
                 }
                 window.verHojaFactura(f.proveedor, f.ccf, false, 'abonos');
+
+                // Subir a Google Drive en segundo plano
+                if (window.showNotification) {
+                    window.showNotification('Subiendo comprobante a Google Drive...', 'info');
+                }
+                const resDrive = await window.subirComprobanteAGoogleDrive(f.proveedor, f.ccf, idx, f.abonos[idx], dataUrl);
+                if (resDrive && resDrive.status === 'success') {
+                    if (fEnApp && fEnApp.abonos && fEnApp.abonos[idx]) {
+                        fEnApp.abonos[idx].comprobante = resDrive.viewUrl;
+                        fEnApp.abonos[idx].driveUrl = resDrive.driveUrl;
+                    }
+                    if (window.showNotification) {
+                        window.showNotification('¡Comprobante guardado en Google Drive con éxito!', 'success');
+                    }
+                    window.verHojaFactura(f.proveedor, f.ccf, false, 'abonos');
+                } else {
+                    if (window.showNotification) {
+                        window.showNotification('Comprobante guardado localmente (se sincronizará con Google Drive cuando haya conexión).', 'warning');
+                    }
+                }
             });
         };
 
-        window.quitarComprobanteAbonoHoja = function(idx) {
+        window.quitarComprobanteAbonoHoja = async function(idx) {
             if (appData.currentUserRole === 'viewer') {
                 alert('Acción denegada: Usuario en modo solo lectura.');
                 return;
@@ -5113,19 +5459,21 @@
             const f = facturaActivaHoja;
             if (!f || !f.abonos || !f.abonos[idx]) return;
             f.abonos[idx].comprobante = '';
+            f.abonos[idx].driveUrl = '';
             const fEnApp = appData.facturas.find(x => 
                 String(x.proveedor).trim().toUpperCase() === String(f.proveedor).trim().toUpperCase() && 
                 String(x.ccf).trim().toUpperCase() === String(f.ccf).trim().toUpperCase()
             );
             if (fEnApp && fEnApp.abonos && fEnApp.abonos[idx]) {
                 fEnApp.abonos[idx].comprobante = '';
+                fEnApp.abonos[idx].driveUrl = '';
+            }
+            if (window.eliminarComprobanteAbono) {
+                await window.eliminarComprobanteAbono(f.proveedor, f.ccf, idx, f.abonos[idx]);
             }
             try {
                 localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas));
             } catch(e) {}
-            if (window.sincronizarConGoogleSheetsSilencioso) {
-                window.sincronizarConGoogleSheetsSilencioso(f.proveedor);
-            }
             if (window.showNotification) {
                 window.showNotification(`Comprobante del Abono #${idx + 1} eliminado.`, 'info');
             }
@@ -5137,13 +5485,20 @@
         // ========================================================
         window.verComprobanteAbonoRapido = function(idx) {
             const f = window.facturaDetalleAbonosActual;
-            if (!f || !f.abonos || !f.abonos[idx]) return;
+            if (!f || !f.abonos || !f.abonos[idx]) {
+                alert('No se identificó el abono seleccionado.');
+                return;
+            }
             const ab = f.abonos[idx];
-            if (!ab.comprobante) {
+            let comp = ab.comprobante;
+            if (!comp && window.obtenerComprobanteAbono) {
+                comp = window.obtenerComprobanteAbono(f.proveedor, f.ccf, idx, ab);
+            }
+            if (!comp) {
                 alert('Este abono no cuenta con un comprobante de pago adjunto.');
                 return;
             }
-            window.verComprobanteEnGrande(ab.comprobante, `Comprobante de Pago #${idx + 1} - CCF ${f.ccf} (${f.proveedor})`);
+            window.verComprobanteEnGrande(comp, `Comprobante de Pago #${idx + 1} - CCF ${f.ccf} (${f.proveedor})`, ab.driveUrl);
         };
 
         window.adjuntarComprobanteAbonoRapido = function(idx, input) {
@@ -5156,7 +5511,10 @@
             const f = window.facturaDetalleAbonosActual;
             if (!f || !f.abonos || !f.abonos[idx]) return;
             const file = input.files[0];
-            window.comprimirImagenAbono(file, function(dataUrl) {
+            if (window.showNotification) {
+                window.showNotification('Comprimiendo y preparando comprobante...', 'info');
+            }
+            window.comprimirImagenAbono(file, async function(dataUrl) {
                 f.abonos[idx].comprobante = dataUrl;
                 const fEnApp = appData.facturas.find(x => 
                     String(x.proveedor).trim().toUpperCase() === String(f.proveedor).trim().toUpperCase() && 
@@ -5165,20 +5523,34 @@
                 if (fEnApp && fEnApp.abonos && fEnApp.abonos[idx]) {
                     fEnApp.abonos[idx].comprobante = dataUrl;
                 }
-                try {
-                    localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas));
-                } catch(e) {}
-                if (window.sincronizarConGoogleSheetsSilencioso) {
-                    window.sincronizarConGoogleSheetsSilencioso(f.proveedor);
-                }
-                if (window.showNotification) {
-                    window.showNotification(`Comprobante adjuntado con éxito al Abono #${idx + 1}.`, 'success');
+                if (window.guardarComprobanteAbono) {
+                    await window.guardarComprobanteAbono(f.proveedor, f.ccf, idx, f.abonos[idx], dataUrl);
                 }
                 window.verAbonosFacturaRapido(f.proveedor, f.ccf);
+
+                // Subir a Google Drive
+                if (window.showNotification) {
+                    window.showNotification('Subiendo comprobante a Google Drive...', 'info');
+                }
+                const resDrive = await window.subirComprobanteAGoogleDrive(f.proveedor, f.ccf, idx, f.abonos[idx], dataUrl);
+                if (resDrive && resDrive.status === 'success') {
+                    if (fEnApp && fEnApp.abonos && fEnApp.abonos[idx]) {
+                        fEnApp.abonos[idx].comprobante = resDrive.viewUrl;
+                        fEnApp.abonos[idx].driveUrl = resDrive.driveUrl;
+                    }
+                    if (window.showNotification) {
+                        window.showNotification('¡Comprobante guardado en Google Drive con éxito!', 'success');
+                    }
+                    window.verAbonosFacturaRapido(f.proveedor, f.ccf);
+                } else {
+                    if (window.showNotification) {
+                        window.showNotification('Comprobante guardado localmente (se sincronizará con Google Drive cuando haya conexión).', 'warning');
+                    }
+                }
             });
         };
 
-        window.quitarComprobanteAbonoRapido = function(idx) {
+        window.quitarComprobanteAbonoRapido = async function(idx) {
             if (appData.currentUserRole === 'viewer') {
                 alert('Acción denegada: Usuario en modo solo lectura.');
                 return;
@@ -5187,18 +5559,23 @@
             const f = window.facturaDetalleAbonosActual;
             if (!f || !f.abonos || !f.abonos[idx]) return;
             f.abonos[idx].comprobante = '';
+            f.abonos[idx].driveUrl = '';
             const fEnApp = appData.facturas.find(x => 
                 String(x.proveedor).trim().toUpperCase() === String(f.proveedor).trim().toUpperCase() && 
                 String(x.ccf).trim().toUpperCase() === String(f.ccf).trim().toUpperCase()
             );
             if (fEnApp && fEnApp.abonos && fEnApp.abonos[idx]) {
                 fEnApp.abonos[idx].comprobante = '';
+                fEnApp.abonos[idx].driveUrl = '';
+            }
+            if (window.eliminarComprobanteAbono) {
+                await window.eliminarComprobanteAbono(f.proveedor, f.ccf, idx, f.abonos[idx]);
             }
             try {
                 localStorage.setItem('cache_facturas', JSON.stringify(appData.facturas));
             } catch(e) {}
-            if (window.sincronizarConGoogleSheetsSilencioso) {
-                window.sincronizarConGoogleSheetsSilencioso(f.proveedor);
+            if (window.showNotification) {
+                window.showNotification(`Comprobante del Abono #${idx + 1} eliminado.`, 'info');
             }
             window.verAbonosFacturaRapido(f.proveedor, f.ccf);
         };
@@ -5978,9 +6355,21 @@
             mostrarEstadoSincronizacion('sincronizando', 'Guardando en Google Sheets...');
 
             try {
+                // Clonar facturas para la nube sin las cadenas base64 pesadas de comprobantes (guardados permanentemente en IndexedDB local)
+                const facturasNube = appData.facturas.map(fac => {
+                    if (!fac.abonos || !Array.isArray(fac.abonos)) return fac;
+                    const abonosLimpios = fac.abonos.map(ab => {
+                        if (!ab.comprobante) return ab;
+                        const copia = { ...ab };
+                        delete copia.comprobante;
+                        return copia;
+                    });
+                    return { ...fac, abonos: abonosLimpios };
+                });
+
                 const payload = {
                     proveedores: appData.proveedores,
-                    facturas: appData.facturas,
+                    facturas: facturasNube,
                     bancos: appData.bancos || [],
                     programacionPagos: appData.programacionPagos || [],
                     proveedorAfectado: proveedorAfectado || null
@@ -6394,7 +6783,7 @@
 
             let nuevosAbonos = [];
             const contenedores = document.querySelectorAll('#contenedor-abonos-dinamicos > div');
-            contenedores.forEach(div => {
+            contenedores.forEach((div, idx) => {
                 const inputMonto = div.querySelector('[name="abonoMonto"]');
                 const inputMetodo = div.querySelector('[name="abonoMetodo"]');
                 const inputBanco = div.querySelector('[name="abonoBanco"]');
@@ -6407,17 +6796,51 @@
                     if (!fechaVal) {
                         fechaVal = new Date().toISOString().split('T')[0];
                     }
+                    let compVal = inputComprobante ? inputComprobante.value : '';
+                    if ((!compVal || compVal.length < 10) && typeof window.obtenerComprobanteAbono === 'function') {
+                        compVal = window.obtenerComprobanteAbono(f.proveedor, f.ccf, idx, { monto, fecha: fechaVal, metodo: inputMetodo ? inputMetodo.value : '', banco: inputBanco ? inputBanco.value : '' }) || '';
+                    }
                     nuevosAbonos.push({
                         monto: monto,
                         metodo: inputMetodo ? inputMetodo.value : 'TRANSFERENCIA',
                         banco: inputBanco ? inputBanco.value : 'NINGUNO',
                         fecha: formatearSoloFecha(fechaVal),
-                        comprobante: inputComprobante ? inputComprobante.value : ''
+                        comprobante: compVal
                     });
                 }
             });
 
             f.abonos = nuevosAbonos;
+
+            // Inmediata persistencia de comprobantes en IndexedDB y memoria
+            if (window.guardarComprobanteAbono) {
+                nuevosAbonos.forEach((ab, idx) => {
+                    let compParaGuardar = ab.comprobante;
+                    if ((!compParaGuardar || compParaGuardar.length < 10) && typeof window.obtenerComprobanteAbono === 'function') {
+                        compParaGuardar = window.obtenerComprobanteAbono(f.proveedor, f.ccf, idx, ab);
+                    }
+                    if (compParaGuardar) {
+                        ab.comprobante = compParaGuardar;
+                        window.guardarComprobanteAbono(f.proveedor, f.ccf, idx, ab, compParaGuardar);
+                    }
+                });
+            }
+
+            // Subir comprobantes en base64 pendientes a Google Drive
+            if (window.subirComprobanteAGoogleDrive) {
+                for (let i = 0; i < nuevosAbonos.length; i++) {
+                    const ab = nuevosAbonos[i];
+                    if (ab.comprobante && String(ab.comprobante).startsWith('data:image/')) {
+                        const btnSub = document.getElementById('btn-submit-abono');
+                        if (btnSub) btnSub.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Subiendo comprobante #${i+1} a Google Drive...`;
+                        const resDrive = await window.subirComprobanteAGoogleDrive(f.proveedor, f.ccf, i, ab, ab.comprobante);
+                        if (resDrive && resDrive.viewUrl) {
+                            ab.comprobante = resDrive.viewUrl;
+                            ab.driveUrl = resDrive.driveUrl;
+                        }
+                    }
+                }
+            }
 
             // Inmediata persistencia en localStorage para salvaguardar los datos
             try {
@@ -7687,15 +8110,25 @@
             document.getElementById('hojaFacContadorAbonos').innerText = `${abonos.length} abono${abonos.length === 1 ? '' : 's'} registrado${abonos.length === 1 ? '' : 's'}`;
 
             abonos.forEach((ab, idx) => {
+                if ((!ab.comprobante || String(ab.comprobante).trim().length <= 5) && typeof window.obtenerComprobanteAbono === 'function') {
+                    const compRecup = window.obtenerComprobanteAbono(f.proveedor, f.ccf, idx, ab);
+                    if (compRecup) ab.comprobante = compRecup;
+                }
                 const tieneFoto = Boolean(ab.comprobante && String(ab.comprobante).trim().length > 5);
                 let compBtn = '';
                 if (tieneFoto) {
+                    const driveHref = ab.driveUrl || (typeof ab.comprobante === 'string' && ab.comprobante.includes('/d/') ? `https://drive.google.com/file/d/${ab.comprobante.split('/d/')[1].split('?')[0].split('/')[0]}/view` : '');
                     compBtn = `
-                        <div class="flex items-center justify-center gap-2">
+                        <div class="flex items-center justify-center gap-2 flex-wrap">
                             <img src="${ab.comprobante}" alt="Voucher" class="w-9 h-9 object-cover rounded-lg border border-emerald-500/50 shadow-sm cursor-pointer hover:scale-105 transition" onclick="window.verComprobanteHojaFactura(${idx})" title="Clic para ampliar comprobante">
                             <button type="button" onclick="window.verComprobanteHojaFactura(${idx})" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer shadow-sm">
                                 <i class="fa-solid fa-receipt"></i> Ver Comprobante
                             </button>
+                            ${driveHref ? `
+                                <a href="${driveHref}" target="_blank" rel="noopener noreferrer" class="px-2 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 border border-blue-500/30 text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-sm" title="Abrir archivo original en Google Drive">
+                                    <i class="fa-brands fa-google-drive text-amber-400"></i> En Drive
+                                </a>
+                            ` : ''}
                             <label class="px-2 py-1.5 rounded-lg bg-bgDark hover:bg-cardDark text-slate-300 hover:text-white border border-borderDark text-[11px] font-medium inline-flex items-center gap-1 cursor-pointer transition" title="Cambiar foto de este comprobante">
                                 <i class="fa-solid fa-camera-rotate text-accentCyan"></i> Cambiar
                                 <input type="file" accept="image/*" class="hidden" onchange="window.adjuntarComprobanteAbonoHoja(${idx}, this)">
@@ -10267,15 +10700,25 @@
 
             window.facturaDetalleAbonosActual = f;
             abonos.forEach((ab, idx) => {
+                if ((!ab.comprobante || String(ab.comprobante).trim().length <= 5) && typeof window.obtenerComprobanteAbono === 'function') {
+                    const compRecup = window.obtenerComprobanteAbono(f.proveedor, f.ccf, idx, ab);
+                    if (compRecup) ab.comprobante = compRecup;
+                }
                 const tieneFoto = Boolean(ab.comprobante && String(ab.comprobante).trim().length > 5);
                 let compBtn = '';
                 if (tieneFoto) {
+                    const driveHref = ab.driveUrl || (typeof ab.comprobante === 'string' && ab.comprobante.includes('/d/') ? `https://drive.google.com/file/d/${ab.comprobante.split('/d/')[1].split('?')[0].split('/')[0]}/view` : '');
                     compBtn = `
-                        <div class="flex items-center justify-center gap-1.5">
+                        <div class="flex items-center justify-center gap-1.5 flex-wrap">
                             <img src="${ab.comprobante}" alt="Voucher" class="w-8 h-8 object-cover rounded border border-emerald-500/50 cursor-pointer hover:scale-105 transition" onclick="window.verComprobanteAbonoRapido(${idx})" title="Clic para ampliar comprobante">
                             <button type="button" onclick="window.verComprobanteAbonoRapido(${idx})" class="px-2 py-1 rounded bg-accentCyan/15 hover:bg-accentCyan/30 text-accentCyan text-xs font-semibold inline-flex items-center gap-1 border border-accentCyan/30 transition shadow-sm cursor-pointer">
                                 <i class="fa-solid fa-receipt"></i> Ver Foto
                             </button>
+                            ${driveHref ? `
+                                <a href="${driveHref}" target="_blank" rel="noopener noreferrer" class="px-1.5 py-1 rounded bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 border border-blue-500/30 text-[11px] font-semibold inline-flex items-center gap-1 transition shadow-sm" title="Abrir archivo original en Google Drive">
+                                    <i class="fa-brands fa-google-drive text-amber-400"></i> Drive
+                                </a>
+                            ` : ''}
                             <label class="px-1.5 py-1 rounded bg-bgDark hover:bg-cardDark text-slate-300 hover:text-white border border-borderDark text-[10px] font-medium inline-flex items-center gap-1 cursor-pointer transition" title="Cambiar comprobante">
                                 <i class="fa-solid fa-camera-rotate text-accentCyan"></i>
                                 <input type="file" accept="image/*" class="hidden" onchange="window.adjuntarComprobanteAbonoRapido(${idx}, this)">
